@@ -131,10 +131,10 @@ const siteUrl = "http://49.232.252.118:8800/";
 const defaultFormState: FormState = { name: "", company: "", email: "", website: "", brief: "" };
 
 const navItems: NavItem[] = [
+  { href: "#flywheel-demo", label: { zh: "增长飞轮", en: "Growth Flywheel" } },
   { href: "#architecture", label: { zh: "五大引擎", en: "Architecture" } },
-  { href: "#modules", label: { zh: "能力模块", en: "Modules" } },
-  { href: "#geo", label: { zh: "GEO优化", en: "GEO" } },
-  { href: "#cases", label: { zh: "案例证明", en: "Cases" } },
+  { href: "#modules", label: { zh: "核心能力", en: "Modules" } },
+  { href: "#cases", label: { zh: "案例", en: "Cases" } },
   { href: "#faq", label: { zh: "FAQ", en: "FAQ" } },
   { href: "#contact", label: { zh: "联系咨询", en: "Contact" } },
 ];
@@ -1055,14 +1055,14 @@ const brandCopy = {
     en: "The core brand defines the operating model for enterprise growth in the AI era, while the five engines cover visibility, content production, website conversion, intelligent lead capture, and recommendation intelligence.",
   },
   flywheelDemoTag: { zh: "Interactive Flywheel", en: "Interactive Flywheel" },
-  flywheelDemoTitle: { zh: "以 JGMAO 增长飞轮为框架，构建企业在 AI 时代的增长方法论", en: "Use one interactive growth flywheel to explain all five JGMAO modules clearly" },
+  flywheelDemoTitle: { zh: "JGMAO增长飞轮", en: "Use one interactive growth flywheel to explain all five JGMAO modules clearly" },
   flywheelDemoBody: {
-    zh: "JGMAO 的每一环都不是单点能力，而是在驱动下一环节，持续提升业务的获客效率、验证能力与信任水平。",
+    zh: "每一环都不是单点能力，而是在驱动下一环节，持续提升业务的获客效率与转化能力。",
     en: "Click any module or let the wheel autoplay. Each layer fuels the next so the website keeps becoming more discoverable, more measurable, and more trusted.",
   },
   flywheelDemoDetailButton: { zh: "查看独立详情", en: "Open Module Detail" },
-  flywheelDemoWhyTag: { zh: "为什么是飞轮", en: "Why a Flywheel" },
-  flywheelDemoWhyTitle: { zh: "每个模块都在为下一环提供燃料", en: "Every module supplies momentum to the next" },
+  flywheelDemoWhyTag: { zh: "为什么是增长飞轮", en: "Why a Flywheel" },
+  flywheelDemoWhyTitle: { zh: "每一环都在放大下一环的结果", en: "Each layer amplifies the next" },
   flywheelDemoGrowthLoopLabel: { zh: "AI 增长飞轮", en: "AI Growth Loop" },
   flywheelDemoActiveModule: { zh: "当前模块", en: "Active Module" },
   flywheelDemoModalLabel: { zh: "模块详情", en: "Module Detail" },
@@ -1073,10 +1073,10 @@ const brandCopy = {
     en: "Click any engine to see how it contributes to site-wide GEO, content, conversion, and recommendation intelligence. Each part can work alone, but together they create a complete AI growth engine.",
   },
   detailButton: { zh: "查看引擎详情", en: "Open Engine Detail" },
-  geoTag: { zh: "GEO Optimization Blueprint", en: "GEO Optimization Blueprint" },
-  geoTitle: { zh: "整站 GEO 优化不只是写内容，而是重构网站的可见性与可引用性", en: "Site-wide GEO is not just content production. It rebuilds visibility and citability." },
+  geoTag: { zh: "GEO Capability Card", en: "GEO Capability Card" },
+  geoTitle: { zh: "整站 GEO 能力卡", en: "Site-wide GEO Capability Card" },
   geoBody: {
-    zh: "我们把 GEO 放在网站整体结构层来做：标题层级、FAQ 设计、答案块、案例证据、CTA 和线索回写都被一起优化，这样 AI 才更容易理解网站，用户也更容易转化。",
+    zh: "把结构、内容与转化承接放在同一套设计里，让网站更容易被 AI 理解、引用，并持续带来可验证的增长结果。",
     en: "We treat GEO as a full-site structural layer. Heading hierarchy, FAQ design, answer blocks, proof-heavy case studies, CTA paths, and lead write-back are optimized together so AI systems can understand the site and buyers can convert more easily.",
   },
   casesTag: { zh: "Case Proof", en: "Case Proof" },
@@ -1327,7 +1327,7 @@ function Home() {
   const [isPaused, setIsPaused] = useState(false);
   const [flywheelDemoActiveIndex, setFlywheelDemoActiveIndex] = useState(0);
   const [flywheelDemoPaused, setFlywheelDemoPaused] = useState(false);
-  const [activeSection, setActiveSection] = useState("architecture");
+  const [activeSection, setActiveSection] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
   const [detailIndex, setDetailIndex] = useState<number | null>(null);
   const [flywheelDemoDetailIndex, setFlywheelDemoDetailIndex] = useState<number | null>(null);
@@ -1506,7 +1506,7 @@ function Home() {
   };
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#050816] text-slate-100">
+    <main id="top" className="relative min-h-screen overflow-hidden bg-[#050816] text-slate-100">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_15%,rgba(82,230,255,0.14),transparent_24%),radial-gradient(circle_at_90%_18%,rgba(245,197,92,0.12),transparent_24%),radial-gradient(circle_at_50%_80%,rgba(181,146,255,0.12),transparent_28%),linear-gradient(180deg,#050816_0%,#091222_38%,#050816_100%)]" />
       <div className="pointer-events-none absolute inset-0 ops-grid opacity-20" />
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(5,8,22,0.18)_58%,rgba(5,8,22,0.94)_100%)]" />
@@ -1514,7 +1514,7 @@ function Home() {
       <div className="relative mx-auto flex min-h-screen w-full max-w-[1440px] flex-col px-5 pb-20 pt-6 sm:px-6 lg:px-10">
         <header className="sticky top-4 z-40 mb-10 rounded-[1.6rem] border border-white/10 bg-slate-950/55 px-4 py-3 backdrop-blur-xl sm:px-5">
           <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-[14px]">
+            <a href="#top" onClick={() => setActiveSection("")} className="flex items-center gap-[14px]">
               <BrandMark />
               <div>
                 <p
@@ -1525,7 +1525,7 @@ function Home() {
                 </p>
                 <p className="mt-[3px] text-sm text-white/78">{locale === "zh" ? "AI增长引擎" : "AI Growth Engine"}</p>
               </div>
-            </div>
+            </a>
 
             <div className="hidden items-center gap-2 lg:flex">
               <nav className="flex items-center gap-1 rounded-full border border-white/10 bg-white/5 p-1 text-sm">
@@ -1951,26 +1951,29 @@ function Home() {
               </motion.article>
             </AnimatePresence>
 
-            <article className="rounded-[2rem] border border-white/10 bg-slate-950/45 p-6 backdrop-blur-xl">
+            <article className="rounded-[1.85rem] border border-white/8 bg-slate-950/40 p-5 backdrop-blur-xl">
               <p className="text-xs uppercase tracking-[0.24em] text-slate-400">{t(brandCopy.flywheelDemoWhyTag, locale)}</p>
-              <h3 className="mt-3 text-2xl font-semibold text-white">{t(brandCopy.flywheelDemoWhyTitle, locale)}</h3>
-              <div className="mt-6 space-y-4">
-                {orchestrationRail.map((item, index) => (
-                  <div key={item.step} className="flex gap-4">
-                    <div className="flex flex-col items-center">
-                      <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-sm font-semibold text-white">
-                        {item.step}
-                      </div>
-                      {index < orchestrationRail.length - 1 ? <div className="mt-2 h-full w-px bg-white/10" /> : null}
-                    </div>
-                    <div className="pb-5">
-                      <p className="text-lg font-medium text-white">{t(item.title, locale)}</p>
-                      <p className="mt-2 text-sm leading-7 text-slate-300">{t(item.description, locale)}</p>
-                    </div>
+              <p className="mt-2.5 text-lg font-semibold text-white">{t(brandCopy.flywheelDemoWhyTitle, locale)}</p>
+              <div className="mt-3.5 flex flex-wrap items-center gap-2">
+                {(locale === "zh"
+                  ? ["可见性", "内容", "官网", "获客", "推荐决策"]
+                  : ["Visibility", "Content", "Website", "Leads", "Recommendation"]
+                ).map((item, index, items) => (
+                  <div key={item} className="flex items-center gap-2">
+                    <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-slate-200">
+                      {item}
+                    </span>
+                    {index < items.length - 1 ? (
+                      <span
+                        className="flywheel-why-connector"
+                        style={{ "--flow-delay": `${index * 0.36}s` } as CSSProperties}
+                      />
+                    ) : null}
                   </div>
                 ))}
               </div>
             </article>
+
           </div>
         </section>
 
@@ -2179,44 +2182,6 @@ function Home() {
                 </button>
               </motion.article>
             </AnimatePresence>
-          </div>
-        </section>
-
-        <section id="geo" className="py-14">
-          <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-            <div>
-              <SectionTag>{t(brandCopy.geoTag, locale)}</SectionTag>
-              <h2 className="mt-5 text-3xl font-semibold tracking-tight text-white sm:text-[2.55rem]">{t(brandCopy.geoTitle, locale)}</h2>
-            </div>
-            <p className="max-w-2xl text-base leading-8 text-slate-300">{t(brandCopy.geoBody, locale)}</p>
-          </div>
-
-          <div className="mt-8 grid gap-5 lg:grid-cols-3">
-            {geoBlueprints.map((blueprint) => {
-              const Icon = blueprint.icon;
-
-              return (
-                <article key={blueprint.title.en} className="rounded-[1.9rem] border border-white/10 bg-white/6 p-6 shadow-[0_20px_80px_rgba(0,0,0,0.22)] backdrop-blur">
-                  <div className="flex items-center gap-4">
-                    <div className="rounded-[1.3rem] border border-white/10 bg-slate-950/70 p-3 text-cyan-100">
-                      <Icon className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <p className="text-xs uppercase tracking-[0.24em] text-slate-400">GEO Layer</p>
-                      <h3 className="mt-1 text-2xl font-semibold text-white">{t(blueprint.title, locale)}</h3>
-                    </div>
-                  </div>
-                  <p className="mt-5 text-sm leading-7 text-slate-300">{t(blueprint.description, locale)}</p>
-                  <div className="mt-5 space-y-3">
-                    {blueprint.bullets.map((bullet) => (
-                      <div key={bullet.en} className="rounded-[1.3rem] border border-white/10 bg-slate-950/55 px-4 py-4 text-sm leading-7 text-slate-200">
-                        {t(bullet, locale)}
-                      </div>
-                    ))}
-                  </div>
-                </article>
-              );
-            })}
           </div>
         </section>
 

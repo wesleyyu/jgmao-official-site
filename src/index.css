@@ -277,6 +277,31 @@
     pointer-events: none;
   }
 
+  .flywheel-why-connector {
+    position: relative;
+    width: 12px;
+    height: 1px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.1);
+    overflow: hidden;
+    flex: 0 0 auto;
+  }
+
+  .flywheel-why-connector::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: -42%;
+    width: 42%;
+    height: 100%;
+    transform: translateY(-50%);
+    border-radius: inherit;
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(186, 230, 253, 0.88), rgba(255, 255, 255, 0));
+    box-shadow: 0 0 8px rgba(125, 211, 252, 0.3);
+    animation: flywheel-why-flow 3.4s ease-in-out infinite;
+    animation-delay: var(--flow-delay, 0s);
+  }
+
   @keyframes flow-dash {
     from {
       stroke-dashoffset: 0;
@@ -379,6 +404,29 @@
 
     52% {
       transform: translateX(140%);
+      opacity: 0;
+    }
+  }
+
+  @keyframes flywheel-why-flow {
+    0%,
+    18% {
+      left: -42%;
+      opacity: 0;
+    }
+
+    30% {
+      opacity: 0.9;
+    }
+
+    55% {
+      left: 100%;
+      opacity: 0.95;
+    }
+
+    70%,
+    100% {
+      left: 100%;
       opacity: 0;
     }
   }
