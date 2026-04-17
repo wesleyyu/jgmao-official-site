@@ -1049,15 +1049,15 @@ const brandCopy = {
     en: "JGMAO AI Growth Engine combines five parts: GEO optimization, an AI content factory, an AI growth website, an intelligent lead system, and AI recommendation analytics to connect visibility, content, conversion, and feedback into one operating system.",
   },
   architectureTag: { zh: "Brand Architecture", en: "Brand Architecture" },
-  architectureTitle: { zh: "JGMAO AI 增长引擎包含五大部分", en: "JGMAO AI Growth Engine includes five core parts" },
+  architectureTitle: { zh: "五大引擎", en: "JGMAO AI Growth Engine includes five core parts" },
   architectureBody: {
-    zh: "主品牌负责定义企业在 AI 时代的增长方法论，五大引擎分别覆盖可见性、内容生产、官网承接、智能获客与推荐判断，最终形成一个完整的 AI 增长飞轮。",
+    zh: "围绕 AI 可见性、内容生产、官网承接、智能获客与推荐决策协同运转，最终形成完整的 AI 增长飞轮。",
     en: "The core brand defines the operating model for enterprise growth in the AI era, while the five engines cover visibility, content production, website conversion, intelligent lead capture, and recommendation intelligence.",
   },
   flywheelDemoTag: { zh: "Interactive Flywheel", en: "Interactive Flywheel" },
-  flywheelDemoTitle: { zh: "用一个可点击的增长飞轮，把 JGMAO 五个模块真正讲清楚", en: "Use one interactive growth flywheel to explain all five JGMAO modules clearly" },
+  flywheelDemoTitle: { zh: "以 JGMAO 增长飞轮为框架，构建企业在 AI 时代的增长方法论", en: "Use one interactive growth flywheel to explain all five JGMAO modules clearly" },
   flywheelDemoBody: {
-    zh: "点击任意模块，或者停留观看自动轮播。每一环都不是孤立能力，而是在推动下一个环节，让官网持续变得更会获客、更可验证、更值得信任。",
+    zh: "JGMAO 的每一环都不是单点能力，而是在驱动下一环节，持续提升业务的获客效率、验证能力与信任水平。",
     en: "Click any module or let the wheel autoplay. Each layer fuels the next so the website keeps becoming more discoverable, more measurable, and more trusted.",
   },
   flywheelDemoDetailButton: { zh: "查看独立详情", en: "Open Module Detail" },
@@ -1067,9 +1067,9 @@ const brandCopy = {
   flywheelDemoActiveModule: { zh: "当前模块", en: "Active Module" },
   flywheelDemoModalLabel: { zh: "模块详情", en: "Module Detail" },
   moduleTag: { zh: "Interactive Engine Map", en: "Interactive Engine Map" },
-  moduleTitle: { zh: "五大引擎不是孤立产品，而是一套协同增长系统", en: "The five engines are not isolated products. They form one coordinated growth system." },
+  moduleTitle: { zh: "五大引擎协同运转，形成完整的 AI 增长飞轮。", en: "The five engines are not isolated products. They form one coordinated growth system." },
   moduleBody: {
-    zh: "点击任意引擎查看它在整站 GEO、内容、转化和推荐分析中的位置。每一部分都能单独发挥作用，但组合起来才是完整的 AI 增长引擎。",
+    zh: "点击任意引擎，查看它在业务增长飞轮中的作用与连接关系。每个引擎都能独立发挥作用，彼此协同后构成完整的 AI 增长体系。",
     en: "Click any engine to see how it contributes to site-wide GEO, content, conversion, and recommendation intelligence. Each part can work alone, but together they create a complete AI growth engine.",
   },
   detailButton: { zh: "查看引擎详情", en: "Open Engine Detail" },
@@ -1985,7 +1985,7 @@ function Home() {
               <h3 className="mt-3 text-3xl font-semibold text-white">{locale === "zh" ? "JGMAO AI 增长引擎" : "JGMAO AI Growth Engine"}</h3>
               <p className="mt-4 text-sm leading-7 text-slate-200">
                 {locale === "zh"
-                  ? "这是企业 AI 增长方法论与产品架构的总入口。它不只是一个网站名字，而是一整套增长系统的组织方式。"
+                  ? "企业在 AI 时代构建增长飞轮的统一方法框架。"
                   : "This is the master entry point for the product architecture and operating model. It is not just a website name, but the organizing system behind the full growth stack."}
               </p>
             </div>
