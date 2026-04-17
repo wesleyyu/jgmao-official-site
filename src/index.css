@@ -198,6 +198,85 @@
     animation: flywheel-spin 18s linear infinite reverse;
   }
 
+  .status-badge-live {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+    animation: status-badge-breathe 3.8s ease-in-out infinite;
+  }
+
+  .status-badge-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.95) 0%, rgba(74, 222, 128, 0.95) 42%, rgba(16, 185, 129, 0.88) 100%);
+    box-shadow: 0 0 0 rgba(74, 222, 128, 0.4);
+    animation: status-dot-ping 1.9s ease-in-out infinite;
+    flex: 0 0 auto;
+  }
+
+  .snapshot-layer-group {
+    position: relative;
+    padding-left: 0.2rem;
+  }
+
+  .snapshot-flow-line {
+    position: absolute;
+    left: 1.65rem;
+    top: 1.15rem;
+    bottom: 1.15rem;
+    width: 1px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.08));
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .snapshot-flow-dot {
+    position: absolute;
+    left: 50%;
+    top: -10%;
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    transform: translateX(-50%);
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.98) 0%, rgba(82, 230, 255, 0.75) 45%, rgba(82, 230, 255, 0) 100%);
+    box-shadow: 0 0 16px rgba(82, 230, 255, 0.55);
+    animation: snapshot-flow 4.6s ease-in-out infinite;
+  }
+
+  .snapshot-layer-card {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .snapshot-layer-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(120deg, transparent 0%, rgba(255, 255, 255, 0.06) 18%, transparent 42%);
+    transform: translateX(-120%);
+    animation: snapshot-sheen 6.2s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  .snapshot-layer-icon {
+    position: relative;
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+    animation: snapshot-pulse 3.6s ease-in-out infinite;
+  }
+
+  .snapshot-layer-icon::after {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    border: 1px solid color-mix(in srgb, var(--snapshot-accent) 48%, transparent);
+    opacity: 0.38;
+    pointer-events: none;
+  }
+
   @keyframes flow-dash {
     from {
       stroke-dashoffset: 0;
@@ -215,6 +294,92 @@
 
     to {
       transform: rotate(360deg);
+    }
+  }
+
+  @keyframes status-badge-breathe {
+    0%,
+    100% {
+      background-color: rgba(52, 211, 153, 0.1);
+      border-color: rgba(52, 211, 153, 0.2);
+    }
+
+    50% {
+      background-color: rgba(52, 211, 153, 0.16);
+      border-color: rgba(110, 231, 183, 0.34);
+    }
+  }
+
+  @keyframes status-dot-ping {
+    0%,
+    100% {
+      transform: scale(1);
+      box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.32);
+      opacity: 0.95;
+    }
+
+    50% {
+      transform: scale(1.18);
+      box-shadow: 0 0 0 8px rgba(74, 222, 128, 0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes snapshot-flow {
+    0% {
+      top: -10%;
+      opacity: 0;
+    }
+
+    12% {
+      opacity: 1;
+    }
+
+    50% {
+      opacity: 0.95;
+    }
+
+    88% {
+      opacity: 1;
+    }
+
+    100% {
+      top: 102%;
+      opacity: 0;
+    }
+  }
+
+  @keyframes snapshot-pulse {
+    0%,
+    100% {
+      transform: scale(1);
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.03) inset, 0 0 0 rgba(0, 0, 0, 0);
+      background-color: rgba(15, 23, 42, 0.8);
+    }
+
+    50% {
+      transform: scale(1.03);
+      box-shadow: 0 0 22px var(--snapshot-glow);
+      background-color: color-mix(in srgb, var(--snapshot-glow) 32%, rgba(15, 23, 42, 0.82));
+    }
+  }
+
+  @keyframes snapshot-sheen {
+    0%,
+    62%,
+    100% {
+      transform: translateX(-120%);
+      opacity: 0;
+    }
+
+    18%,
+    42% {
+      opacity: 1;
+    }
+
+    52% {
+      transform: translateX(140%);
+      opacity: 0;
     }
   }
 

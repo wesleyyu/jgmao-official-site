@@ -12,11 +12,13 @@ import {
   Menu,
   MoveUpRight,
   Radar,
+  ShieldCheck,
   Sparkles,
+  Waypoints,
   Workflow,
   X,
 } from "lucide-react";
-import { startTransition, useEffect, useState, type FormEvent } from "react";
+import { startTransition, useEffect, useState, type CSSProperties, type FormEvent } from "react";
 
 import logoImage from "@/assets/jgmao-logo-black-square.png";
 import { cn } from "@/lib/utils";
@@ -35,9 +37,42 @@ type HeroStat = {
   detail: LocalizedText;
 };
 
+type SnapshotLayer = {
+  label: LocalizedText;
+  value: LocalizedText;
+  icon: LucideIcon;
+  accent: string;
+  glow: string;
+};
+
 type EngineMetric = {
   label: LocalizedText;
   value: string;
+};
+
+type FlywheelMetric = {
+  label: LocalizedText;
+  value: string;
+};
+
+type FlywheelModule = {
+  id: string;
+  letter: string;
+  name: string;
+  title: LocalizedText;
+  summary: LocalizedText;
+  description: LocalizedText;
+  modalBody: LocalizedText;
+  accent: string;
+  glow: string;
+  icon: LucideIcon;
+  outputLabel: LocalizedText;
+  outputs: LocalizedText[];
+  signals: LocalizedText[];
+  metrics: FlywheelMetric[];
+  integrationTitle: LocalizedText;
+  integrations: LocalizedText[];
+  nextStep: LocalizedText;
 };
 
 type Capability = {
@@ -135,6 +170,515 @@ const heroStats: HeroStat[] = [
     detail: {
       zh: "从内容入口到表单转化，再到 CRM 路由与推荐分析，线索承接更完整。",
       en: "From content entry to forms, CRM routing, and recommendation analytics, lead capture becomes more complete.",
+    },
+  },
+];
+
+const snapshotLayers: SnapshotLayer[] = [
+  {
+    label: { zh: "采集层", en: "Signal Layer" },
+    value: { zh: "搜索信号 + 站点行为 + 线索信号 + AI 引用", en: "Search + Site + Lead Signals + AI citations" },
+    icon: Gauge,
+    accent: "#52E6FF",
+    glow: "rgba(82, 230, 255, 0.22)",
+  },
+  {
+    label: { zh: "策略层", en: "Strategy Layer" },
+    value: { zh: "增长路径 → 内容生成 → 监测优化 → 可信表达", en: "Journey → Generation → Monitoring → Authority" },
+    icon: Bot,
+    accent: "#F5C55C",
+    glow: "rgba(245, 197, 92, 0.2)",
+  },
+  {
+    label: { zh: "执行层", en: "Execution Layer" },
+    value: { zh: "Orchestration 自动发布 / 回写 / 复盘", en: "Orchestration automates publishing, write-back, and review" },
+    icon: Workflow,
+    accent: "#B592FF",
+    glow: "rgba(181, 146, 255, 0.22)",
+  },
+];
+
+const orchestrationRail = [
+  {
+    step: "01",
+    title: {
+      zh: "发现与诊断",
+      en: "Discover and Diagnose",
+    },
+    description: {
+      zh: "识别高价值用户路径、搜索意图与信息缺口。",
+      en: "Map high-value journeys, search intent, and information gaps.",
+    },
+  },
+  {
+    step: "02",
+    title: {
+      zh: "资产生成",
+      en: "Generate Assets",
+    },
+    description: {
+      zh: "生成页面、内容、信任模块与转化组件。",
+      en: "Create pages, content, proof blocks, and conversion components.",
+    },
+  },
+  {
+    step: "03",
+    title: {
+      zh: "监测与学习",
+      en: "Monitor and Learn",
+    },
+    description: {
+      zh: "回收引用、点击、停留、转化与实验结果。",
+      en: "Collect citations, clicks, dwell time, conversions, and experiments.",
+    },
+  },
+  {
+    step: "04",
+    title: {
+      zh: "自动编排",
+      en: "Orchestrate",
+    },
+    description: {
+      zh: "按规则触发迭代、发布、补强与再验证。",
+      en: "Trigger iteration, publishing, reinforcement, and re-validation.",
+    },
+  },
+];
+
+const flywheelModules: FlywheelModule[] = [
+  {
+    id: "journey",
+    letter: "J",
+    name: "Journey",
+    title: {
+      zh: "用户旅程与增长路径",
+      en: "User Journey and Growth Paths",
+    },
+    summary: {
+      zh: "先把用户如何发现、比较、咨询、转化与复访拆成可优化的路径图。",
+      en: "Map how users discover, compare, ask, convert, and return before optimizing anything else.",
+    },
+    description: {
+      zh: "我们先对官网流量、搜索意图、内容入口和转化节点做旅程拆解，找出哪里该承接、哪里该解释、哪里该推动行动。",
+      en: "We break down traffic, search intent, content entry points, and conversion nodes to understand where the site should guide, explain, or push action.",
+    },
+    modalBody: {
+      zh: "Journey 模块决定官网的信息架构、入口优先级和转化路径。它会告诉你哪些页面该承接高意图需求，哪些内容该放在比较阶段，哪些证据应该在用户准备咨询前出现。",
+      en: "Journey defines the website’s information architecture, entry priorities, and conversion paths. It tells you which pages should capture high-intent demand, where comparison-stage content belongs, and when proof should show up before a buyer is ready to talk.",
+    },
+    accent: "#52E6FF",
+    glow: "rgba(82, 230, 255, 0.28)",
+    icon: Waypoints,
+    outputLabel: {
+      zh: "Journey 输出",
+      en: "Journey Outputs",
+    },
+    outputs: [
+      {
+        zh: "旅程地图",
+        en: "Journey maps",
+      },
+      {
+        zh: "关键页面结构",
+        en: "High-intent page architecture",
+      },
+      {
+        zh: "高意图入口清单",
+        en: "Priority entry-point list",
+      },
+    ],
+    signals: [
+      {
+        zh: "搜索词群",
+        en: "Search clusters",
+      },
+      {
+        zh: "跳转路径",
+        en: "Navigation flows",
+      },
+      {
+        zh: "咨询节点",
+        en: "Inquiry triggers",
+      },
+      {
+        zh: "转化阻塞点",
+        en: "Conversion blockers",
+      },
+    ],
+    metrics: [
+      { label: { zh: "旅程清晰度", en: "Journey Clarity" }, value: "91%" },
+      { label: { zh: "关键路径覆盖", en: "Path Coverage" }, value: "23" },
+      { label: { zh: "高意图入口", en: "Intent Entries" }, value: "48" },
+    ],
+    integrationTitle: {
+      zh: "Journey 连接点",
+      en: "Journey Integrations",
+    },
+    integrations: [
+      {
+        zh: "官网导航与页面层级设计",
+        en: "Website navigation and page hierarchy",
+      },
+      {
+        zh: "CTA 与下载入口的布局策略",
+        en: "Layout strategy for CTAs and downloadable assets",
+      },
+      {
+        zh: "内容矩阵中的意图映射",
+        en: "Intent mapping across the content matrix",
+      },
+    ],
+    nextStep: {
+      zh: "Journey 的输出会直接成为 Generation 的输入。",
+      en: "Journey outputs become direct inputs for Generation.",
+    },
+  },
+  {
+    id: "generation",
+    letter: "G",
+    name: "Generation",
+    title: {
+      zh: "内容 / 站点 / 线索 / 转化的生成能力",
+      en: "Generation for Content, Pages, Leads, and Conversion",
+    },
+    summary: {
+      zh: "把战略拆成可规模化生成的页面、内容、CTA 与线索承接资产。",
+      en: "Turn strategy into scalable pages, content, CTAs, and lead assets.",
+    },
+    description: {
+      zh: "不是只做文案，而是把页面模块、证据结构、问答片段、下载页、表单与线索收集一起形成高频生成引擎。",
+      en: "This is not just copywriting. It is a generation system for page modules, proof structures, answer blocks, download pages, forms, and lead capture assets.",
+    },
+    modalBody: {
+      zh: "Generation 负责把正确的路径转成可快速生产的官网资产。它把首页 Hero、解决方案页、FAQ、案例页和转化组件统一成一个可复用的内容生产系统。",
+      en: "Generation turns the right paths into rapidly produced website assets. It unifies homepage hero sections, solution pages, FAQs, case studies, and conversion components into one repeatable production system.",
+    },
+    accent: "#9CF46B",
+    glow: "rgba(156, 244, 107, 0.22)",
+    icon: Sparkles,
+    outputLabel: {
+      zh: "Generation 输出",
+      en: "Generation Outputs",
+    },
+    outputs: [
+      {
+        zh: "专题页批量生成",
+        en: "Landing page generation",
+      },
+      {
+        zh: "问答型内容资产",
+        en: "Answer-led content assets",
+      },
+      {
+        zh: "线索承接组件",
+        en: "Lead conversion components",
+      },
+    ],
+    signals: [
+      {
+        zh: "内容缺口",
+        en: "Content gaps",
+      },
+      {
+        zh: "页面模板",
+        en: "Page templates",
+      },
+      {
+        zh: "下载转化点",
+        en: "Download-based conversion points",
+      },
+      {
+        zh: "行业证据素材",
+        en: "Industry proof assets",
+      },
+    ],
+    metrics: [
+      { label: { zh: "内容产能", en: "Content Capacity" }, value: "8x" },
+      { label: { zh: "专题页速度", en: "Launch Speed" }, value: "72h" },
+      { label: { zh: "线索承接率", en: "Lead Capture" }, value: "+37%" },
+    ],
+    integrationTitle: {
+      zh: "Generation 连接点",
+      en: "Generation Integrations",
+    },
+    integrations: [
+      {
+        zh: "官网页面模板与模块库",
+        en: "Website page templates and module library",
+      },
+      {
+        zh: "内容生产节奏与发布工作流",
+        en: "Content production rhythm and publishing workflow",
+      },
+      {
+        zh: "线索页、CTA 与表单承接",
+        en: "Lead pages, CTAs, and form capture",
+      },
+    ],
+    nextStep: {
+      zh: "Generation 的结果需要 Monitoring 来验证是否有效。",
+      en: "Generation needs Monitoring to validate what actually works.",
+    },
+  },
+  {
+    id: "monitoring",
+    letter: "M",
+    name: "Monitoring",
+    title: {
+      zh: "监测、验证、反馈",
+      en: "Monitoring, Validation, and Feedback",
+    },
+    summary: {
+      zh: "每一个增长动作都被追踪、验证、归因，然后回流到下一轮优化。",
+      en: "Every growth action is traced, validated, attributed, and fed back into the next cycle.",
+    },
+    description: {
+      zh: "从 AI 引用、自然搜索、页面行为到表单转化，我们把信号统一到一个监测层，知道哪条路径有效、哪种表达在损耗。",
+      en: "From AI citations and organic search to page behavior and form conversion, signals are unified into one monitoring layer to reveal which path works and which message leaks value.",
+    },
+    modalBody: {
+      zh: "Monitoring 让官网从主观判断转成有反馈的数据系统。不是只看流量，而是看 AI 引用、页面表现、案例吸引力、CTA 点击和最终线索质量。",
+      en: "Monitoring turns the website from a subjective design exercise into a feedback-driven system. It tracks not only traffic, but also AI citations, page performance, case engagement, CTA clicks, and lead quality.",
+    },
+    accent: "#FFC966",
+    glow: "rgba(255, 201, 102, 0.2)",
+    icon: Radar,
+    outputLabel: {
+      zh: "Monitoring 输出",
+      en: "Monitoring Outputs",
+    },
+    outputs: [
+      {
+        zh: "归因看板",
+        en: "Attribution dashboards",
+      },
+      {
+        zh: "实验报告",
+        en: "Experiment reports",
+      },
+      {
+        zh: "异常预警与修正建议",
+        en: "Anomaly alerts and fixes",
+      },
+    ],
+    signals: [
+      {
+        zh: "引用率",
+        en: "Citation rate",
+      },
+      {
+        zh: "停留时长",
+        en: "Dwell time",
+      },
+      {
+        zh: "表单完成率",
+        en: "Form completion",
+      },
+      {
+        zh: "实验胜率",
+        en: "Experiment win rate",
+      },
+    ],
+    metrics: [
+      { label: { zh: "信号刷新", en: "Signal Refresh" }, value: "15m" },
+      { label: { zh: "实验闭环", en: "Experiment Loops" }, value: "126/mo" },
+      { label: { zh: "异常发现", en: "Anomaly Detection" }, value: "<1h" },
+    ],
+    integrationTitle: {
+      zh: "Monitoring 连接点",
+      en: "Monitoring Integrations",
+    },
+    integrations: [
+      {
+        zh: "Search Console / Analytics / CRM 数据回收",
+        en: "Search Console, Analytics, and CRM feedback",
+      },
+      {
+        zh: "AI 引用与答案抓取监测",
+        en: "AI citation and answer extraction tracking",
+      },
+      {
+        zh: "内容与 CTA 的实验对照",
+        en: "Controlled experiments for content and CTAs",
+      },
+    ],
+    nextStep: {
+      zh: "Monitoring 会告诉 Authority 和智能执行中枢下一步该加强什么。",
+      en: "Monitoring tells Authority and Orchestration what to improve next.",
+    },
+  },
+  {
+    id: "authority",
+    letter: "A",
+    name: "Authority",
+    title: {
+      zh: "采信、可信度、权威表达",
+      en: "Authority, Trust, and Credible Expression",
+    },
+    summary: {
+      zh: "让官网内容更容易被用户相信，也更容易被 AI 抽取与引用。",
+      en: "Make website content easier for people to trust and easier for AI to cite.",
+    },
+    description: {
+      zh: "通过证据结构、来源表达、专家视角、品牌信号与案例可信度设计，让你的页面不是‘会说’，而是‘值得被信’。",
+      en: "By designing evidence structures, sourcing, expert voice, brand signals, and proof-heavy case studies, the site becomes not just persuasive, but trustworthy.",
+    },
+    modalBody: {
+      zh: "Authority 模块决定官网是不是值得被采信。它把案例、资质、数据、专家观点和来源说明做成一个统一的信任层，让用户和 AI 都更愿意引用你的内容。",
+      en: "Authority determines whether the website deserves trust. It turns cases, credentials, data, expert viewpoints, and source notes into a consistent trust layer that both buyers and AI models are more willing to reference.",
+    },
+    accent: "#FF7F7F",
+    glow: "rgba(255, 127, 127, 0.22)",
+    icon: ShieldCheck,
+    outputLabel: {
+      zh: "Authority 输出",
+      en: "Authority Outputs",
+    },
+    outputs: [
+      {
+        zh: "可信表达规范",
+        en: "Trust expression system",
+      },
+      {
+        zh: "证据引用结构",
+        en: "Evidence and citation structure",
+      },
+      {
+        zh: "案例与资质信任层",
+        en: "Case-study and credential layer",
+      },
+    ],
+    signals: [
+      {
+        zh: "引用来源",
+        en: "Source references",
+      },
+      {
+        zh: "品牌露出",
+        en: "Brand visibility",
+      },
+      {
+        zh: "专家证据",
+        en: "Expert proof",
+      },
+      {
+        zh: "案例背书",
+        en: "Case validation",
+      },
+    ],
+    metrics: [
+      { label: { zh: "引用可信度", en: "Trust Lift" }, value: "+42%" },
+      { label: { zh: "AI 采信提升", en: "AI Acceptance" }, value: "+31%" },
+      { label: { zh: "品牌信任层", en: "Trust Blocks" }, value: "12" },
+    ],
+    integrationTitle: {
+      zh: "Authority 连接点",
+      en: "Authority Integrations",
+    },
+    integrations: [
+      {
+        zh: "案例页、资质页、专家内容的统一规范",
+        en: "Shared structure for cases, credentials, and expert content",
+      },
+      {
+        zh: "引用格式与证据块标准化",
+        en: "Standardized citation and proof blocks",
+      },
+      {
+        zh: "品牌可信表达与设计语言",
+        en: "Brand trust language and proof-led design",
+      },
+    ],
+    nextStep: {
+      zh: "Authority 会抬高整个飞轮的信任基线。",
+      en: "Authority raises the trust baseline of the entire flywheel.",
+    },
+  },
+  {
+    id: "orchestration",
+    letter: "O",
+    name: "Orchestration",
+    title: {
+      zh: "智能执行中枢",
+      en: "AI Automation and Closed-Loop Orchestration",
+    },
+    summary: {
+      zh: "把前面四个模块串成持续运转的自动化增长系统，而不是一次性交付。",
+      en: "Connect the other four modules into a continuously running, automated growth system instead of a one-off delivery.",
+    },
+    description: {
+      zh: "通过工作流、触发器、任务队列和回写机制，让生成、发布、监测、复盘和优化成为真正自动执行的循环。",
+      en: "Through workflows, triggers, job queues, and write-back mechanisms, generation, publishing, monitoring, and iteration become a real operating loop.",
+    },
+    modalBody: {
+      zh: "智能执行中枢是飞轮真正转起来的关键。它让内容生成、页面更新、信号回收、异常提醒和优化建议不再依赖人工记忆，而是按节奏自动发生。",
+      en: "Orchestration is what makes the flywheel actually move. It ensures content generation, page updates, signal collection, anomaly alerts, and optimization suggestions happen on rhythm instead of relying on human memory.",
+    },
+    accent: "#B592FF",
+    glow: "rgba(181, 146, 255, 0.2)",
+    icon: Workflow,
+    outputLabel: {
+      zh: "智能执行中枢输出",
+      en: "Orchestration Outputs",
+    },
+    outputs: [
+      {
+        zh: "自动化工作流",
+        en: "Automation workflows",
+      },
+      {
+        zh: "触发规则",
+        en: "Trigger logic",
+      },
+      {
+        zh: "多角色协作编排",
+        en: "Multi-role coordination",
+      },
+    ],
+    signals: [
+      {
+        zh: "发布节奏",
+        en: "Publishing cadence",
+      },
+      {
+        zh: "任务回写",
+        en: "Task write-back",
+      },
+      {
+        zh: "异常触发",
+        en: "Exception triggers",
+      },
+      {
+        zh: "优化优先级",
+        en: "Optimization priority",
+      },
+    ],
+    metrics: [
+      { label: { zh: "自动执行率", en: "Automation Rate" }, value: "79%" },
+      { label: { zh: "优化节拍", en: "Optimization Rhythm" }, value: "Weekly" },
+      { label: { zh: "人效提升", en: "Team Leverage" }, value: "4.6x" },
+    ],
+    integrationTitle: {
+      zh: "智能执行中枢连接点",
+      en: "Orchestration Integrations",
+    },
+    integrations: [
+      {
+        zh: "内容发布与站点更新流程",
+        en: "Content publishing and page update workflows",
+      },
+      {
+        zh: "表单线索到 CRM 的自动回写",
+        en: "Automatic form-to-CRM handoff",
+      },
+      {
+        zh: "监测异常后的自动任务派发",
+        en: "Automatic task creation after monitoring anomalies",
+      },
+    ],
+    nextStep: {
+      zh: "智能执行中枢会让飞轮持续转下去，而不是停在建议层。",
+      en: "Orchestration keeps the flywheel moving instead of stopping at recommendations.",
     },
   },
 ];
@@ -280,7 +824,7 @@ const capabilities: Capability[] = [
   },
   {
     id: "lead-system",
-    token: "CRM",
+    token: "ILS",
     name: { zh: "智能获客系统", en: "Intelligent Lead System" },
     title: { zh: "把内容流量与咨询意向转成可跟进、可分发、可验证的高质量线索", en: "Convert traffic and intent into qualified, routable, measurable leads" },
     summary: {
@@ -499,7 +1043,7 @@ const faqItems: FaqItem[] = [
 
 const brandCopy = {
   heroTag: { zh: "JGMAO AI Growth Engine", en: "JGMAO AI Growth Engine" },
-  heroTitle: { zh: "帮助企业在 AI 时代构建 AI 增长飞轮", en: "Helping enterprises build AI growth flywheels in the AI era" },
+  heroTitle: { zh: "帮助企业构建 AI 时代的增长飞轮", en: "Helping enterprises build AI growth flywheels in the AI era" },
   heroBody: {
     zh: "帮助企业把AI可见性、内容、官网、获客与推荐判断连成一个真正可运转的增长系统。",
     en: "JGMAO AI Growth Engine combines five parts: GEO optimization, an AI content factory, an AI growth website, an intelligent lead system, and AI recommendation analytics to connect visibility, content, conversion, and feedback into one operating system.",
@@ -510,6 +1054,18 @@ const brandCopy = {
     zh: "主品牌负责定义企业在 AI 时代的增长方法论，五大引擎分别覆盖可见性、内容生产、官网承接、智能获客与推荐判断，最终形成一个完整的 AI 增长飞轮。",
     en: "The core brand defines the operating model for enterprise growth in the AI era, while the five engines cover visibility, content production, website conversion, intelligent lead capture, and recommendation intelligence.",
   },
+  flywheelDemoTag: { zh: "Interactive Flywheel", en: "Interactive Flywheel" },
+  flywheelDemoTitle: { zh: "用一个可点击的增长飞轮，把 JGMAO 五个模块真正讲清楚", en: "Use one interactive growth flywheel to explain all five JGMAO modules clearly" },
+  flywheelDemoBody: {
+    zh: "点击任意模块，或者停留观看自动轮播。每一环都不是孤立能力，而是在推动下一个环节，让官网持续变得更会获客、更可验证、更值得信任。",
+    en: "Click any module or let the wheel autoplay. Each layer fuels the next so the website keeps becoming more discoverable, more measurable, and more trusted.",
+  },
+  flywheelDemoDetailButton: { zh: "查看独立详情", en: "Open Module Detail" },
+  flywheelDemoWhyTag: { zh: "为什么是飞轮", en: "Why a Flywheel" },
+  flywheelDemoWhyTitle: { zh: "每个模块都在为下一环提供燃料", en: "Every module supplies momentum to the next" },
+  flywheelDemoGrowthLoopLabel: { zh: "AI 增长飞轮", en: "AI Growth Loop" },
+  flywheelDemoActiveModule: { zh: "当前模块", en: "Active Module" },
+  flywheelDemoModalLabel: { zh: "模块详情", en: "Module Detail" },
   moduleTag: { zh: "Interactive Engine Map", en: "Interactive Engine Map" },
   moduleTitle: { zh: "五大引擎不是孤立产品，而是一套协同增长系统", en: "The five engines are not isolated products. They form one coordinated growth system." },
   moduleBody: {
@@ -564,6 +1120,10 @@ function t(copy: LocalizedText, locale: Locale) {
   return copy[locale];
 }
 
+function displayFlywheelName(module: FlywheelModule, locale: Locale) {
+  return locale === "zh" && module.id === "orchestration" ? "智能执行中枢" : module.name;
+}
+
 function setMetaTag(attribute: "name" | "property", key: string, content: string) {
   let element = document.head.querySelector<HTMLMetaElement>(`meta[${attribute}="${key}"]`);
 
@@ -584,9 +1144,75 @@ function SectionTag({ children }: { children: string }) {
   );
 }
 
+function parseAnimatedStat(value: string) {
+  const match = value.match(/^([^\d-]*)(\d+(?:\.\d+)?)(.*)$/);
+
+  if (!match) {
+    return { prefix: "", number: 0, suffix: value, decimals: 0 };
+  }
+
+  const [, prefix, rawNumber, suffix] = match;
+  const decimals = rawNumber.includes(".") ? rawNumber.split(".")[1]?.length ?? 0 : 0;
+
+  return {
+    prefix,
+    number: Number(rawNumber),
+    suffix,
+    decimals,
+  };
+}
+
+function AnimatedStatValue({ value, delay = 0 }: { value: string; delay?: number }) {
+  const parsed = parseAnimatedStat(value);
+  const [displayValue, setDisplayValue] = useState(0);
+
+  useEffect(() => {
+    if (!parsed.number) {
+      return undefined;
+    }
+
+    let frameId = 0;
+    let timeoutId = 0;
+    const duration = 950;
+
+    const startAnimation = () => {
+      const start = performance.now();
+
+      const tick = (now: number) => {
+        const progress = Math.min((now - start) / duration, 1);
+        const eased = 1 - (1 - progress) * (1 - progress);
+        setDisplayValue(parsed.number * eased);
+
+        if (progress < 1) {
+          frameId = window.requestAnimationFrame(tick);
+        }
+      };
+
+      frameId = window.requestAnimationFrame(tick);
+    };
+
+    timeoutId = window.setTimeout(startAnimation, delay);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+      window.cancelAnimationFrame(frameId);
+    };
+  }, [delay, parsed.number]);
+
+  const formatted = parsed.decimals > 0 ? displayValue.toFixed(parsed.decimals) : Math.round(displayValue).toString();
+
+  return (
+    <span className="inline-block">
+      {parsed.prefix}
+      {formatted}
+      {parsed.suffix}
+    </span>
+  );
+}
+
 function BrandMark() {
   return (
-    <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-[#1f1d1d] shadow-[0_0_30px_rgba(245,197,92,0.12)]">
+    <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-[#1f1d1d] shadow-[0_0_30px_rgba(245,197,92,0.12)]">
       <img src={logoImage} alt="坚果猫 Logo" className="h-full w-full object-cover" />
     </div>
   );
@@ -642,18 +1268,76 @@ function EngineNode({
   );
 }
 
+function FlywheelDemoNode({
+  module,
+  index,
+  position,
+  isActive,
+  onActivate,
+}: {
+  module: FlywheelModule;
+  index: number;
+  position: OrbitPosition;
+  isActive: boolean;
+  onActivate: (index: number) => void;
+}) {
+  const Icon = module.icon;
+
+  return (
+    <motion.button
+      type="button"
+      onMouseEnter={() => onActivate(index)}
+      onFocus={() => onActivate(index)}
+      onClick={() => onActivate(index)}
+      className={cn(
+        "absolute z-20 flex h-24 w-24 -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-[1.8rem] border text-center backdrop-blur transition-all duration-300 md:h-28 md:w-28",
+        isActive ? "scale-105 border-white/35 bg-slate-950/80" : "border-white/10 bg-slate-950/45 hover:border-white/20 hover:bg-slate-950/60",
+      )}
+      style={{
+        left: `${position.x}%`,
+        top: `${position.y}%`,
+        boxShadow: isActive ? `0 0 0 1px ${module.accent} inset, 0 0 36px ${module.glow}` : undefined,
+      }}
+      whileHover={{ y: -4 }}
+      whileTap={{ scale: 0.98 }}
+      aria-pressed={isActive}
+      aria-label={displayFlywheelName(module, "zh")}
+    >
+      <div
+        className="flex h-10 w-10 items-center justify-center rounded-2xl border"
+        style={{
+          backgroundColor: module.glow,
+          borderColor: isActive ? module.accent : "rgba(255,255,255,0.12)",
+          color: module.accent,
+        }}
+      >
+        <Icon className="h-4 w-4" />
+      </div>
+      <span className="mt-2 text-lg font-semibold tracking-[0.18em]" style={{ color: isActive ? module.accent : "#F5F7FB" }}>
+        {module.letter}
+      </span>
+      <span className="text-[11px] uppercase tracking-[0.2em] text-slate-300">{displayFlywheelName(module, "zh")}</span>
+    </motion.button>
+  );
+}
+
 function Home() {
   const [locale, setLocale] = useState<Locale>("zh");
   const [activeIndex, setActiveIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const [flywheelDemoActiveIndex, setFlywheelDemoActiveIndex] = useState(0);
+  const [flywheelDemoPaused, setFlywheelDemoPaused] = useState(false);
   const [activeSection, setActiveSection] = useState("architecture");
   const [menuOpen, setMenuOpen] = useState(false);
   const [detailIndex, setDetailIndex] = useState<number | null>(null);
+  const [flywheelDemoDetailIndex, setFlywheelDemoDetailIndex] = useState<number | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [formState, setFormState] = useState<FormState>(defaultFormState);
 
   const activeCapability = capabilities[activeIndex];
   const detailCapability = detailIndex === null ? null : capabilities[detailIndex];
+  const activeFlywheelModule = flywheelModules[flywheelDemoActiveIndex];
+  const detailFlywheelModule = flywheelDemoDetailIndex === null ? null : flywheelModules[flywheelDemoDetailIndex];
 
   useEffect(() => {
     if (isPaused) {
@@ -668,6 +1352,20 @@ function Home() {
 
     return () => window.clearInterval(timer);
   }, [isPaused]);
+
+  useEffect(() => {
+    if (flywheelDemoPaused) {
+      return undefined;
+    }
+
+    const timer = window.setInterval(() => {
+      startTransition(() => {
+        setFlywheelDemoActiveIndex((current) => (current + 1) % flywheelModules.length);
+      });
+    }, 3600);
+
+    return () => window.clearInterval(timer);
+  }, [flywheelDemoPaused]);
 
   useEffect(() => {
     const sectionIds = navItems.map((item) => item.href.replace("#", ""));
@@ -781,19 +1479,20 @@ function Home() {
   }, [locale]);
 
   useEffect(() => {
-    if (detailIndex === null) {
+    if (detailIndex === null && flywheelDemoDetailIndex === null) {
       return undefined;
     }
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         setDetailIndex(null);
+        setFlywheelDemoDetailIndex(null);
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [detailIndex]);
+  }, [detailIndex, flywheelDemoDetailIndex]);
 
   const handleInputChange = (field: keyof FormState, value: string) => {
     setSubmitted(false);
@@ -815,11 +1514,16 @@ function Home() {
       <div className="relative mx-auto flex min-h-screen w-full max-w-[1440px] flex-col px-5 pb-20 pt-6 sm:px-6 lg:px-10">
         <header className="sticky top-4 z-40 mb-10 rounded-[1.6rem] border border-white/10 bg-slate-950/55 px-4 py-3 backdrop-blur-xl sm:px-5">
           <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-[14px]">
               <BrandMark />
               <div>
-                <p className="text-[11px] uppercase tracking-[0.32em] text-cyan-100/70">JGMAO</p>
-                <p className="text-sm text-white">{locale === "zh" ? "AI增长引擎" : "AI Growth Engine"}</p>
+                <p
+                  className="text-[1.05rem] font-semibold uppercase leading-none text-cyan-100/85"
+                  style={{ fontFamily: '"Sora", "IBM Plex Sans", sans-serif', letterSpacing: "0.18em" }}
+                >
+                  JGMAO
+                </p>
+                <p className="mt-[3px] text-sm text-white/78">{locale === "zh" ? "AI增长引擎" : "AI Growth Engine"}</p>
               </div>
             </div>
 
@@ -937,13 +1641,13 @@ function Home() {
               initial={{ opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7 }}
-              className="mt-5 max-w-4xl text-4xl font-semibold tracking-tight text-white sm:text-5xl lg:text-[4.35rem] lg:leading-[1.03]"
+              className="mt-5 max-w-4xl text-[2.85rem] font-semibold tracking-tight text-white sm:text-[3.55rem] lg:text-[4.45rem] lg:leading-[1.03]"
             >
               {locale === "zh" ? (
                 <>
-                  帮助企业在 AI 时代
+                  帮助企业构建
                   <br />
-                  构建 <span className="bg-gradient-to-r from-cyan-200 via-amber-100 to-violet-200 bg-clip-text text-transparent">AI 增长飞轮</span>
+                  <span className="bg-gradient-to-r from-cyan-200 via-amber-100 to-violet-200 bg-clip-text text-transparent">AI 时代的增长飞轮</span>
                 </>
               ) : (
                 <>
@@ -972,10 +1676,12 @@ function Home() {
             </div>
 
             <div className="mt-8 grid gap-4 sm:grid-cols-3">
-              {heroStats.map((item) => (
+              {heroStats.map((item, index) => (
                 <article key={item.label.en} className="rounded-[1.7rem] border border-white/10 bg-white/6 p-5 shadow-[0_18px_60px_rgba(0,0,0,0.18)] backdrop-blur">
                   <p className="text-xs uppercase tracking-[0.24em] text-slate-400">{t(item.label, locale)}</p>
-                  <p className="mt-3 text-3xl font-semibold tracking-tight text-white">{item.value}</p>
+                  <p className="mt-3 text-3xl font-semibold tracking-tight text-white">
+                    <AnimatedStatValue value={item.value} delay={index * 120} />
+                  </p>
                   <p className="mt-3 text-sm leading-6 text-slate-300">{t(item.detail, locale)}</p>
                 </article>
               ))}
@@ -997,45 +1703,64 @@ function Home() {
                     {locale === "zh" ? "增长不是一条链路，而是一个会自我强化的系统" : "Growth is not a single funnel. It is a self-reinforcing system."}
                   </h2>
                 </div>
-                <div className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-4 py-2 text-xs uppercase tracking-[0.18em] text-emerald-100">
+                <motion.div
+                  key={`loop-status-${flywheelDemoActiveIndex}`}
+                  initial={{ scale: 0.985, opacity: 0.92, boxShadow: "0 0 0 rgba(16,185,129,0)" }}
+                  animate={{
+                    scale: 1,
+                    opacity: 1,
+                    boxShadow: [
+                      "0 0 0 rgba(16,185,129,0)",
+                      "0 0 24px rgba(52,211,153,0.22)",
+                      "0 0 10px rgba(52,211,153,0.1)",
+                    ],
+                  }}
+                  transition={{ duration: 0.72, times: [0, 0.4, 1], ease: "easeOut" }}
+                  className="status-badge-live rounded-full border border-emerald-400/20 bg-emerald-400/10 px-4 py-2 text-xs uppercase tracking-[0.18em] text-emerald-100"
+                >
+                  <span className="status-badge-dot" aria-hidden="true" />
                   {locale === "zh" ? "飞轮运行中" : "Loop Active"}
-                </div>
+                </motion.div>
               </div>
 
-              <div className="mt-5 space-y-4">
-                {[
-                  {
-                    label: { zh: "采集层", en: "Signal Layer" },
-                    value: { zh: "Search + Site + CRM + AI 引用", en: "Search + Site + CRM + AI citations" },
-                    icon: Gauge,
-                  },
-                  {
-                    label: { zh: "策略层", en: "Strategy Layer" },
-                    value: { zh: "Journey → Generation → Monitoring → Authority", en: "Journey → Generation → Monitoring → Authority" },
-                    icon: Bot,
-                  },
-                  {
-                    label: { zh: "执行层", en: "Execution Layer" },
-                    value: { zh: "Orchestration 自动发布 / 回写 / 复盘", en: "Orchestration automates publishing, write-back, and review" },
-                    icon: Workflow,
-                  },
-                ].map((row) => {
-                  const Icon = row.icon;
+              <div className="snapshot-layer-group mt-5">
+                <div className="snapshot-flow-line" aria-hidden="true">
+                  <span className="snapshot-flow-dot" />
+                </div>
+                <div className="space-y-4">
+                  {snapshotLayers.map((row, index) => {
+                    const Icon = row.icon;
 
-                  return (
-                    <div key={row.label.en} className="rounded-[1.4rem] border border-white/10 bg-white/6 p-4">
-                      <div className="flex items-start gap-4">
-                        <div className="rounded-2xl border border-white/10 bg-slate-900/80 p-3 text-cyan-100">
-                          <Icon className="h-4 w-4" />
+                    return (
+                      <motion.div
+                        key={row.label.en}
+                        initial={{ opacity: 0, y: 18 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true, amount: 0.45 }}
+                        transition={{ duration: 0.42, delay: index * 0.1 }}
+                        className="snapshot-layer-card relative rounded-[1.4rem] border border-white/10 bg-white/6 p-4"
+                      >
+                        <div className="flex items-start gap-4">
+                          <div
+                            className="snapshot-layer-icon rounded-2xl border border-white/10 bg-slate-900/80 p-3 text-cyan-100"
+                            style={
+                              {
+                                "--snapshot-accent": row.accent,
+                                "--snapshot-glow": row.glow,
+                              } as CSSProperties
+                            }
+                          >
+                            <Icon className="h-4 w-4" />
+                          </div>
+                          <div>
+                            <p className="text-xs uppercase tracking-[0.22em] text-slate-400">{t(row.label, locale)}</p>
+                            <p className="mt-2 text-sm leading-7 text-white">{t(row.value, locale)}</p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-xs uppercase tracking-[0.22em] text-slate-400">{t(row.label, locale)}</p>
-                          <p className="mt-2 text-sm leading-7 text-white">{t(row.value, locale)}</p>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
+                      </motion.div>
+                    );
+                  })}
+                </div>
               </div>
 
               <div className="mt-5 rounded-[1.5rem] border border-amber-300/15 bg-amber-300/8 p-5">
@@ -1048,6 +1773,205 @@ function Home() {
               </div>
             </div>
           </motion.div>
+        </section>
+
+        <section id="flywheel-demo" className="grid gap-8 py-14 lg:grid-cols-[1.08fr_0.92fr]">
+          <div
+            className="relative overflow-hidden rounded-[2.2rem] border border-white/10 bg-slate-950/50 p-6 shadow-[0_24px_100px_rgba(0,0,0,0.32)] backdrop-blur-xl"
+            onMouseEnter={() => setFlywheelDemoPaused(true)}
+            onMouseLeave={() => setFlywheelDemoPaused(false)}
+          >
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(82,230,255,0.12),transparent_30%),radial-gradient(circle_at_bottom,rgba(245,197,92,0.10),transparent_28%)]" />
+            <div className="relative">
+              <SectionTag>{t(brandCopy.flywheelDemoTag, locale)}</SectionTag>
+              <h2 className="mt-5 text-3xl font-semibold tracking-tight text-white sm:text-[2.6rem]">{t(brandCopy.flywheelDemoTitle, locale)}</h2>
+              <p className="mt-4 max-w-2xl text-base leading-8 text-slate-300">{t(brandCopy.flywheelDemoBody, locale)}</p>
+
+              <div className="relative mx-auto mt-8 aspect-square w-full max-w-[640px]">
+                <div className="flywheel-ring absolute inset-[10%] rounded-full border border-white/10 opacity-80" />
+                <div className="flywheel-ring-reverse absolute inset-[18%] rounded-full border border-dashed border-white/10 opacity-80" />
+                <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_center,rgba(82,230,255,0.08),transparent_38%),radial-gradient(circle_at_center,rgba(245,197,92,0.06),transparent_60%)]" />
+
+                <svg viewBox="0 0 100 100" className="absolute inset-0 h-full w-full">
+                  <circle cx="50" cy="50" r="35" stroke="rgba(255,255,255,0.08)" strokeWidth="0.8" fill="none" />
+                  <circle cx="50" cy="50" r="22" stroke="rgba(255,255,255,0.06)" strokeWidth="0.6" fill="none" />
+                  {orbitPositions.map((position, index) => {
+                    const module = flywheelModules[index];
+                    const isActive = index === flywheelDemoActiveIndex;
+
+                    return (
+                      <g key={module.id}>
+                        <line
+                          x1="50"
+                          y1="50"
+                          x2={position.x}
+                          y2={position.y}
+                          stroke={isActive ? module.accent : "rgba(255,255,255,0.12)"}
+                          strokeWidth={isActive ? 1.4 : 0.7}
+                          strokeDasharray={isActive ? "0" : "3 3"}
+                          opacity={isActive ? 0.9 : 0.55}
+                        />
+                        <circle cx={position.x} cy={position.y} r="1.8" fill={isActive ? module.accent : "rgba(255,255,255,0.35)"} />
+                      </g>
+                    );
+                  })}
+                </svg>
+
+                {flywheelModules.map((module, index) => (
+                  <FlywheelDemoNode
+                    key={module.id}
+                    module={module}
+                    index={index}
+                    position={orbitPositions[index]}
+                    isActive={index === flywheelDemoActiveIndex}
+                    onActivate={(nextIndex) => {
+                      setFlywheelDemoActiveIndex(nextIndex);
+                      setFlywheelDemoPaused(true);
+                    }}
+                  />
+                ))}
+
+                <motion.div
+                  className="absolute left-1/2 top-1/2 z-10 flex h-[38%] w-[38%] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-full border border-white/12 bg-slate-950/80 text-center shadow-[0_0_80px_rgba(0,0,0,0.38)] backdrop-blur-xl"
+                  animate={{ boxShadow: [`0 0 40px ${activeFlywheelModule.glow}`, `0 0 72px ${activeFlywheelModule.glow}`, `0 0 40px ${activeFlywheelModule.glow}`] }}
+                  transition={{ duration: 3.2, repeat: Number.POSITIVE_INFINITY }}
+                >
+                  <div
+                    className="flex h-14 w-14 items-center justify-center rounded-2xl border text-xl font-semibold"
+                    style={{ borderColor: activeFlywheelModule.accent, color: activeFlywheelModule.accent, backgroundColor: activeFlywheelModule.glow }}
+                  >
+                    {activeFlywheelModule.letter}
+                  </div>
+                  <p className="mt-4 text-xs uppercase tracking-[0.28em] text-slate-400">{t(brandCopy.flywheelDemoGrowthLoopLabel, locale)}</p>
+                  <p className="mt-2 text-2xl font-semibold text-white">{displayFlywheelName(activeFlywheelModule, locale)}</p>
+                  <p className="mt-2 max-w-[16rem] text-sm leading-6 text-slate-300">{t(activeFlywheelModule.title, locale)}</p>
+                </motion.div>
+              </div>
+
+              <div className="mt-8 grid gap-3 sm:grid-cols-5">
+                {flywheelModules.map((module, index) => (
+                  <button
+                    key={module.id}
+                    type="button"
+                    onClick={() => {
+                      setFlywheelDemoActiveIndex(index);
+                      setFlywheelDemoPaused(true);
+                    }}
+                    className={cn(
+                      "rounded-2xl border px-3 py-3 text-left transition",
+                      index === flywheelDemoActiveIndex ? "bg-white/10 text-white" : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/8",
+                    )}
+                    style={{ borderColor: index === flywheelDemoActiveIndex ? module.accent : undefined }}
+                  >
+                    <p className="text-[11px] uppercase tracking-[0.2em]" style={{ color: index === flywheelDemoActiveIndex ? module.accent : undefined }}>
+                      {module.letter}
+                    </p>
+                    <p className="mt-2 text-sm font-medium">{displayFlywheelName(module, locale)}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-6">
+            <AnimatePresence mode="wait">
+              <motion.article
+                key={`${activeFlywheelModule.id}-${locale}`}
+                initial={{ opacity: 0, y: 18 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -18 }}
+                transition={{ duration: 0.3 }}
+                className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/6 p-6 shadow-[0_24px_100px_rgba(0,0,0,0.28)] backdrop-blur-xl"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.26em] text-slate-400">{t(activeFlywheelModule.outputLabel, locale)}</p>
+                    <h3 className="mt-3 text-3xl font-semibold tracking-tight text-white">
+                      {displayFlywheelName(activeFlywheelModule, locale)}
+                      <span className="ml-3 text-lg font-medium text-slate-400">{t(activeFlywheelModule.title, locale)}</span>
+                    </h3>
+                  </div>
+                  <div
+                    className="rounded-[1.4rem] border px-4 py-3 text-right"
+                    style={{ borderColor: activeFlywheelModule.accent, backgroundColor: activeFlywheelModule.glow }}
+                  >
+                    <p className="text-xs uppercase tracking-[0.18em]" style={{ color: activeFlywheelModule.accent }}>
+                      {t(brandCopy.flywheelDemoActiveModule, locale)}
+                    </p>
+                    <p className="mt-2 text-3xl font-semibold text-white">{activeFlywheelModule.letter}</p>
+                  </div>
+                </div>
+
+                <p className="mt-5 text-base leading-8 text-slate-300">{t(activeFlywheelModule.description, locale)}</p>
+
+                <div className="mt-6 grid gap-4 sm:grid-cols-3">
+                  {activeFlywheelModule.metrics.map((metric) => (
+                    <div key={metric.label.en} className="rounded-[1.4rem] border border-white/10 bg-slate-950/55 p-4">
+                      <p className="text-xs uppercase tracking-[0.22em] text-slate-400">{t(metric.label, locale)}</p>
+                      <p className="mt-3 text-2xl font-semibold text-white">{metric.value}</p>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-6 grid gap-4 md:grid-cols-2">
+                  <div className="rounded-[1.4rem] border border-white/10 bg-slate-950/55 p-5">
+                    <p className="text-xs uppercase tracking-[0.22em] text-slate-400">{t(activeFlywheelModule.outputLabel, locale)}</p>
+                    <div className="mt-4 space-y-3">
+                      {activeFlywheelModule.outputs.map((item) => (
+                        <div key={item.en} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200">
+                          {t(item, locale)}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="rounded-[1.4rem] border border-white/10 bg-slate-950/55 p-5">
+                    <p className="text-xs uppercase tracking-[0.22em] text-slate-400">{t(activeFlywheelModule.integrationTitle, locale)}</p>
+                    <div className="mt-4 space-y-3">
+                      {activeFlywheelModule.integrations.map((item) => (
+                        <div key={item.en} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200">
+                          {t(item, locale)}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-6 flex flex-col gap-4 rounded-[1.4rem] border border-white/10 bg-slate-950/55 p-5 sm:flex-row sm:items-center sm:justify-between">
+                  <p className="max-w-xl text-sm leading-7 text-slate-300">{t(activeFlywheelModule.nextStep, locale)}</p>
+                  <button
+                    type="button"
+                    onClick={() => setFlywheelDemoDetailIndex(flywheelDemoActiveIndex)}
+                    className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium text-white transition hover:bg-white/8"
+                  >
+                    {t(brandCopy.flywheelDemoDetailButton, locale)}
+                    <MoveUpRight className="h-4 w-4" />
+                  </button>
+                </div>
+              </motion.article>
+            </AnimatePresence>
+
+            <article className="rounded-[2rem] border border-white/10 bg-slate-950/45 p-6 backdrop-blur-xl">
+              <p className="text-xs uppercase tracking-[0.24em] text-slate-400">{t(brandCopy.flywheelDemoWhyTag, locale)}</p>
+              <h3 className="mt-3 text-2xl font-semibold text-white">{t(brandCopy.flywheelDemoWhyTitle, locale)}</h3>
+              <div className="mt-6 space-y-4">
+                {orchestrationRail.map((item, index) => (
+                  <div key={item.step} className="flex gap-4">
+                    <div className="flex flex-col items-center">
+                      <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-sm font-semibold text-white">
+                        {item.step}
+                      </div>
+                      {index < orchestrationRail.length - 1 ? <div className="mt-2 h-full w-px bg-white/10" /> : null}
+                    </div>
+                    <div className="pb-5">
+                      <p className="text-lg font-medium text-white">{t(item.title, locale)}</p>
+                      <p className="mt-2 text-sm leading-7 text-slate-300">{t(item.description, locale)}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </article>
+          </div>
         </section>
 
         <section id="architecture" className="grid gap-6 py-14 lg:grid-cols-[0.88fr_1.12fr]">
@@ -1496,6 +2420,103 @@ function Home() {
           </div>
         </section>
       </div>
+
+      <AnimatePresence>
+        {detailFlywheelModule ? (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/75 px-4 py-8 backdrop-blur-md"
+            onClick={() => setFlywheelDemoDetailIndex(null)}
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 20, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 20, scale: 0.98 }}
+              transition={{ duration: 0.25 }}
+              className="relative max-h-[90vh] w-full max-w-4xl overflow-auto rounded-[2rem] border border-white/10 bg-[#09101f] p-6 shadow-[0_30px_120px_rgba(0,0,0,0.5)]"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(245,197,92,0.14),transparent_26%),radial-gradient(circle_at_bottom_left,rgba(82,230,255,0.12),transparent_28%)]" />
+              <div className="relative">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <div
+                      className="flex h-14 w-14 items-center justify-center rounded-[1.4rem] border text-xl font-semibold"
+                      style={{ borderColor: detailFlywheelModule.accent, color: detailFlywheelModule.accent, backgroundColor: detailFlywheelModule.glow }}
+                    >
+                      {detailFlywheelModule.letter}
+                    </div>
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.24em] text-slate-400">{t(brandCopy.flywheelDemoModalLabel, locale)}</p>
+                      <h3 className="mt-2 text-3xl font-semibold text-white">
+                        {displayFlywheelName(detailFlywheelModule, locale)}
+                        <span className="ml-3 text-lg font-medium text-slate-400">{t(detailFlywheelModule.title, locale)}</span>
+                      </h3>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setFlywheelDemoDetailIndex(null)}
+                    className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-white transition hover:bg-white/10"
+                    aria-label={t(brandCopy.modalClose, locale)}
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+
+                <p className="mt-6 text-base leading-8 text-slate-300">{t(detailFlywheelModule.modalBody, locale)}</p>
+
+                <div className="mt-8 grid gap-4 md:grid-cols-3">
+                  {detailFlywheelModule.metrics.map((metric) => (
+                    <div key={metric.label.en} className="rounded-[1.4rem] border border-white/10 bg-white/6 p-5">
+                      <p className="text-xs uppercase tracking-[0.22em] text-slate-400">{t(metric.label, locale)}</p>
+                      <p className="mt-3 text-2xl font-semibold text-white">{metric.value}</p>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-8 grid gap-4 lg:grid-cols-[1fr_1fr]">
+                  <div className="rounded-[1.5rem] border border-white/10 bg-slate-950/55 p-5">
+                    <p className="text-xs uppercase tracking-[0.22em] text-slate-400">{t(detailFlywheelModule.outputLabel, locale)}</p>
+                    <div className="mt-4 space-y-3">
+                      {detailFlywheelModule.outputs.map((item) => (
+                        <div key={item.en} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200">
+                          {t(item, locale)}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="rounded-[1.5rem] border border-white/10 bg-slate-950/55 p-5">
+                    <p className="text-xs uppercase tracking-[0.22em] text-slate-400">{t(detailFlywheelModule.integrationTitle, locale)}</p>
+                    <div className="mt-4 space-y-3">
+                      {detailFlywheelModule.integrations.map((item) => (
+                        <div key={item.en} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200">
+                          {t(item, locale)}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-8 rounded-[1.5rem] border border-white/10 bg-white/6 p-5">
+                  <p className="text-xs uppercase tracking-[0.22em] text-slate-400">{locale === "zh" ? "关键输入信号" : "Key Signals"}</p>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {detailFlywheelModule.signals.map((signal) => (
+                      <span key={signal.en} className="rounded-full border px-3 py-2 text-sm text-slate-200" style={{ borderColor: `${detailFlywheelModule.accent}66`, backgroundColor: detailFlywheelModule.glow }}>
+                        {t(signal, locale)}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
 
       <AnimatePresence>
         {detailCapability ? (
