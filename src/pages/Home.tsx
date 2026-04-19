@@ -18,7 +18,7 @@ import {
   Workflow,
   X,
 } from "lucide-react";
-import { startTransition, useEffect, useState, type CSSProperties, type FormEvent } from "react";
+import { startTransition, useEffect, useState, type CSSProperties, type ReactNode } from "react";
 
 import logoImage from "@/assets/jgmao-logo-black-square.png";
 import { cn } from "@/lib/utils";
@@ -60,6 +60,7 @@ type FlywheelModule = {
   letter: string;
   name: string;
   title: LocalizedText;
+  compactTitle: LocalizedText;
   summary: LocalizedText;
   description: LocalizedText;
   modalBody: LocalizedText;
@@ -105,6 +106,14 @@ type GeoBlueprint = {
   icon: LucideIcon;
 };
 
+type ScenarioCard = {
+  title: LocalizedText;
+  description: LocalizedText;
+  icon: LucideIcon;
+  accent: string;
+  glow: string;
+};
+
 type CaseStudy = {
   company: string;
   sector: LocalizedText;
@@ -119,21 +128,11 @@ type FaqItem = {
   answer: LocalizedText;
 };
 
-type FormState = {
-  name: string;
-  company: string;
-  email: string;
-  website: string;
-  brief: string;
-};
-
 const siteUrl = "http://49.232.252.118:8800/";
-const defaultFormState: FormState = { name: "", company: "", email: "", website: "", brief: "" };
-
 const navItems: NavItem[] = [
   { href: "#flywheel-demo", label: { zh: "增长飞轮", en: "Growth Flywheel" } },
-  { href: "#architecture", label: { zh: "五大引擎", en: "Architecture" } },
-  { href: "#modules", label: { zh: "核心能力", en: "Modules" } },
+  { href: "#architecture", label: { zh: "核心场景", en: "Architecture" } },
+  { href: "#modules", label: { zh: "五大引擎", en: "Modules" } },
   { href: "#cases", label: { zh: "案例", en: "Cases" } },
   { href: "#faq", label: { zh: "FAQ", en: "FAQ" } },
   { href: "#contact", label: { zh: "联系咨询", en: "Contact" } },
@@ -254,6 +253,10 @@ const flywheelModules: FlywheelModule[] = [
       zh: "用户旅程与增长路径",
       en: "User Journey and Growth Paths",
     },
+    compactTitle: {
+      zh: "增长路径",
+      en: "Growth Paths",
+    },
     summary: {
       zh: "先把用户如何发现、比较、咨询、转化与复访拆成可优化的路径图。",
       en: "Map how users discover, compare, ask, convert, and return before optimizing anything else.",
@@ -340,6 +343,10 @@ const flywheelModules: FlywheelModule[] = [
     title: {
       zh: "内容 / 站点 / 线索 / 转化的生成能力",
       en: "Generation for Content, Pages, Leads, and Conversion",
+    },
+    compactTitle: {
+      zh: "生成能力",
+      en: "Generation System",
     },
     summary: {
       zh: "把战略拆成可规模化生成的页面、内容、CTA 与线索承接资产。",
@@ -428,6 +435,10 @@ const flywheelModules: FlywheelModule[] = [
       zh: "监测、验证、反馈",
       en: "Monitoring, Validation, and Feedback",
     },
+    compactTitle: {
+      zh: "监测反馈",
+      en: "Monitoring Loop",
+    },
     summary: {
       zh: "每一个增长动作都被追踪、验证、归因，然后回流到下一轮优化。",
       en: "Every growth action is traced, validated, attributed, and fed back into the next cycle.",
@@ -515,6 +526,10 @@ const flywheelModules: FlywheelModule[] = [
       zh: "采信、可信度、权威表达",
       en: "Authority, Trust, and Credible Expression",
     },
+    compactTitle: {
+      zh: "可信表达",
+      en: "Trust Layer",
+    },
     summary: {
       zh: "让官网内容更容易被用户相信，也更容易被 AI 抽取与引用。",
       en: "Make website content easier for people to trust and easier for AI to cite.",
@@ -601,6 +616,10 @@ const flywheelModules: FlywheelModule[] = [
     title: {
       zh: "智能执行中枢",
       en: "AI Automation and Closed-Loop Orchestration",
+    },
+    compactTitle: {
+      zh: "智能执行",
+      en: "Automation Hub",
     },
     summary: {
       zh: "把前面四个模块串成持续运转的自动化增长系统，而不是一次性交付。",
@@ -958,6 +977,67 @@ const geoBlueprints: GeoBlueprint[] = [
   },
 ];
 
+const scenarioCards: ScenarioCard[] = [
+  {
+    title: { zh: "AI 搜索与问答里品牌不够可见", en: "Brand visibility is weak in AI search and answer experiences" },
+    description: {
+      zh: "官网有内容，但结构和表达不适合被 AI 抽取、引用和采信，品牌在高意图问题里很难被看见。",
+      en: "The site has content, but its structure and expression are weak for AI retrieval, citation, and trust in high-intent question scenarios.",
+    },
+    icon: Globe2,
+    accent: "#5AE4FF",
+    glow: "rgba(90, 228, 255, 0.24)",
+  },
+  {
+    title: { zh: "内容产能不稳定，难以持续覆盖问题场景", en: "Content production is inconsistent and cannot keep up with demand" },
+    description: {
+      zh: "专题页、问答页、案例和行业内容依赖人工堆叠，更新慢，难以形成持续扩张的内容系统。",
+      en: "Landing pages, Q&A content, case studies, and industry insight rely on manual effort and fail to scale into a durable publishing system.",
+    },
+    icon: FileSearch,
+    accent: "#A1F56A",
+    glow: "rgba(161, 245, 106, 0.22)",
+  },
+  {
+    title: { zh: "官网承接弱，访客难以理解和转化", en: "The website cannot clearly capture intent or convert visitors" },
+    description: {
+      zh: "页面层级、信任表达和 CTA 路径不清晰，访客虽然来了，却不知道下一步，也难以快速建立信任。",
+      en: "Page hierarchy, trust signals, and CTA paths are unclear, so visitors arrive but fail to understand the next step or trust the offer quickly.",
+    },
+    icon: Sparkles,
+    accent: "#F3C56B",
+    glow: "rgba(243, 197, 107, 0.22)",
+  },
+  {
+    title: { zh: "线索承接分散，销售跟进缺少闭环", en: "Lead handling is fragmented and follow-up lacks a closed loop" },
+    description: {
+      zh: "咨询入口、表单、标签和分发逻辑没有连起来，导致高意图线索无法被快速识别、路由和跟进。",
+      en: "Consultation entry points, forms, tags, and routing are disconnected, so high-intent leads are not captured, routed, or followed up quickly.",
+    },
+    icon: Database,
+    accent: "#7CB6FF",
+    glow: "rgba(124, 182, 255, 0.22)",
+  },
+  {
+    title: { zh: "看不清 AI 推荐带来的结果与质量", en: "Recommendation impact and quality are hard to evaluate" },
+    description: {
+      zh: "企业知道流量在变，但不知道 AI 为什么推荐、哪些内容在推动商机，以及该如何持续优化。",
+      en: "The company sees changing traffic but lacks visibility into why AI recommends it, which assets create opportunities, and how to improve systematically.",
+    },
+    icon: Radar,
+    accent: "#FF8C8C",
+    glow: "rgba(255, 140, 140, 0.22)",
+  },
+];
+
+const capabilityLayers: LocalizedText[] = [
+  { zh: "可见性层", en: "Visibility Layer" },
+  { zh: "生产层", en: "Production Layer" },
+  { zh: "承接层", en: "Conversion Layer" },
+  { zh: "转化层", en: "Lead Layer" },
+  { zh: "判断层", en: "Decision Layer" },
+];
+
 const caseStudies: CaseStudy[] = [
   {
     company: "NovaStack",
@@ -1005,9 +1085,9 @@ const caseStudies: CaseStudy[] = [
 
 const faqItems: FaqItem[] = [
   {
-    question: { zh: "什么是 JGMAO AI 增长引擎？", en: "What is the JGMAO AI Growth Engine?" },
+    question: { zh: "什么是坚果猫 JGMAO AI 增长引擎？", en: "What is the JGMAO AI Growth Engine?" },
     answer: {
-      zh: "JGMAO AI 增长引擎是一套帮助企业在 AI 时代构建增长飞轮的系统，包含 GEO 优化引擎、AI 内容工厂、AI 增长网站、智能获客系统和 AI 推荐分析五大部分。",
+      zh: "坚果猫 JGMAO AI 增长引擎是一套帮助企业在 AI 时代构建增长飞轮的系统，包含 GEO 优化引擎、AI 内容工厂、AI 增长网站、智能获客系统和 AI 推荐分析五大部分。",
       en: "JGMAO AI Growth Engine is a system for helping enterprises build AI growth flywheels, combining a GEO engine, AI content factory, AI growth website, intelligent lead system, and AI recommendation analytics.",
     },
   },
@@ -1042,17 +1122,17 @@ const faqItems: FaqItem[] = [
 ];
 
 const brandCopy = {
-  heroTag: { zh: "JGMAO AI Growth Engine", en: "JGMAO AI Growth Engine" },
+  heroTag: { zh: "AI时代企业增长系统", en: "Enterprise growth system for the AI era" },
   heroTitle: { zh: "帮助企业构建 AI 时代的增长飞轮", en: "Helping enterprises build AI growth flywheels in the AI era" },
   heroBody: {
     zh: "帮助企业把AI可见性、内容、官网、获客与推荐判断连成一个真正可运转的增长系统。",
     en: "JGMAO AI Growth Engine combines five parts: GEO optimization, an AI content factory, an AI growth website, an intelligent lead system, and AI recommendation analytics to connect visibility, content, conversion, and feedback into one operating system.",
   },
-  architectureTag: { zh: "Brand Architecture", en: "Brand Architecture" },
-  architectureTitle: { zh: "五大引擎", en: "JGMAO AI Growth Engine includes five core parts" },
+  architectureTag: { zh: "Core Scenarios", en: "Core Scenarios" },
+  architectureTitle: { zh: "核心场景：适用问题", en: "Core scenarios: where this system fits" },
   architectureBody: {
-    zh: "围绕 AI 可见性、内容生产、官网承接、智能获客与推荐决策协同运转，最终形成完整的 AI 增长飞轮。",
-    en: "The core brand defines the operating model for enterprise growth in the AI era, while the five engines cover visibility, content production, website conversion, intelligent lead capture, and recommendation intelligence.",
+    zh: "如果企业正在面临 AI 可见性不足、内容生产不稳定、官网承接弱、线索闭环断裂，或者看不清推荐结果质量，这一套增长系统才真正有价值。",
+    en: "This system is most useful when enterprises face weak AI visibility, inconsistent content production, poor website conversion, fragmented lead handling, or weak recommendation insight.",
   },
   flywheelDemoTag: { zh: "Interactive Flywheel", en: "Interactive Flywheel" },
   flywheelDemoTitle: { zh: "JGMAO增长飞轮", en: "Use one interactive growth flywheel to explain all five JGMAO modules clearly" },
@@ -1067,9 +1147,9 @@ const brandCopy = {
   flywheelDemoActiveModule: { zh: "当前模块", en: "Active Module" },
   flywheelDemoModalLabel: { zh: "模块详情", en: "Module Detail" },
   moduleTag: { zh: "Interactive Engine Map", en: "Interactive Engine Map" },
-  moduleTitle: { zh: "五大引擎协同运转，形成完整的 AI 增长飞轮。", en: "The five engines are not isolated products. They form one coordinated growth system." },
+  moduleTitle: { zh: "五大引擎：核心能力", en: "The five engines are not isolated products. They form one coordinated growth system." },
   moduleBody: {
-    zh: "点击任意引擎，查看它在业务增长飞轮中的作用与连接关系。每个引擎都能独立发挥作用，彼此协同后构成完整的 AI 增长体系。",
+    zh: "每个引擎都能独立发挥作用，彼此协同后形成完整的 AI 增长飞轮。",
     en: "Click any engine to see how it contributes to site-wide GEO, content, conversion, and recommendation intelligence. Each part can work alone, but together they create a complete AI growth engine.",
   },
   detailButton: { zh: "查看引擎详情", en: "Open Engine Detail" },
@@ -1080,22 +1160,22 @@ const brandCopy = {
     en: "We treat GEO as a full-site structural layer. Heading hierarchy, FAQ design, answer blocks, proof-heavy case studies, CTA paths, and lead write-back are optimized together so AI systems can understand the site and buyers can convert more easily.",
   },
   casesTag: { zh: "Case Proof", en: "Case Proof" },
-  casesTitle: { zh: "当五大引擎协同工作，官网才会真正变成增长资产", en: "A website becomes a growth asset when all five engines work together" },
+  casesTitle: { zh: "增长飞轮案例", en: "Growth Flywheel Cases" },
   casesBody: {
-    zh: "案例区的价值不只是证明我们做过项目，而是展示五大引擎如何共同提升 AI 可见性、内容规模、线索质量与推荐分析能力。",
-    en: "Case studies do more than prove experience. They show how the five engines raise AI visibility, content scale, lead quality, and recommendation intelligence together.",
+    zh: "让内容、流量、线索、AI 推荐与转化形成联动，驱动持续运转的增长飞轮。",
+    en: "A website becomes a growth asset when all five engines work together.",
   },
-  faqTag: { zh: "FAQ For GEO", en: "FAQ For GEO" },
-  faqTitle: { zh: "FAQ 是网站 GEO 的关键内容层", en: "FAQ is a critical content layer for website GEO" },
+  faqTag: { zh: "FAQ", en: "FAQ" },
+  faqTitle: { zh: "FAQ", en: "FAQ" },
   faqBody: {
-    zh: "下面这些问答不仅服务访客，也服务 AI。它们会让模型更容易理解 JGMAO 的结构、价值和适用场景。",
+    zh: "这些常见问题帮助你更好了解坚果猫JGMAO。",
     en: "These answers are written for both buyers and AI systems. They make it easier to understand JGMAO’s structure, value, and use cases.",
   },
-  contactTag: { zh: "Lead Conversion", en: "Lead Conversion" },
-  contactTitle: { zh: "让网站访问、AI 推荐与销售线索真正连起来", en: "Connect website visits, AI recommendations, and real pipeline" },
+  contactTag: { zh: "联系我们", en: "Contact" },
+  contactTitle: { zh: "坚果猫AI智能体", en: "JianGuoMao AI Agent" },
   contactBody: {
-    zh: "如果你想围绕 GEO、内容工厂、官网转化和推荐分析重构现有网站，可以直接提交当前情况，我们会基于五大引擎给出站点升级路径。",
-    en: "If you want to rebuild an existing website around GEO, content production, conversion, and recommendation analytics, submit your current situation and we can propose an upgrade path based on the five engines.",
+    zh: "打开对话窗口，即可连接坚果猫智能客服，快速说明你的业务问题、当前网站情况与合作需求。",
+    en: "Open the chat window to connect with the JianGuoMao AI concierge and quickly share your business goals, website context, and project needs.",
   },
   formSuccess: {
     zh: "信息已记录。下一步可以把这份表单接到 CRM、日历预约或顾问分发流程。",
@@ -1111,17 +1191,105 @@ const brandCopy = {
   modalClose: { zh: "关闭", en: "Close" },
 };
 
-const topQuickFacts = [
-  { zh: "GEO + Content + Website + Leads + Analytics", en: "GEO + Content + Website + Leads + Analytics" },
-  { zh: "AI时代企业增长系统", en: "Enterprise growth system for the AI era" },
-];
+const topQuickFacts: LocalizedText[] = [];
 
 function t(copy: LocalizedText, locale: Locale) {
   return copy[locale];
 }
 
+function renderInlineFormattedText(text: string) {
+  const parts = text.split(/(\*\*[^*]+\*\*)/g);
+
+  return parts.map((part, index) => {
+    const match = part.match(/^\*\*([^*]+)\*\*$/);
+    if (match) {
+      return (
+        <strong key={`strong-${index}`} className="font-semibold text-white">
+          {match[1]}
+        </strong>
+      );
+    }
+
+    return <span key={`span-${index}`}>{part}</span>;
+  });
+}
+
+function renderChatMessageContent(text: string): ReactNode[] {
+  const lines = text.split(/\r?\n/);
+  const nodes: ReactNode[] = [];
+
+  for (let index = 0; index < lines.length; index += 1) {
+    const rawLine = lines[index];
+    const line = rawLine.trim();
+
+    if (!line) {
+      continue;
+    }
+
+    if (line === "---") {
+      nodes.push(<div key={`divider-${index}`} className="my-2 border-t border-white/10" />);
+      continue;
+    }
+
+    if (line.startsWith("### ")) {
+      nodes.push(
+        <h4 key={`h3-${index}`} className="mt-2 text-sm font-semibold text-white">
+          {renderInlineFormattedText(line.slice(4))}
+        </h4>,
+      );
+      continue;
+    }
+
+    if (line.startsWith("## ")) {
+      nodes.push(
+        <h3 key={`h2-${index}`} className="mt-2 text-sm font-semibold text-white">
+          {renderInlineFormattedText(line.slice(3))}
+        </h3>,
+      );
+      continue;
+    }
+
+    if (line.startsWith("# ")) {
+      nodes.push(
+        <h2 key={`h1-${index}`} className="mt-2 text-base font-semibold text-white">
+          {renderInlineFormattedText(line.slice(2))}
+        </h2>,
+      );
+      continue;
+    }
+
+    if (line.startsWith("- ")) {
+      const items: string[] = [line.slice(2)];
+
+      while (index + 1 < lines.length && lines[index + 1].trim().startsWith("- ")) {
+        index += 1;
+        items.push(lines[index].trim().slice(2));
+      }
+
+      nodes.push(
+        <ul key={`ul-${index}`} className="space-y-1.5 pl-5 text-sm leading-7">
+          {items.map((item, itemIndex) => (
+            <li key={`li-${index}-${itemIndex}`} className="list-disc text-slate-100">
+              {renderInlineFormattedText(item)}
+            </li>
+          ))}
+        </ul>,
+      );
+      continue;
+    }
+
+    nodes.push(
+      <p key={`p-${index}`} className="text-sm leading-7 text-inherit">
+        {renderInlineFormattedText(line)}
+      </p>,
+    );
+  }
+
+  return nodes;
+}
+
 function displayFlywheelName(module: FlywheelModule, locale: Locale) {
-  return locale === "zh" && module.id === "orchestration" ? "智能执行中枢" : module.name;
+  return module.name;
 }
 
 function setMetaTag(attribute: "name" | "property", key: string, content: string) {
@@ -1218,56 +1386,6 @@ function BrandMark() {
   );
 }
 
-function EngineNode({
-  capability,
-  position,
-  isActive,
-  onActivate,
-}: {
-  capability: Capability;
-  position: OrbitPosition;
-  isActive: boolean;
-  onActivate: () => void;
-}) {
-  const Icon = capability.icon;
-
-  return (
-    <motion.button
-      type="button"
-      onMouseEnter={onActivate}
-      onFocus={onActivate}
-      onClick={onActivate}
-      aria-label={t(capability.name, "zh")}
-      className={cn(
-        "absolute z-20 flex h-24 w-24 -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-[1.8rem] border text-center backdrop-blur transition-all duration-300 md:h-28 md:w-28",
-        isActive ? "scale-105 border-white/35 bg-slate-950/85" : "border-white/10 bg-slate-950/50 hover:border-white/20 hover:bg-slate-950/60",
-      )}
-      style={{
-        left: `${position.x}%`,
-        top: `${position.y}%`,
-        boxShadow: isActive ? `0 0 0 1px ${capability.accent} inset, 0 0 32px ${capability.glow}` : undefined,
-      }}
-      whileHover={{ y: -4 }}
-      whileTap={{ scale: 0.98 }}
-    >
-      <div
-        className="flex h-10 w-10 items-center justify-center rounded-2xl border"
-        style={{
-          backgroundColor: capability.glow,
-          borderColor: isActive ? capability.accent : "rgba(255,255,255,0.12)",
-          color: capability.accent,
-        }}
-      >
-        <Icon className="h-4 w-4" />
-      </div>
-      <span className={cn("mt-2 font-semibold tracking-[0.16em]", capability.token.length > 3 ? "text-xs" : "text-sm")} style={{ color: isActive ? capability.accent : "#F5F7FB" }}>
-        {capability.token}
-      </span>
-      <span className="text-[10px] uppercase tracking-[0.18em] text-slate-300">{capability.id.replaceAll("-", " ")}</span>
-    </motion.button>
-  );
-}
-
 function FlywheelDemoNode({
   module,
   index,
@@ -1290,7 +1408,7 @@ function FlywheelDemoNode({
       onFocus={() => onActivate(index)}
       onClick={() => onActivate(index)}
       className={cn(
-        "absolute z-20 flex h-24 w-24 -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-[1.8rem] border text-center backdrop-blur transition-all duration-300 md:h-28 md:w-28",
+        "absolute z-20 flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-[1.35rem] border text-center backdrop-blur transition-all duration-300 sm:h-20 sm:w-20 md:h-28 md:w-28 md:rounded-[1.8rem]",
         isActive ? "scale-105 border-white/35 bg-slate-950/80" : "border-white/10 bg-slate-950/45 hover:border-white/20 hover:bg-slate-950/60",
       )}
       style={{
@@ -1304,19 +1422,19 @@ function FlywheelDemoNode({
       aria-label={displayFlywheelName(module, "zh")}
     >
       <div
-        className="flex h-10 w-10 items-center justify-center rounded-2xl border"
+        className="flex h-7 w-7 items-center justify-center rounded-xl border sm:h-8 sm:w-8 md:h-10 md:w-10 md:rounded-2xl"
         style={{
           backgroundColor: module.glow,
           borderColor: isActive ? module.accent : "rgba(255,255,255,0.12)",
           color: module.accent,
         }}
       >
-        <Icon className="h-4 w-4" />
+        <Icon className="h-3.5 w-3.5 md:h-4 md:w-4" />
       </div>
-      <span className="mt-2 text-lg font-semibold tracking-[0.18em]" style={{ color: isActive ? module.accent : "#F5F7FB" }}>
+      <span className="mt-1.5 text-sm font-semibold tracking-[0.16em] sm:text-base md:mt-2 md:text-lg md:tracking-[0.18em]" style={{ color: isActive ? module.accent : "#F5F7FB" }}>
         {module.letter}
       </span>
-      <span className="text-[11px] uppercase tracking-[0.2em] text-slate-300">{displayFlywheelName(module, "zh")}</span>
+      <span className="hidden text-[11px] uppercase tracking-[0.2em] text-slate-300 md:block">{displayFlywheelName(module, "zh")}</span>
     </motion.button>
   );
 }
@@ -1324,34 +1442,113 @@ function FlywheelDemoNode({
 function Home() {
   const [locale, setLocale] = useState<Locale>("zh");
   const [activeIndex, setActiveIndex] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
   const [flywheelDemoActiveIndex, setFlywheelDemoActiveIndex] = useState(0);
   const [flywheelDemoPaused, setFlywheelDemoPaused] = useState(false);
+  const [moduleTab, setModuleTab] = useState<"overview" | "outputs" | "integrations">("overview");
   const [activeSection, setActiveSection] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
+  const [floatingNavOpen, setFloatingNavOpen] = useState(false);
   const [detailIndex, setDetailIndex] = useState<number | null>(null);
   const [flywheelDemoDetailIndex, setFlywheelDemoDetailIndex] = useState<number | null>(null);
-  const [submitted, setSubmitted] = useState(false);
-  const [formState, setFormState] = useState<FormState>(defaultFormState);
+  const [chatModalOpen, setChatModalOpen] = useState(false);
+  const [chatInput, setChatInput] = useState("");
+  const [chatLoading, setChatLoading] = useState(false);
+  const [chatError, setChatError] = useState<string | null>(null);
+  const [chatSessionId] = useState(() => {
+    if (typeof window === "undefined") {
+      return "jgmao-web-local";
+    }
+
+    return `jgmao-web-${window.crypto?.randomUUID?.() ?? Date.now().toString(36)}`;
+  });
+  const [chatMessages, setChatMessages] = useState<Array<{ role: "user" | "assistant"; text: string }>>([]);
 
   const activeCapability = capabilities[activeIndex];
   const detailCapability = detailIndex === null ? null : capabilities[detailIndex];
   const activeFlywheelModule = flywheelModules[flywheelDemoActiveIndex];
   const detailFlywheelModule = flywheelDemoDetailIndex === null ? null : flywheelModules[flywheelDemoDetailIndex];
+  const isLocalPreview =
+    typeof window !== "undefined" && ["127.0.0.1", "localhost"].includes(window.location.hostname);
+  const configuredChatEndpoint =
+    typeof import.meta !== "undefined" && typeof import.meta.env?.VITE_CHAT_ENDPOINT === "string"
+      ? import.meta.env.VITE_CHAT_ENDPOINT.trim()
+      : "";
+  const chatEndpoint = configuredChatEndpoint || (isLocalPreview ? "/local-chat/message" : "/api/chat/send");
 
-  useEffect(() => {
-    if (isPaused) {
-      return undefined;
+  async function sendChatMessage(message: string) {
+    const trimmed = message.trim();
+    if (!trimmed || chatLoading) {
+      return;
     }
 
-    const timer = window.setInterval(() => {
-      startTransition(() => {
-        setActiveIndex((current) => (current + 1) % capabilities.length);
-      });
-    }, 3600);
+    setChatMessages((current) => [...current, { role: "user", text: trimmed }]);
+    setChatInput("");
+    setChatLoading(true);
+    setChatError(null);
 
-    return () => window.clearInterval(timer);
-  }, [isPaused]);
+    try {
+      const response = await fetch(chatEndpoint, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          message: trimmed,
+          sessionId: chatSessionId,
+        }),
+      });
+
+      const payload = await response.json();
+      if (!response.ok || !payload?.ok) {
+        throw new Error(payload?.error || "Chat request failed");
+      }
+
+      setChatMessages((current) => [
+        ...current,
+        {
+          role: "assistant",
+          text:
+            typeof payload.reply === "string" && payload.reply.trim()
+              ? payload.reply.trim()
+              : locale === "zh"
+                ? "已收到，我继续帮你整理。"
+                : "Got it. Let me help from here.",
+        },
+      ]);
+    } catch (error) {
+      const messageText = error instanceof Error ? error.message : String(error);
+      setChatError(messageText);
+      setChatMessages((current) => [
+        ...current,
+        {
+          role: "assistant",
+          text:
+            locale === "zh"
+              ? "我先记录下你的问题了。目前智能体连接有点小问题，你可以稍后再试，或者继续补充你的需求。"
+              : "I captured your request, but the agent connection hit a small issue. You can retry shortly or keep adding more context.",
+        },
+      ]);
+    } finally {
+      setChatLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    setModuleTab("overview");
+  }, [activeIndex]);
+
+  useEffect(() => {
+    setChatMessages([
+      {
+        role: "assistant",
+        text:
+          locale === "zh"
+            ? "你好，我是坚果猫AI智能体。你可以直接告诉我你的公司、官网地址，以及当前最想提升的增长问题。"
+            : "Hi, I’m the JianGuoMao AI agent. You can directly share your company, website URL, and the main growth issue you want to improve.",
+      },
+    ]);
+    setChatInput("");
+    setChatError(null);
+    setChatLoading(false);
+  }, [locale]);
 
   useEffect(() => {
     if (flywheelDemoPaused) {
@@ -1402,13 +1599,13 @@ function Home() {
     document.documentElement.lang = locale === "zh" ? "zh-CN" : "en";
 
     const title = locale === "zh"
-      ? "JGMAO AI 增长引擎 | GEO优化引擎 | AI内容工厂 | AI增长网站 | 智能获客系统 | AI推荐分析"
+      ? "坚果猫 JGMAO AI 增长引擎 | GEO优化引擎 | AI内容工厂 | AI增长网站 | 智能获客系统 | AI推荐分析"
       : "JGMAO AI Growth Engine | GEO | AI Content Factory | AI Growth Website | Lead System | Recommendation Analytics";
     const description = locale === "zh"
-      ? "JGMAO AI 增长引擎帮助企业在 AI 时代构建 AI 增长飞轮，包含 GEO 优化引擎、AI 内容工厂、AI 增长网站、智能获客系统和 AI推荐分析五大部分。"
+      ? "坚果猫 JGMAO AI 增长引擎帮助企业在 AI 时代构建 AI 增长飞轮，包含 GEO 优化引擎、AI 内容工厂、AI 增长网站、智能获客系统和 AI推荐分析五大部分。"
       : "JGMAO AI Growth Engine helps enterprises build AI growth flywheels through GEO optimization, AI content production, AI growth websites, intelligent lead systems, and recommendation analytics.";
     const keywords = locale === "zh"
-      ? "JGMAO, AI增长引擎, GEO优化引擎, AI内容工厂, AI增长网站, 智能获客系统, AI推荐分析, GEO优化, AI搜索优化"
+      ? "坚果猫, JGMAO, 坚果猫 JGMAO, AI增长引擎, GEO优化引擎, AI内容工厂, AI增长网站, 智能获客系统, AI推荐分析, GEO优化, AI搜索优化"
       : "JGMAO, AI growth engine, GEO optimization, AI content factory, AI growth website, intelligent lead system, recommendation analytics";
 
     document.title = title;
@@ -1433,12 +1630,14 @@ function Home() {
       document.head.appendChild(script);
     }
 
-    const organizationName = locale === "zh" ? "JGMAO AI 增长引擎" : "JGMAO AI Growth Engine";
+    const organizationName = locale === "zh" ? "坚果猫 JGMAO AI 增长引擎" : "JGMAO AI Growth Engine";
+    const alternateBrandName = locale === "zh" ? "JGMAO" : "坚果猫";
     const structuredData = [
       {
         "@context": "https://schema.org",
         "@type": "Organization",
         name: organizationName,
+        alternateName: alternateBrandName,
         url: siteUrl,
         logo: new URL(logoImage, window.location.origin).href,
         description,
@@ -1447,13 +1646,14 @@ function Home() {
         "@context": "https://schema.org",
         "@type": "WebSite",
         name: organizationName,
+        alternateName: alternateBrandName,
         url: siteUrl,
         description,
       },
       {
         "@context": "https://schema.org",
         "@type": "ItemList",
-        name: locale === "zh" ? "JGMAO 五大引擎" : "JGMAO Five Engines",
+        name: locale === "zh" ? "坚果猫 JGMAO 五大引擎" : "JGMAO Five Engines",
         itemListElement: capabilities.map((capability, index) => ({
           "@type": "ListItem",
           position: index + 1,
@@ -1479,7 +1679,7 @@ function Home() {
   }, [locale]);
 
   useEffect(() => {
-    if (detailIndex === null && flywheelDemoDetailIndex === null) {
+    if (detailIndex === null && flywheelDemoDetailIndex === null && !chatModalOpen) {
       return undefined;
     }
 
@@ -1487,29 +1687,91 @@ function Home() {
       if (event.key === "Escape") {
         setDetailIndex(null);
         setFlywheelDemoDetailIndex(null);
+        setChatModalOpen(false);
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [detailIndex, flywheelDemoDetailIndex]);
-
-  const handleInputChange = (field: keyof FormState, value: string) => {
-    setSubmitted(false);
-    setFormState((current) => ({ ...current, [field]: value }));
-  };
-
-  const handleFormSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setSubmitted(true);
-    setFormState(defaultFormState);
-  };
+  }, [chatModalOpen, detailIndex, flywheelDemoDetailIndex]);
 
   return (
     <main id="top" className="relative min-h-screen overflow-hidden bg-[#050816] text-slate-100">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_15%,rgba(82,230,255,0.14),transparent_24%),radial-gradient(circle_at_90%_18%,rgba(245,197,92,0.12),transparent_24%),radial-gradient(circle_at_50%_80%,rgba(181,146,255,0.12),transparent_28%),linear-gradient(180deg,#050816_0%,#091222_38%,#050816_100%)]" />
       <div className="pointer-events-none absolute inset-0 ops-grid opacity-20" />
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(5,8,22,0.18)_58%,rgba(5,8,22,0.94)_100%)]" />
+
+      <div className="fixed bottom-5 right-4 z-40 md:hidden">
+        <AnimatePresence>
+          {floatingNavOpen ? (
+            <motion.div
+              initial={{ opacity: 0, y: 12, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 8, scale: 0.98 }}
+              transition={{ duration: 0.18 }}
+              className="mb-3 w-[11.5rem] rounded-[1.4rem] border border-white/10 bg-slate-950/88 p-2 shadow-[0_18px_60px_rgba(0,0,0,0.32)] backdrop-blur-xl"
+            >
+              <a
+                href="#top"
+                onClick={() => {
+                  setActiveSection("");
+                  setFloatingNavOpen(false);
+                }}
+                className="flex items-center justify-between rounded-[1rem] px-3 py-3 text-sm text-white transition hover:bg-white/6"
+              >
+                <span>{locale === "zh" ? "首页" : "Home"}</span>
+                <MoveUpRight className="h-4 w-4 -rotate-45 text-slate-300" />
+              </a>
+              <div className="mt-1 space-y-1">
+                {navItems.map((item) => {
+                  const sectionId = item.href.replace("#", "");
+                  const isActive = activeSection === sectionId;
+
+                  return (
+                    <a
+                      key={`floating-${item.href}`}
+                      href={item.href}
+                      onClick={() => setFloatingNavOpen(false)}
+                      className={cn(
+                        "flex items-center justify-between rounded-[1rem] px-3 py-3 text-sm transition",
+                        isActive ? "bg-white/10 text-white" : "text-slate-300 hover:bg-white/6 hover:text-white",
+                      )}
+                    >
+                      <span>{t(item.label, locale)}</span>
+                      <ArrowRight className="h-4 w-4 opacity-60" />
+                    </a>
+                  );
+                })}
+              </div>
+            </motion.div>
+          ) : null}
+        </AnimatePresence>
+
+        <button
+          type="button"
+          onClick={() => setFloatingNavOpen((current) => !current)}
+          className="group flex items-center justify-center rounded-full border border-white/10 bg-slate-950/72 p-1.5 text-white shadow-[0_12px_40px_rgba(0,0,0,0.28)] backdrop-blur-xl transition hover:border-cyan-200/30 hover:bg-slate-900/80"
+          aria-label={floatingNavOpen ? (locale === "zh" ? "关闭导航" : "Close navigation") : (locale === "zh" ? "打开导航" : "Open navigation")}
+          aria-expanded={floatingNavOpen}
+        >
+          <span className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 transition group-hover:border-cyan-200/30 group-hover:bg-cyan-300/10">
+            {floatingNavOpen
+              ? <X className="h-4 w-4 transition group-hover:text-cyan-100" />
+              : <MoveUpRight className="h-4 w-4 -rotate-45 transition group-hover:-translate-y-0.5 group-hover:text-cyan-100" />}
+          </span>
+        </button>
+      </div>
+
+      <a
+        href="#top"
+        onClick={() => setActiveSection("")}
+        className="group fixed right-4 top-1/2 z-40 hidden -translate-y-1/2 items-center justify-center rounded-full border border-white/10 bg-slate-950/72 p-1.5 text-white shadow-[0_12px_40px_rgba(0,0,0,0.28)] backdrop-blur-xl transition hover:border-cyan-200/30 hover:bg-slate-900/80 md:flex"
+        aria-label={locale === "zh" ? "回到首页" : "Back to top"}
+      >
+        <span className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 transition group-hover:border-cyan-200/30 group-hover:bg-cyan-300/10">
+          <MoveUpRight className="h-4 w-4 -rotate-45 transition group-hover:-translate-y-0.5 group-hover:text-cyan-100" />
+        </span>
+      </a>
 
       <div className="relative mx-auto flex min-h-screen w-full max-w-[1440px] flex-col px-5 pb-20 pt-6 sm:px-6 lg:px-10">
         <header className="sticky top-4 z-40 mb-10 rounded-[1.6rem] border border-white/10 bg-slate-950/55 px-4 py-3 backdrop-blur-xl sm:px-5">
@@ -1518,12 +1780,17 @@ function Home() {
               <BrandMark />
               <div>
                 <p
-                  className="text-[1.05rem] font-semibold uppercase leading-none text-cyan-100/85"
-                  style={{ fontFamily: '"Sora", "IBM Plex Sans", sans-serif', letterSpacing: "0.18em" }}
+                  className="text-[1.16rem] font-semibold leading-none text-cyan-50/95 sm:text-[1.2rem]"
+                  style={{ fontFamily: '"Sora", "IBM Plex Sans", sans-serif', letterSpacing: "0.03em" }}
                 >
-                  JGMAO
+                  {locale === "zh" ? "坚果猫" : "JGMAO"}
                 </p>
-                <p className="mt-[3px] text-sm text-white/78">{locale === "zh" ? "AI增长引擎" : "AI Growth Engine"}</p>
+                <p
+                  className="mt-[1px] text-[0.69rem] font-medium tracking-[0.24em] text-white/52 sm:text-[0.71rem]"
+                  style={{ fontFamily: '"Sora", "IBM Plex Sans", sans-serif' }}
+                >
+                  {locale === "zh" ? "JGMAO AI增长引擎" : "AI GROWTH ENGINE"}
+                </p>
               </div>
             </a>
 
@@ -1787,7 +2054,7 @@ function Home() {
               <h2 className="mt-5 text-3xl font-semibold tracking-tight text-white sm:text-[2.6rem]">{t(brandCopy.flywheelDemoTitle, locale)}</h2>
               <p className="mt-4 max-w-2xl text-base leading-8 text-slate-300">{t(brandCopy.flywheelDemoBody, locale)}</p>
 
-              <div className="relative mx-auto mt-8 aspect-square w-full max-w-[640px]">
+              <div className="relative mx-auto mt-8 aspect-square w-full max-w-[352px] sm:max-w-[440px] md:max-w-[520px] lg:max-w-[640px]">
                 <div className="flywheel-ring absolute inset-[10%] rounded-full border border-white/10 opacity-80" />
                 <div className="flywheel-ring-reverse absolute inset-[18%] rounded-full border border-dashed border-white/10 opacity-80" />
                 <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_center,rgba(82,230,255,0.08),transparent_38%),radial-gradient(circle_at_center,rgba(245,197,92,0.06),transparent_60%)]" />
@@ -1832,23 +2099,24 @@ function Home() {
                 ))}
 
                 <motion.div
-                  className="absolute left-1/2 top-1/2 z-10 flex h-[38%] w-[38%] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-full border border-white/12 bg-slate-950/80 text-center shadow-[0_0_80px_rgba(0,0,0,0.38)] backdrop-blur-xl"
+                  className="absolute left-1/2 top-1/2 z-10 flex h-[36%] w-[36%] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-full border border-white/12 bg-slate-950/80 px-2 text-center shadow-[0_0_80px_rgba(0,0,0,0.38)] backdrop-blur-xl sm:h-[36%] sm:w-[36%] md:h-[38%] md:w-[38%]"
                   animate={{ boxShadow: [`0 0 40px ${activeFlywheelModule.glow}`, `0 0 72px ${activeFlywheelModule.glow}`, `0 0 40px ${activeFlywheelModule.glow}`] }}
                   transition={{ duration: 3.2, repeat: Number.POSITIVE_INFINITY }}
                 >
                   <div
-                    className="flex h-14 w-14 items-center justify-center rounded-2xl border text-xl font-semibold"
+                    className="flex h-10 w-10 items-center justify-center rounded-2xl border text-base font-semibold sm:h-12 sm:w-12 sm:text-lg md:h-14 md:w-14 md:text-xl"
                     style={{ borderColor: activeFlywheelModule.accent, color: activeFlywheelModule.accent, backgroundColor: activeFlywheelModule.glow }}
                   >
                     {activeFlywheelModule.letter}
                   </div>
-                  <p className="mt-4 text-xs uppercase tracking-[0.28em] text-slate-400">{t(brandCopy.flywheelDemoGrowthLoopLabel, locale)}</p>
-                  <p className="mt-2 text-2xl font-semibold text-white">{displayFlywheelName(activeFlywheelModule, locale)}</p>
-                  <p className="mt-2 max-w-[16rem] text-sm leading-6 text-slate-300">{t(activeFlywheelModule.title, locale)}</p>
+                  <p className="mt-2 text-[10px] uppercase tracking-[0.2em] text-slate-400 sm:mt-3 sm:text-xs sm:tracking-[0.24em] md:mt-4 md:tracking-[0.28em]">{t(brandCopy.flywheelDemoGrowthLoopLabel, locale)}</p>
+                  <p className="mt-1 text-sm font-semibold text-white sm:mt-1.5 sm:text-lg md:mt-2 md:text-2xl">{displayFlywheelName(activeFlywheelModule, locale)}</p>
+                  <p className="mt-1 text-[11px] leading-5 text-slate-300 sm:text-xs md:hidden">{t(activeFlywheelModule.compactTitle, locale)}</p>
+                  <p className="mt-1 hidden max-w-[16rem] text-sm leading-6 text-slate-300 md:block">{t(activeFlywheelModule.title, locale)}</p>
                 </motion.div>
               </div>
 
-              <div className="mt-8 grid gap-3 sm:grid-cols-5">
+              <div className="mt-8 -mx-1 flex gap-3 overflow-x-auto px-1 pb-2 sm:mx-0 sm:grid sm:grid-cols-5 sm:overflow-visible sm:px-0 sm:pb-0">
                 {flywheelModules.map((module, index) => (
                   <button
                     key={module.id}
@@ -1858,7 +2126,7 @@ function Home() {
                       setFlywheelDemoPaused(true);
                     }}
                     className={cn(
-                      "rounded-2xl border px-3 py-3 text-left transition",
+                      "min-w-[7.5rem] shrink-0 rounded-2xl border px-3 py-3 text-left transition sm:min-w-0",
                       index === flywheelDemoActiveIndex ? "bg-white/10 text-white" : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/8",
                     )}
                     style={{ borderColor: index === flywheelDemoActiveIndex ? module.accent : undefined }}
@@ -1895,7 +2163,7 @@ function Home() {
                     className="rounded-[1.4rem] border px-4 py-3 text-right"
                     style={{ borderColor: activeFlywheelModule.accent, backgroundColor: activeFlywheelModule.glow }}
                   >
-                    <p className="text-xs uppercase tracking-[0.18em]" style={{ color: activeFlywheelModule.accent }}>
+                    <p className="whitespace-nowrap text-[10px] uppercase tracking-[0.12em] sm:text-xs sm:tracking-[0.18em]" style={{ color: activeFlywheelModule.accent }}>
                       {t(brandCopy.flywheelDemoActiveModule, locale)}
                     </p>
                     <p className="mt-2 text-3xl font-semibold text-white">{activeFlywheelModule.letter}</p>
@@ -1984,23 +2252,23 @@ function Home() {
             <p className="mt-4 text-base leading-8 text-slate-300">{t(brandCopy.architectureBody, locale)}</p>
 
             <div className="mt-8 rounded-[1.8rem] border border-cyan-300/15 bg-cyan-300/8 p-6">
-              <p className="text-xs uppercase tracking-[0.24em] text-cyan-100/80">{locale === "zh" ? "主品牌" : "Core Brand"}</p>
-              <h3 className="mt-3 text-3xl font-semibold text-white">{locale === "zh" ? "JGMAO AI 增长引擎" : "JGMAO AI Growth Engine"}</h3>
+              <p className="text-xs uppercase tracking-[0.24em] text-cyan-100/80">{locale === "zh" ? "典型问题" : "Typical Challenges"}</p>
+              <h3 className="mt-3 text-3xl font-semibold text-white">{locale === "zh" ? "这类企业最常见的增长断点" : "The most common growth breakpoints"}</h3>
               <p className="mt-4 text-sm leading-7 text-slate-200">
                 {locale === "zh"
-                  ? "企业在 AI 时代构建增长飞轮的统一方法框架。"
-                  : "This is the master entry point for the product architecture and operating model. It is not just a website name, but the organizing system behind the full growth stack."}
+                  ? "品牌能做内容，但不一定能被 AI 看见；有流量，也不一定能形成线索；有推荐，也不一定知道结果为什么好或不好。"
+                  : "Many teams can publish content, but not all of it becomes visible to AI, converts visitors, or turns recommendations into measurable pipeline."}
               </p>
             </div>
           </article>
 
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {capabilities.map((capability, index) => {
-              const Icon = capability.icon;
+            {scenarioCards.map((scenario, index) => {
+              const Icon = scenario.icon;
 
               return (
                 <motion.article
-                  key={capability.id}
+                  key={scenario.title.en}
                   initial={{ opacity: 0, y: 16 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, amount: 0.25 }}
@@ -2008,104 +2276,79 @@ function Home() {
                   className="rounded-[1.8rem] border border-white/10 bg-white/6 p-5 shadow-[0_20px_80px_rgba(0,0,0,0.2)] backdrop-blur"
                 >
                   <div className="flex items-center gap-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl border" style={{ borderColor: `${capability.accent}88`, backgroundColor: capability.glow, color: capability.accent }}>
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl border" style={{ borderColor: `${scenario.accent}88`, backgroundColor: scenario.glow, color: scenario.accent }}>
                       <Icon className="h-5 w-5" />
                     </div>
                     <div>
-                      <p className="text-xs uppercase tracking-[0.22em] text-slate-400">{capability.token}</p>
-                      <h3 className="mt-1 text-xl font-semibold text-white">{t(capability.name, locale)}</h3>
+                      <p className="text-xs uppercase tracking-[0.22em] text-slate-400">{locale === "zh" ? `场景 0${index + 1}` : `Scenario 0${index + 1}`}</p>
+                      <h3 className="mt-1 text-xl font-semibold text-white">{t(scenario.title, locale)}</h3>
                     </div>
                   </div>
-                  <p className="mt-4 text-sm leading-7 text-slate-300">{t(capability.summary, locale)}</p>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setActiveIndex(index);
-                      setDetailIndex(index);
-                    }}
-                    className="mt-5 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white transition hover:bg-white/8"
-                  >
-                    {t(brandCopy.detailButton, locale)}
-                    <MoveUpRight className="h-4 w-4" />
-                  </button>
+                  <p className="mt-4 text-sm leading-7 text-slate-300">{t(scenario.description, locale)}</p>
                 </motion.article>
               );
             })}
           </div>
         </section>
 
-        <section id="modules" className="grid gap-8 py-14 lg:grid-cols-[1.08fr_0.92fr]">
-          <div
-            className="relative overflow-hidden rounded-[2.2rem] border border-white/10 bg-slate-950/50 p-6 shadow-[0_24px_100px_rgba(0,0,0,0.32)] backdrop-blur-xl"
-            onMouseEnter={() => setIsPaused(true)}
-            onMouseLeave={() => setIsPaused(false)}
-          >
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(82,230,255,0.12),transparent_30%),radial-gradient(circle_at_bottom,rgba(245,197,92,0.10),transparent_28%)]" />
-            <div className="relative">
+        <section id="modules" className="grid gap-8 py-14 lg:grid-cols-[0.72fr_1.28fr] lg:items-start">
+          <div className="rounded-[2.1rem] border border-white/10 bg-slate-950/48 p-6 shadow-[0_24px_100px_rgba(0,0,0,0.28)] backdrop-blur-xl lg:flex lg:h-[820px] lg:flex-col lg:overflow-hidden">
+            <div className="shrink-0">
               <SectionTag>{t(brandCopy.moduleTag, locale)}</SectionTag>
-              <h2 className="mt-5 text-3xl font-semibold tracking-tight text-white sm:text-[2.55rem]">{t(brandCopy.moduleTitle, locale)}</h2>
-              <p className="mt-4 max-w-2xl text-base leading-8 text-slate-300">{t(brandCopy.moduleBody, locale)}</p>
+              <h2 className="mt-5 text-3xl font-semibold tracking-tight text-white sm:text-[2.45rem]">{t(brandCopy.moduleTitle, locale)}</h2>
+              <p className="mt-4 max-w-xl text-base leading-8 text-slate-300">{t(brandCopy.moduleBody, locale)}</p>
+            </div>
 
-              <div className="relative mx-auto mt-8 aspect-square w-full max-w-[640px]">
-                <div className="flywheel-ring absolute inset-[10%] rounded-full border border-white/10 opacity-80" />
-                <div className="flywheel-ring-reverse absolute inset-[18%] rounded-full border border-dashed border-white/10 opacity-80" />
-                <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_center,rgba(82,230,255,0.08),transparent_38%),radial-gradient(circle_at_center,rgba(245,197,92,0.06),transparent_60%)]" />
+            <div className="mt-8 space-y-3 lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:pr-3">
+              {capabilities.map((capability, index) => {
+                const Icon = capability.icon;
+                const isActive = index === activeIndex;
+                const layer = capabilityLayers[index];
 
-                <svg viewBox="0 0 100 100" className="absolute inset-0 h-full w-full">
-                  <circle cx="50" cy="50" r="35" stroke="rgba(255,255,255,0.08)" strokeWidth="0.8" fill="none" />
-                  <circle cx="50" cy="50" r="22" stroke="rgba(255,255,255,0.06)" strokeWidth="0.6" fill="none" />
-                  {orbitPositions.map((position, index) => {
-                    const capability = capabilities[index];
-                    const isActive = index === activeIndex;
-
-                    return (
-                      <g key={capability.id}>
-                        <line
-                          x1="50"
-                          y1="50"
-                          x2={position.x}
-                          y2={position.y}
-                          stroke={isActive ? capability.accent : "rgba(255,255,255,0.12)"}
-                          strokeWidth={isActive ? 1.4 : 0.7}
-                          strokeDasharray={isActive ? "0" : "3 3"}
-                          opacity={isActive ? 0.9 : 0.55}
-                        />
-                        <circle cx={position.x} cy={position.y} r="1.8" fill={isActive ? capability.accent : "rgba(255,255,255,0.35)"} />
-                      </g>
-                    );
-                  })}
-                </svg>
-
-                {capabilities.map((capability, index) => (
-                  <EngineNode
+                return (
+                  <button
                     key={capability.id}
-                    capability={capability}
-                    position={orbitPositions[index]}
-                    isActive={index === activeIndex}
-                    onActivate={() => {
-                      setActiveIndex(index);
-                      setIsPaused(true);
-                    }}
-                  />
-                ))}
-
-                <motion.div
-                  className="absolute left-1/2 top-1/2 z-10 flex h-[40%] w-[40%] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-full border border-white/12 bg-slate-950/80 text-center shadow-[0_0_80px_rgba(0,0,0,0.38)] backdrop-blur-xl"
-                  animate={{ boxShadow: [`0 0 40px ${activeCapability.glow}`, `0 0 72px ${activeCapability.glow}`, `0 0 40px ${activeCapability.glow}`] }}
-                  transition={{ duration: 3.2, repeat: Number.POSITIVE_INFINITY }}
-                >
-                  <div className="rounded-2xl border px-4 py-2 text-sm font-semibold tracking-[0.18em]" style={{ borderColor: activeCapability.accent, color: activeCapability.accent, backgroundColor: activeCapability.glow }}>
-                    {activeCapability.token}
-                  </div>
-                  <p className="mt-4 text-xs uppercase tracking-[0.28em] text-slate-400">{locale === "zh" ? "Five Engine System" : "Five Engine System"}</p>
-                  <p className="mt-2 text-2xl font-semibold text-white">{t(activeCapability.name, locale)}</p>
-                  <p className="mt-2 max-w-[17rem] text-sm leading-6 text-slate-300">{t(activeCapability.title, locale)}</p>
-                </motion.div>
-              </div>
+                    type="button"
+                    onMouseEnter={() => setActiveIndex(index)}
+                    onFocus={() => setActiveIndex(index)}
+                    onClick={() => setActiveIndex(index)}
+                    className={cn(
+                      "w-full rounded-[1.55rem] border px-4 py-4 text-left transition",
+                      isActive ? "border-white/16 bg-white/8 shadow-[0_18px_50px_rgba(0,0,0,0.18)]" : "border-white/8 bg-white/[0.03] hover:bg-white/[0.06]",
+                    )}
+                    style={isActive ? { boxShadow: `0 0 0 1px ${capability.accent} inset, 0 0 28px ${capability.glow}` } : undefined}
+                  >
+                    <div className="flex items-start gap-4">
+                      <div
+                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border"
+                        style={{ borderColor: isActive ? capability.accent : "rgba(255,255,255,0.12)", backgroundColor: capability.glow, color: capability.accent }}
+                      >
+                        <Icon className="h-4 w-4" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between gap-3">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <p className="text-[11px] uppercase tracking-[0.2em]" style={{ color: isActive ? capability.accent : "#94A3B8" }}>{capability.token}</p>
+                              <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] uppercase tracking-[0.16em] text-slate-300">
+                                {t(layer, locale)}
+                              </span>
+                            </div>
+                            <p className="mt-1 text-lg font-semibold text-white">{t(capability.name, locale)}</p>
+                          </div>
+                          <ArrowRight className={cn("h-4 w-4 shrink-0 transition", isActive ? "translate-x-0 text-white" : "text-slate-500")} />
+                        </div>
+                        <p className="mt-2 text-sm leading-6 text-slate-300">{t(capability.summary, locale)}</p>
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+              <div className="hidden lg:block lg:h-[26rem]" aria-hidden="true" />
             </div>
           </div>
 
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-6 lg:sticky lg:top-28">
             <AnimatePresence mode="wait">
               <motion.article
                 key={`${activeCapability.id}-${locale}`}
@@ -2113,73 +2356,121 @@ function Home() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -18 }}
                 transition={{ duration: 0.3 }}
-                className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/6 p-6 shadow-[0_24px_100px_rgba(0,0,0,0.28)] backdrop-blur-xl"
+                className="relative overflow-hidden rounded-[2.25rem] border border-white/10 bg-white/6 p-6 shadow-[0_24px_100px_rgba(0,0,0,0.28)] backdrop-blur-xl lg:h-[820px]"
               >
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.26em] text-slate-400">{t(activeCapability.name, locale)}</p>
-                    <h3 className="mt-3 text-3xl font-semibold tracking-tight text-white">{t(activeCapability.title, locale)}</h3>
-                  </div>
-                  <div className="rounded-[1.4rem] border px-4 py-3 text-right" style={{ borderColor: activeCapability.accent, backgroundColor: activeCapability.glow }}>
-                    <p className="text-xs uppercase tracking-[0.18em]" style={{ color: activeCapability.accent }}>
-                      {t(brandCopy.activeModule, locale)}
-                    </p>
-                    <p className="mt-2 text-2xl font-semibold text-white">{activeCapability.token}</p>
-                  </div>
-                </div>
-
-                <p className="mt-5 text-base leading-8 text-slate-300">{t(activeCapability.description, locale)}</p>
-                <p className="mt-5 rounded-[1.3rem] border border-white/10 bg-slate-950/55 px-4 py-4 text-sm leading-7 text-slate-200">{t(activeCapability.geoFocus, locale)}</p>
-
-                <div className="mt-6 grid gap-4 sm:grid-cols-3">
-                  {activeCapability.metrics.map((metric) => (
-                    <div key={metric.label.en} className="rounded-[1.4rem] border border-white/10 bg-slate-950/55 p-4">
-                      <p className="text-xs uppercase tracking-[0.22em] text-slate-400">{t(metric.label, locale)}</p>
-                      <p className="mt-3 text-2xl font-semibold text-white">{metric.value}</p>
+                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(82,230,255,0.12),transparent_26%),radial-gradient(circle_at_bottom_left,rgba(245,197,92,0.10),transparent_28%)]" />
+                <div className="relative flex h-full flex-col">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="text-xs uppercase tracking-[0.26em] text-slate-400">{t(activeCapability.name, locale)}</p>
+                        <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] uppercase tracking-[0.18em] text-slate-300">
+                          {t(capabilityLayers[activeIndex], locale)}
+                        </span>
+                      </div>
+                      <h3 className="mt-3 text-4xl font-semibold tracking-tight text-white sm:text-[2.8rem]">{t(activeCapability.title, locale)}</h3>
+                      <p className="mt-4 max-w-2xl text-lg leading-8 text-slate-200">{t(activeCapability.summary, locale)}</p>
                     </div>
-                  ))}
-                </div>
+                    <div className="rounded-[1.6rem] border px-5 py-4 text-right" style={{ borderColor: activeCapability.accent, backgroundColor: activeCapability.glow }}>
+                      <p className="whitespace-nowrap text-xs uppercase tracking-[0.18em]" style={{ color: activeCapability.accent }}>
+                        {t(brandCopy.activeModule, locale)}
+                      </p>
+                      <p className="mt-2 text-3xl font-semibold text-white">{activeCapability.token}</p>
+                    </div>
+                  </div>
 
-                <div className="mt-6 grid gap-4 md:grid-cols-2">
-                  <div className="rounded-[1.4rem] border border-white/10 bg-slate-950/55 p-5">
-                    <p className="text-xs uppercase tracking-[0.22em] text-slate-400">{locale === "zh" ? "核心产物" : "Key Outputs"}</p>
-                    <div className="mt-4 space-y-3">
-                      {activeCapability.outputs.map((item) => (
-                        <div key={item.en} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200">
-                          {t(item, locale)}
+                  <div className="mt-5 flex flex-wrap gap-2">
+                    {[
+                      { id: "overview", zh: "概览", en: "Overview" },
+                      { id: "outputs", zh: "核心产物", en: "Outputs" },
+                      { id: "integrations", zh: "关键连接点", en: "Integrations" },
+                    ].map((tab) => {
+                      const isActive = moduleTab === tab.id;
+
+                      return (
+                        <button
+                          key={tab.id}
+                          type="button"
+                          onClick={() => setModuleTab(tab.id as "overview" | "outputs" | "integrations")}
+                          className={cn(
+                            "rounded-full border px-4 py-2 text-sm transition",
+                            isActive ? "border-white/16 bg-white/10 text-white" : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/8",
+                          )}
+                        >
+                          {locale === "zh" ? tab.zh : tab.en}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <div className="mt-5 flex-1 overflow-auto pr-1">
+                    {moduleTab === "overview" ? (
+                      <div>
+                        <p className="max-w-3xl text-base leading-8 text-slate-300">{t(activeCapability.description, locale)}</p>
+                        <div className="mt-6 grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
+                          <div className="rounded-[1.5rem] border border-white/10 bg-slate-950/55 p-5">
+                            <p className="text-xs uppercase tracking-[0.22em] text-slate-400">{locale === "zh" ? "能力海报" : "Capability Poster"}</p>
+                            <p className="mt-3 text-sm leading-7 text-slate-200">{t(activeCapability.geoFocus, locale)}</p>
+                          </div>
+                          <div className="rounded-[1.5rem] border border-white/10 bg-slate-950/55 p-5">
+                            <p className="text-xs uppercase tracking-[0.22em] text-slate-400">{locale === "zh" ? "关键场景信号" : "Key Signals"}</p>
+                            <div className="mt-4 flex flex-wrap gap-2">
+                              {activeCapability.signals.map((signal) => (
+                                <span key={signal.en} className="rounded-full border px-3 py-2 text-sm text-slate-200" style={{ borderColor: `${activeCapability.accent}66`, backgroundColor: activeCapability.glow }}>
+                                  {t(signal, locale)}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
                         </div>
-                      ))}
-                    </div>
-                  </div>
 
-                  <div className="rounded-[1.4rem] border border-white/10 bg-slate-950/55 p-5">
-                    <p className="text-xs uppercase tracking-[0.22em] text-slate-400">{locale === "zh" ? "关键连接点" : "Key Integrations"}</p>
-                    <div className="mt-4 space-y-3">
-                      {activeCapability.integrations.map((item) => (
-                        <div key={item.en} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200">
-                          {t(item, locale)}
+                        <div className="mt-6 grid gap-4 sm:grid-cols-3">
+                          {activeCapability.metrics.map((metric) => (
+                            <div key={metric.label.en} className="rounded-[1.4rem] border border-white/10 bg-slate-950/55 p-4">
+                              <p className="text-xs uppercase tracking-[0.22em] text-slate-400">{t(metric.label, locale)}</p>
+                              <p className="mt-3 text-2xl font-semibold text-white">{metric.value}</p>
+                            </div>
+                          ))}
                         </div>
-                      ))}
-                    </div>
+                      </div>
+                    ) : null}
+
+                    {moduleTab === "outputs" ? (
+                      <div className="rounded-[1.5rem] border border-white/10 bg-slate-950/55 p-5">
+                        <p className="text-xs uppercase tracking-[0.22em] text-slate-400">{locale === "zh" ? "核心产物" : "Key Outputs"}</p>
+                        <div className="mt-4 space-y-3">
+                          {activeCapability.outputs.map((item) => (
+                            <div key={item.en} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200">
+                              {t(item, locale)}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : null}
+
+                    {moduleTab === "integrations" ? (
+                      <div className="rounded-[1.5rem] border border-white/10 bg-slate-950/55 p-5">
+                        <p className="text-xs uppercase tracking-[0.22em] text-slate-400">{locale === "zh" ? "关键连接点" : "Key Integrations"}</p>
+                        <div className="mt-4 space-y-3">
+                          {activeCapability.integrations.map((item) => (
+                            <div key={item.en} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200">
+                              {t(item, locale)}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : null}
                   </div>
-                </div>
 
-                <div className="mt-6 flex flex-wrap gap-2">
-                  {activeCapability.signals.map((signal) => (
-                    <span key={signal.en} className="rounded-full border px-3 py-2 text-sm text-slate-200" style={{ borderColor: `${activeCapability.accent}66`, backgroundColor: activeCapability.glow }}>
-                      {t(signal, locale)}
-                    </span>
-                  ))}
+                  <button
+                    type="button"
+                    onClick={() => setDetailIndex(activeIndex)}
+                    className="mt-5 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium text-white transition hover:bg-white/8"
+                  >
+                    {t(brandCopy.detailButton, locale)}
+                    <MoveUpRight className="h-4 w-4" />
+                  </button>
                 </div>
-
-                <button
-                  type="button"
-                  onClick={() => setDetailIndex(activeIndex)}
-                  className="mt-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium text-white transition hover:bg-white/8"
-                >
-                  {t(brandCopy.detailButton, locale)}
-                  <MoveUpRight className="h-4 w-4" />
-                </button>
               </motion.article>
             </AnimatePresence>
           </div>
@@ -2193,18 +2484,46 @@ function Home() {
               <p className="mt-4 text-base leading-8 text-slate-300">{t(brandCopy.casesBody, locale)}</p>
 
               <div className="mt-8 rounded-[1.7rem] border border-white/10 bg-white/6 p-5">
-                <p className="text-xs uppercase tracking-[0.22em] text-slate-400">{locale === "zh" ? "整站 GEO 结果关注点" : "What We Measure Site-Wide"}</p>
-                <div className="mt-4 flex flex-wrap gap-2">
+                <p className="text-xs uppercase tracking-[0.22em] text-slate-400">{locale === "zh" ? "增长结果观察维度" : "Growth Result Dimensions"}</p>
+                <p className="mt-3 text-sm leading-7 text-slate-300">
+                  {locale === "zh"
+                    ? "我们不只看流量，而是看 AI 可见性、内容表现与商机转化如何沿着同一条增长链路被持续放大。"
+                    : "We do not just track traffic. We track how AI visibility, content performance, and pipeline conversion compound across one connected growth loop."}
+                </p>
+
+                <div className="mt-5 grid gap-3">
                   {[
-                    { zh: "AI 引用率", en: "AI citation rate" },
-                    { zh: "推荐场景覆盖", en: "Recommendation scenario coverage" },
-                    { zh: "FAQ 抽取表现", en: "FAQ extraction performance" },
-                    { zh: "高意图 CTA 点击", en: "High-intent CTA clicks" },
-                    { zh: "推荐到商机转化", en: "Recommendation to pipeline" },
-                  ].map((item) => (
-                    <span key={item.en} className="rounded-full border border-white/10 bg-slate-950/55 px-3 py-2 text-sm text-slate-200">
-                      {t(item, locale)}
-                    </span>
+                    {
+                      title: { zh: "可见性", en: "Visibility" },
+                      items: [
+                        { zh: "AI 引用率", en: "AI citation rate" },
+                        { zh: "推荐场景覆盖", en: "Recommendation scenario coverage" },
+                      ],
+                    },
+                    {
+                      title: { zh: "内容表现", en: "Content Performance" },
+                      items: [
+                        { zh: "FAQ 抽取表现", en: "FAQ extraction performance" },
+                        { zh: "高意图 CTA 点击", en: "High-intent CTA clicks" },
+                      ],
+                    },
+                    {
+                      title: { zh: "转化结果", en: "Conversion Outcomes" },
+                      items: [
+                        { zh: "推荐到商机转化", en: "Recommendation to pipeline" },
+                      ],
+                    },
+                  ].map((group) => (
+                    <div key={group.title.en} className="rounded-[1.25rem] border border-white/10 bg-slate-950/55 p-4">
+                      <p className="text-xs uppercase tracking-[0.2em] text-slate-400">{t(group.title, locale)}</p>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {group.items.map((item) => (
+                          <span key={item.en} className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-200">
+                            {t(item, locale)}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
                   ))}
                 </div>
               </div>
@@ -2278,113 +2597,243 @@ function Home() {
         </section>
 
         <section id="contact" className="py-14">
-          <div className="grid gap-6 lg:grid-cols-[0.96fr_1.04fr]">
+          <div className="grid gap-6">
             <article className="rounded-[2rem] border border-white/10 bg-slate-950/60 p-6 backdrop-blur-xl">
               <SectionTag>{t(brandCopy.contactTag, locale)}</SectionTag>
               <h2 className="mt-5 text-3xl font-semibold tracking-tight text-white sm:text-[2.45rem]">{t(brandCopy.contactTitle, locale)}</h2>
               <p className="mt-4 text-base leading-8 text-slate-300">{t(brandCopy.contactBody, locale)}</p>
 
-              <div className="mt-8 grid gap-4 sm:grid-cols-2">
-                {capabilities.map((capability) => (
-                  <div key={capability.id} className="rounded-[1.4rem] border border-white/10 bg-white/6 p-4">
-                    <p className="text-xs uppercase tracking-[0.2em] text-slate-400">{capability.token}</p>
-                    <p className="mt-3 text-base font-medium text-white">{t(capability.name, locale)}</p>
+              <div className="mt-8 grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
+                <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
+                  {[
+                    {
+                      title: { zh: "即时对话", en: "Instant Chat" },
+                      body: {
+                        zh: "无需填写传统表单，打开智能体窗口就能直接开始咨询。",
+                        en: "Skip the traditional form and start the conversation immediately.",
+                      },
+                    },
+                    {
+                      title: { zh: "需求梳理", en: "Need Discovery" },
+                      body: {
+                        zh: "先说明业务问题、网站现状和当前最想提升的部分。",
+                        en: "Clarify the business problem, website context, and what matters most right now.",
+                      },
+                    },
+                    {
+                      title: { zh: "智能留资", en: "Lead Capture" },
+                      body: {
+                        zh: "AI Agent 会记录关键信息，帮助后续顾问快速跟进。",
+                        en: "The AI agent captures key context so the team can follow up faster.",
+                      },
+                    },
+                  ].map((item) => (
+                    <div key={item.title.en} className="rounded-[1.4rem] border border-white/10 bg-white/6 p-4">
+                      <p className="text-xs uppercase tracking-[0.2em] text-slate-400">{t(item.title, locale)}</p>
+                      <p className="mt-3 text-sm leading-7 text-white">{t(item.body, locale)}</p>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="rounded-[1.7rem] border border-cyan-300/16 bg-[radial-gradient(circle_at_top,rgba(82,230,255,0.14),transparent_48%),rgba(8,15,30,0.76)] p-5">
+                  <p className="text-xs uppercase tracking-[0.22em] text-cyan-100/80">{locale === "zh" ? "AI顾问入口" : "AI Concierge Entry"}</p>
+                  <h3 className="mt-3 text-2xl font-semibold text-white">
+                    {locale === "zh" ? "需要时再打开，不打扰首页浏览" : "Open only when needed, without crowding the homepage"}
+                  </h3>
+                  <p className="mt-4 text-sm leading-7 text-slate-300">
+                    {locale === "zh"
+                      ? "右下角悬浮按钮会随时在线。点击后，坚果猫AI智能体会在固定位置展开，适合快速咨询、说明需求和直接留资。"
+                      : "The floating button stays available in the corner. Open it anytime to talk with the JianGuoMao AI agent, clarify your needs, and leave your details."}
+                  </p>
+
+                  <div className="mt-5 rounded-[1.35rem] border border-white/10 bg-slate-950/58 p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="rounded-[1rem] border border-cyan-300/20 bg-cyan-300/12 p-2 text-cyan-100">
+                        <Bot className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-white">{locale === "zh" ? "坚果猫AI智能体" : "JianGuoMao AI Agent"}</p>
+                        <p className="mt-1 text-xs text-slate-400">{locale === "zh" ? "悬浮在线，点击即可展开" : "Floating and ready when you need it"}</p>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {[
+                        { zh: "整站 GEO 诊断", en: "Site-wide GEO audit" },
+                        { zh: "AI 增长网站升级", en: "AI growth website upgrade" },
+                      ].map((item) => (
+                        <button
+                          key={item.en}
+                          type="button"
+                          onClick={() => {
+                            setChatModalOpen(true);
+                            void sendChatMessage(t(item, locale));
+                          }}
+                          className="rounded-full border border-cyan-300/20 bg-white/6 px-3 py-1.5 text-sm text-cyan-50 transition hover:border-cyan-200/35 hover:bg-cyan-300/10"
+                        >
+                          {t(item, locale)}
+                        </button>
+                      ))}
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setChatModalOpen(true)}
+                      className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-[1.1rem] border border-cyan-300/20 bg-cyan-300/12 px-4 py-3 text-sm font-medium text-cyan-50 transition hover:border-cyan-200/40 hover:bg-cyan-300/18"
+                    >
+                      {locale === "zh" ? "打开智能体咨询" : "Open AI Chat"}
+                      <ArrowRight className="h-4 w-4" />
+                    </button>
                   </div>
-                ))}
+                </div>
               </div>
-            </article>
-
-            <article className="rounded-[2rem] border border-white/10 bg-white/6 p-6 shadow-[0_24px_90px_rgba(0,0,0,0.22)] backdrop-blur-xl">
-              <form className="space-y-4" onSubmit={handleFormSubmit}>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <label className="block">
-                    <span className="mb-2 block text-sm text-slate-300">{locale === "zh" ? "姓名" : "Name"}</span>
-                    <input
-                      value={formState.name}
-                      onChange={(event) => handleInputChange("name", event.target.value)}
-                      className="h-12 w-full rounded-2xl border border-white/10 bg-slate-950/60 px-4 text-white placeholder:text-slate-500 focus:border-cyan-300/35 focus:outline-none"
-                      placeholder={locale === "zh" ? "例如：Wesley" : "e.g. Wesley"}
-                    />
-                  </label>
-
-                  <label className="block">
-                    <span className="mb-2 block text-sm text-slate-300">{locale === "zh" ? "公司名称" : "Company"}</span>
-                    <input
-                      value={formState.company}
-                      onChange={(event) => handleInputChange("company", event.target.value)}
-                      className="h-12 w-full rounded-2xl border border-white/10 bg-slate-950/60 px-4 text-white placeholder:text-slate-500 focus:border-cyan-300/35 focus:outline-none"
-                      placeholder={locale === "zh" ? "你的公司 / 品牌" : "Your company or brand"}
-                    />
-                  </label>
-                </div>
-
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <label className="block">
-                    <span className="mb-2 block text-sm text-slate-300">{locale === "zh" ? "邮箱" : "Email"}</span>
-                    <input
-                      type="email"
-                      value={formState.email}
-                      onChange={(event) => handleInputChange("email", event.target.value)}
-                      className="h-12 w-full rounded-2xl border border-white/10 bg-slate-950/60 px-4 text-white placeholder:text-slate-500 focus:border-cyan-300/35 focus:outline-none"
-                      placeholder="name@company.com"
-                    />
-                  </label>
-
-                  <label className="block">
-                    <span className="mb-2 block text-sm text-slate-300">{locale === "zh" ? "官网地址" : "Website URL"}</span>
-                    <input
-                      value={formState.website}
-                      onChange={(event) => handleInputChange("website", event.target.value)}
-                      className="h-12 w-full rounded-2xl border border-white/10 bg-slate-950/60 px-4 text-white placeholder:text-slate-500 focus:border-cyan-300/35 focus:outline-none"
-                      placeholder="https://your-site.com"
-                    />
-                  </label>
-                </div>
-
-                <label className="block">
-                  <span className="mb-2 block text-sm text-slate-300">{locale === "zh" ? "你当前最想提升的部分" : "What do you want to improve first?"}</span>
-                  <textarea
-                    value={formState.brief}
-                    onChange={(event) => handleInputChange("brief", event.target.value)}
-                    rows={6}
-                    className="w-full rounded-[1.4rem] border border-white/10 bg-slate-950/60 px-4 py-3 text-white placeholder:text-slate-500 focus:border-cyan-300/35 focus:outline-none"
-                    placeholder={
-                      locale === "zh"
-                        ? "例如：想做整站 GEO 优化、重构 AI 增长网站、建立内容工厂和智能获客系统"
-                        : "e.g. rebuild site GEO, launch an AI growth website, add an AI content factory, or improve lead capture"
-                    }
-                  />
-                </label>
-
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <button
-                    type="submit"
-                    className="inline-flex items-center justify-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/12 px-5 py-3 text-sm font-medium text-cyan-50 transition hover:border-cyan-200/40 hover:bg-cyan-300/18"
-                  >
-                    {t(brandCopy.formSubmit, locale)}
-                    <ArrowRight className="h-4 w-4" />
-                  </button>
-                  <p className="text-sm text-slate-400">{t(brandCopy.formDisclaimer, locale)}</p>
-                </div>
-              </form>
-
-              <AnimatePresence>
-                {submitted ? (
-                  <motion.div
-                    initial={{ opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 12 }}
-                    className="mt-5 flex items-start gap-3 rounded-[1.4rem] border border-emerald-400/20 bg-emerald-400/10 p-4 text-emerald-100"
-                  >
-                    <Check className="mt-0.5 h-5 w-5" />
-                    <p className="text-sm leading-7">{t(brandCopy.formSuccess, locale)}</p>
-                  </motion.div>
-                ) : null}
-              </AnimatePresence>
             </article>
           </div>
         </section>
       </div>
+
+      <div className="fixed bottom-5 right-4 z-[70] hidden md:block">
+        <motion.button
+          type="button"
+          onClick={() => setChatModalOpen((current) => !current)}
+          whileHover={{ y: -3 }}
+          whileTap={{ scale: 0.98 }}
+          className="group inline-flex items-center gap-2.5 rounded-full border border-cyan-300/18 bg-slate-950/82 px-3.5 py-2.5 shadow-[0_18px_60px_rgba(0,0,0,0.32)] backdrop-blur-xl transition hover:border-cyan-200/35 hover:bg-slate-950/90"
+        >
+          <div className="flex h-9 w-9 items-center justify-center rounded-full border border-cyan-300/20 bg-cyan-300/12 text-cyan-100">
+            {chatModalOpen ? <X className="h-3.5 w-3.5" /> : <Bot className="h-3.5 w-3.5" />}
+          </div>
+          <div className="text-left">
+            <p className="text-[13px] font-medium text-white">{locale === "zh" ? "坚果猫AI智能体" : "JianGuoMao AI Agent"}</p>
+            <p className="mt-0.5 text-[11px] text-slate-400">{chatModalOpen ? (locale === "zh" ? "点击收回" : "Click to close") : (locale === "zh" ? "点击开启" : "Click to open")}</p>
+          </div>
+        </motion.button>
+      </div>
+
+      <AnimatePresence>
+        {chatModalOpen ? (
+          <motion.div
+            initial={typeof window !== "undefined" && window.innerWidth >= 768 ? { opacity: 1, x: 36 } : { opacity: 0, y: 24 }}
+            animate={typeof window !== "undefined" && window.innerWidth >= 768 ? { opacity: 1, x: 0 } : { opacity: 1, y: 0 }}
+            exit={typeof window !== "undefined" && window.innerWidth >= 768 ? { opacity: 1, x: 36 } : { opacity: 0, y: 24 }}
+            transition={{ duration: 0.22 }}
+            className="fixed inset-x-4 bottom-20 top-auto z-50 md:right-6 md:bottom-24 md:left-auto md:w-[min(31rem,38vw)]"
+          >
+            <motion.div
+              className="relative flex h-[min(92vh,62rem)] w-full flex-col overflow-hidden rounded-[2rem] border border-white/10 bg-[#09101f] shadow-[0_30px_120px_rgba(0,0,0,0.48)] md:max-h-[calc(100vh-7.5rem)]"
+            >
+              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(82,230,255,0.14),transparent_26%),radial-gradient(circle_at_bottom_left,rgba(245,197,92,0.12),transparent_26%)]" />
+              <div className="relative flex items-center justify-between border-b border-white/10 px-5 py-4">
+                <div className="flex items-center gap-3">
+                  <div className="rounded-[1rem] border border-cyan-300/20 bg-cyan-300/12 p-2.5 text-cyan-100">
+                    <Bot className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-white">{locale === "zh" ? "坚果猫AI智能体" : "JianGuoMao AI Agent"}</p>
+                    <p className="mt-1 text-xs text-slate-400">{locale === "zh" ? "在线，可即时咨询与留资" : "Online for consultation and lead capture"}</p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setChatModalOpen(false)}
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-white transition hover:bg-white/10"
+                  aria-label={t(brandCopy.modalClose, locale)}
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              <div className="relative flex-1 overflow-auto px-5 py-5">
+                <div className="rounded-[1.3rem] border border-cyan-300/12 bg-cyan-300/8 p-3">
+                  <p className="text-xs uppercase tracking-[0.2em] text-cyan-100/80">{locale === "zh" ? "快速开始" : "Quick Start"}</p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {[
+                      { zh: "整站 GEO 诊断", en: "Site-wide GEO audit" },
+                      { zh: "AI 增长网站升级", en: "AI growth website upgrade" },
+                      { zh: "线索承接与留资", en: "Lead capture and intake" },
+                    ].map((item) => (
+                      <button
+                        key={item.en}
+                        type="button"
+                        onClick={() => {
+                          void sendChatMessage(t(item, locale));
+                        }}
+                          className="rounded-full border border-cyan-300/20 bg-slate-950/60 px-3 py-1.5 text-sm text-cyan-50 transition hover:border-cyan-200/35 hover:bg-cyan-300/10"
+                        >
+                          {t(item, locale)}
+                        </button>
+                      ))}
+                  </div>
+                </div>
+
+                <div className="mt-4 space-y-3">
+                  {chatMessages.map((message, index) => (
+                    <div
+                      key={`${message.role}-${index}-${message.text.slice(0, 20)}`}
+                      className={cn(
+                        "max-w-[88%] rounded-[1.2rem] px-4 py-3 text-sm leading-7",
+                        message.role === "user"
+                          ? "rounded-tl-md border border-white/10 bg-white/6 text-slate-200"
+                          : "ml-auto rounded-tr-md border border-cyan-300/18 bg-cyan-300/10 text-cyan-50",
+                      )}
+                    >
+                      <div className="space-y-2">{renderChatMessageContent(message.text)}</div>
+                    </div>
+                  ))}
+
+                  {chatLoading ? (
+                    <div className="ml-auto max-w-[88%] rounded-[1.2rem] rounded-tr-md border border-cyan-300/18 bg-cyan-300/10 px-4 py-3 text-sm leading-7 text-cyan-50">
+                      {locale === "zh" ? "正在思考中..." : "Thinking..."}
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+
+              <div className="relative border-t border-white/10 px-5 py-4">
+                <div className="rounded-[1.2rem] border border-white/10 bg-white/5 p-3">
+                  <div className="flex items-center gap-3 rounded-[1rem] border border-white/10 bg-slate-950/65 px-4 py-3">
+                    <input
+                      value={chatInput}
+                      onChange={(event) => setChatInput(event.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter") {
+                          event.preventDefault();
+                          void sendChatMessage(chatInput);
+                        }
+                      }}
+                      placeholder={locale === "zh" ? "输入你的问题，开始和坚果猫AI智能体对话..." : "Type your message to start chatting with JianGuoMao AI Agent..."}
+                      className="flex-1 bg-transparent text-sm text-white outline-none placeholder:text-slate-400"
+                    />
+                    <button
+                      type="button"
+                      disabled={!isLocalPreview || chatLoading || !chatInput.trim()}
+                      onClick={() => {
+                        void sendChatMessage(chatInput);
+                      }}
+                      className="inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/12 px-4 py-2 text-sm font-medium text-cyan-50 transition hover:border-cyan-200/40 hover:bg-cyan-300/18 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {chatLoading ? (locale === "zh" ? "发送中" : "Sending") : (locale === "zh" ? "开始咨询" : "Start Chat")}
+                      <ArrowRight className="h-4 w-4" />
+                    </button>
+                  </div>
+                  {chatError ? (
+                    <p className="mt-3 text-xs leading-6 text-rose-200">
+                      {locale === "zh" ? `本机智能体连接异常：${chatError}` : `Local agent error: ${chatError}`}
+                    </p>
+                  ) : (
+                    <p className="mt-3 text-xs leading-6 text-slate-400">
+                      {locale === "zh"
+                        ? "可直接在对话中留下公司、官网、行业与当前问题，便于顾问后续快速跟进。"
+                        : "Share your company, website, industry, and growth issue directly in chat for fast follow-up."}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
 
       <AnimatePresence>
         {detailFlywheelModule ? (
