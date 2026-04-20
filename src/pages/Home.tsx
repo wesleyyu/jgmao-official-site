@@ -123,6 +123,17 @@ type CaseStudy = {
   metrics: Array<{ label: LocalizedText; value: string }>;
 };
 
+type InsightItem = {
+  category: LocalizedText;
+  title: LocalizedText;
+  description: LocalizedText;
+  icon: LucideIcon;
+  accent: string;
+  glow: string;
+  metric: string;
+  metricLabel: LocalizedText;
+};
+
 type FaqItem = {
   question: LocalizedText;
   answer: LocalizedText;
@@ -134,6 +145,7 @@ const navItems: NavItem[] = [
   { href: "#architecture", label: { zh: "核心场景", en: "Architecture" } },
   { href: "#modules", label: { zh: "五大引擎", en: "Modules" } },
   { href: "#cases", label: { zh: "案例", en: "Cases" } },
+  { href: "#insights", label: { zh: "新闻 / 洞察", en: "News / Insights" } },
   { href: "#faq", label: { zh: "FAQ", en: "FAQ" } },
   { href: "#contact", label: { zh: "联系咨询", en: "Contact" } },
 ];
@@ -1083,6 +1095,57 @@ const caseStudies: CaseStudy[] = [
   },
 ];
 
+const insightItems: InsightItem[] = [
+  {
+    category: { zh: "GEO 洞察", en: "GEO Insight" },
+    title: {
+      zh: "AI 搜索时代，官网内容为什么要从页面思维转向答案思维",
+      en: "Why websites must shift from page thinking to answer thinking in the AI search era",
+    },
+    description: {
+      zh: "从 AI 可见性、FAQ 结构到证据内容，拆解官网为什么需要重新组织信息表达方式。",
+      en: "A look at why site structure, FAQ design, and proof-led content must adapt for AI visibility.",
+    },
+    icon: Radar,
+    accent: "#52E6FF",
+    glow: "rgba(82, 230, 255, 0.18)",
+    metric: "GEO",
+    metricLabel: { zh: "可见性信号", en: "Visibility Signals" },
+  },
+  {
+    category: { zh: "增长方法", en: "Growth Method" },
+    title: {
+      zh: "企业增长飞轮不是概念，而是一套可持续运转的内容与转化系统",
+      en: "The enterprise growth flywheel is a working system, not just a concept",
+    },
+    description: {
+      zh: "把内容生产、官网承接、智能获客与推荐决策连成闭环，才能真正形成增长资产。",
+      en: "Growth becomes durable when content, website conversion, lead capture, and recommendation intelligence work as one loop.",
+    },
+    icon: Workflow,
+    accent: "#F5C55C",
+    glow: "rgba(245, 197, 92, 0.16)",
+    metric: "Loop",
+    metricLabel: { zh: "增长方法论", en: "Growth Logic" },
+  },
+  {
+    category: { zh: "案例延展", en: "Case Extension" },
+    title: {
+      zh: "从 FAQ 到案例页：哪些内容更容易被 AI 理解、引用与推荐",
+      en: "From FAQ to case pages: what content is easier for AI to understand and recommend",
+    },
+    description: {
+      zh: "总结高质量官网内容的常见结构，帮助后续博客、案例和问答栏目形成统一体系。",
+      en: "Patterns for building high-quality site content across FAQs, case studies, and answer-led articles.",
+    },
+    icon: FileSearch,
+    accent: "#B592FF",
+    glow: "rgba(181, 146, 255, 0.16)",
+    metric: "Case",
+    metricLabel: { zh: "内容结构", en: "Content Structure" },
+  },
+];
+
 const faqItems: FaqItem[] = [
   {
     question: { zh: "什么是坚果猫 JGMAO AI 增长引擎？", en: "What is the JGMAO AI Growth Engine?" },
@@ -1170,6 +1233,12 @@ const brandCopy = {
   faqBody: {
     zh: "这些常见问题帮助你更好了解坚果猫JGMAO。",
     en: "These answers are written for both buyers and AI systems. They make it easier to understand JGMAO’s structure, value, and use cases.",
+  },
+  insightsTag: { zh: "新闻 / 洞察", en: "News / Insights" },
+  insightsTitle: { zh: "新闻 / 洞察", en: "News / Insights" },
+  insightsBody: {
+    zh: "这里会持续沉淀坚果猫的最新动态、AI 增长方法、GEO 观察和案例延展内容。",
+    en: "This section collects the latest JianGuoMao updates, AI growth methods, GEO observations, and case extensions.",
   },
   contactTag: { zh: "联系我们", en: "Contact" },
   contactTitle: { zh: "坚果猫AI智能体", en: "JianGuoMao AI Agent" },
@@ -2683,40 +2752,113 @@ function Home() {
             </article>
 
             <div className="space-y-5">
-              {caseStudies.map((caseStudy) => (
-                <article key={caseStudy.company} className="rounded-[1.9rem] border border-white/10 bg-white/6 p-6 shadow-[0_20px_90px_rgba(0,0,0,0.24)] backdrop-blur">
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                    <div>
-                      <p className="text-xs uppercase tracking-[0.22em] text-slate-400">{t(caseStudy.sector, locale)}</p>
-                      <h3 className="mt-2 text-2xl font-semibold text-white">{caseStudy.company}</h3>
-                    </div>
-                    <div className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-4 py-2 text-xs uppercase tracking-[0.18em] text-emerald-100">
-                      {locale === "zh" ? "协同增长中" : "Compounding"}
-                    </div>
-                  </div>
-
-                  <p className="mt-4 text-base leading-8 text-white">{t(caseStudy.outcome, locale)}</p>
-
-                  <div className="mt-5 grid gap-4 md:grid-cols-2">
-                    <div className="rounded-[1.4rem] border border-white/10 bg-slate-950/55 p-4">
-                      <p className="text-xs uppercase tracking-[0.22em] text-slate-400">{locale === "zh" ? "挑战" : "Challenge"}</p>
-                      <p className="mt-3 text-sm leading-7 text-slate-300">{t(caseStudy.challenge, locale)}</p>
-                    </div>
-                    <div className="rounded-[1.4rem] border border-white/10 bg-slate-950/55 p-4">
-                      <p className="text-xs uppercase tracking-[0.22em] text-slate-400">{locale === "zh" ? "五大引擎动作" : "Five-Engine Execution"}</p>
-                      <p className="mt-3 text-sm leading-7 text-slate-300">{t(caseStudy.solution, locale)}</p>
-                    </div>
-                  </div>
-
-                  <div className="mt-5 grid gap-3 sm:grid-cols-3">
-                    {caseStudy.metrics.map((metric) => (
-                      <div key={metric.label.en} className="rounded-[1.3rem] border border-white/10 bg-white/5 p-4">
-                        <p className="text-xs uppercase tracking-[0.18em] text-slate-400">{t(metric.label, locale)}</p>
-                        <p className="mt-3 text-2xl font-semibold text-white">{metric.value}</p>
+              {caseStudies.map((caseStudy, index) => (
+                <article key={caseStudy.company} className="overflow-hidden rounded-[1.9rem] border border-white/10 bg-white/6 shadow-[0_20px_90px_rgba(0,0,0,0.24)] backdrop-blur">
+                  <div className="relative border-b border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(82,230,255,0.12),transparent_34%),linear-gradient(145deg,rgba(8,15,30,0.94),rgba(14,24,40,0.72))] px-6 py-5">
+                    <div className="absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,rgba(82,230,255,0.9),rgba(245,197,92,0.35),transparent_88%)]" />
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div>
+                        <div className="flex items-center gap-3">
+                          <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] uppercase tracking-[0.22em] text-slate-300">
+                            {locale === "zh" ? `案例 0${index + 1}` : `Case 0${index + 1}`}
+                          </span>
+                          <p className="text-xs uppercase tracking-[0.22em] text-slate-400">{t(caseStudy.sector, locale)}</p>
+                        </div>
+                        <h3 className="mt-3 text-2xl font-semibold text-white">{caseStudy.company}</h3>
                       </div>
-                    ))}
+                      <div className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-4 py-2 text-xs uppercase tracking-[0.18em] text-emerald-100">
+                        {locale === "zh" ? "协同增长中" : "Compounding"}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-6">
+                    <p className="text-base leading-8 text-white">{t(caseStudy.outcome, locale)}</p>
+
+                    <div className="mt-5 grid gap-4 md:grid-cols-2">
+                      <div className="rounded-[1.4rem] border border-white/10 bg-slate-950/55 p-4">
+                        <p className="text-xs uppercase tracking-[0.22em] text-slate-400">{locale === "zh" ? "挑战" : "Challenge"}</p>
+                        <p className="mt-3 text-sm leading-7 text-slate-300">{t(caseStudy.challenge, locale)}</p>
+                      </div>
+                      <div className="rounded-[1.4rem] border border-white/10 bg-slate-950/55 p-4">
+                        <p className="text-xs uppercase tracking-[0.22em] text-slate-400">{locale === "zh" ? "五大引擎动作" : "Five-Engine Execution"}</p>
+                        <p className="mt-3 text-sm leading-7 text-slate-300">{t(caseStudy.solution, locale)}</p>
+                      </div>
+                    </div>
+
+                    <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                      {caseStudy.metrics.map((metric) => (
+                        <div key={metric.label.en} className="rounded-[1.3rem] border border-white/10 bg-white/5 p-4">
+                          <p className="text-xs uppercase tracking-[0.18em] text-slate-400">{t(metric.label, locale)}</p>
+                          <p className="mt-3 text-2xl font-semibold text-white">{metric.value}</p>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section id="insights" className="py-14">
+          <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
+            <article className="rounded-[2rem] border border-white/10 bg-slate-950/55 p-6 backdrop-blur-xl">
+              <SectionTag>{t(brandCopy.insightsTag, locale)}</SectionTag>
+              <h2 className="mt-5 text-3xl font-semibold tracking-tight text-white sm:text-[2.45rem]">{t(brandCopy.insightsTitle, locale)}</h2>
+              <p className="mt-4 text-base leading-8 text-slate-300">{t(brandCopy.insightsBody, locale)}</p>
+
+              <div className="mt-8 rounded-[1.7rem] border border-white/10 bg-white/6 p-5">
+                <p className="text-xs uppercase tracking-[0.22em] text-slate-400">{locale === "zh" ? "栏目定位" : "Editorial Focus"}</p>
+                <p className="mt-3 text-sm leading-7 text-slate-300">
+                  {locale === "zh"
+                    ? "首页只展示最新的 2-3 条内容，后面可以继续接独立的新闻 / 洞察列表页，用来承载博客、更新、行业观察和案例延伸。"
+                    : "The homepage only highlights a few recent items. It can later connect to a dedicated insights archive for updates, articles, GEO observations, and case extensions."}
+                </p>
+
+                <a
+                  href="#contact"
+                  className="mt-5 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium text-white transition hover:bg-white/8"
+                >
+                  {locale === "zh" ? "规划内容栏目" : "Plan the content hub"}
+                  <MoveUpRight className="h-4 w-4" />
+                </a>
+              </div>
+            </article>
+
+            <div className="space-y-4">
+              {insightItems.map((item, index) => (
+                <motion.article
+                  key={item.title.en}
+                  initial={{ opacity: 0, x: 18 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true, amount: 0.25 }}
+                  transition={{ duration: 0.35, delay: index * 0.04 }}
+                  className="overflow-hidden rounded-[1.7rem] border border-white/10 bg-white/6 shadow-[0_18px_80px_rgba(0,0,0,0.22)] backdrop-blur"
+                >
+                  <div className="h-1.5 w-full" style={{ background: `linear-gradient(90deg, ${item.accent}, transparent 88%)` }} />
+
+                  <div className="p-5">
+                    <div className="flex items-start justify-between gap-4">
+                      <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs uppercase tracking-[0.22em] text-slate-300">
+                        {t(item.category, locale)}
+                      </span>
+                      <div
+                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border"
+                        style={{ borderColor: `${item.accent}55`, backgroundColor: item.glow, color: item.accent }}
+                      >
+                        <item.icon className="h-4 w-4" />
+                      </div>
+                    </div>
+                    <h3 className="text-xl font-semibold text-white">{t(item.title, locale)}</h3>
+                    <p className="mt-4 text-sm leading-7 text-slate-300">{t(item.description, locale)}</p>
+                    <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] uppercase tracking-[0.18em] text-slate-300">
+                      {item.metric}
+                      <span className="text-slate-500">/</span>
+                      {t(item.metricLabel, locale)}
+                    </div>
+                  </div>
+                </motion.article>
               ))}
             </div>
           </div>
@@ -2730,21 +2872,61 @@ function Home() {
               <p className="mt-4 text-base leading-8 text-slate-300">{t(brandCopy.faqBody, locale)}</p>
             </article>
 
-            <div className="space-y-4">
-              {faqItems.map((item, index) => (
-                <motion.article
-                  key={item.question.en}
-                  initial={{ opacity: 0, x: 18 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true, amount: 0.3 }}
-                  transition={{ duration: 0.35, delay: index * 0.04 }}
-                  className="rounded-[1.7rem] border border-white/10 bg-white/6 p-5 shadow-[0_18px_80px_rgba(0,0,0,0.22)] backdrop-blur"
-                >
-                  <p className="text-xs uppercase tracking-[0.24em] text-slate-400">Q0{index + 1}</p>
-                  <h3 className="mt-3 text-xl font-semibold text-white">{t(item.question, locale)}</h3>
-                  <p className="mt-4 text-sm leading-7 text-slate-300">{t(item.answer, locale)}</p>
-                </motion.article>
-              ))}
+            <div className="space-y-5">
+              <div className="grid gap-4 md:grid-cols-2">
+                {faqItems.slice(0, 2).map((item, index) => (
+                  <motion.article
+                    key={item.question.en}
+                    initial={{ opacity: 0, x: 18 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true, amount: 0.3 }}
+                    transition={{ duration: 0.35, delay: index * 0.04 }}
+                    className="rounded-[1.7rem] border border-white/10 bg-white/6 p-5 shadow-[0_18px_80px_rgba(0,0,0,0.22)] backdrop-blur"
+                  >
+                    <p className="text-xs uppercase tracking-[0.24em] text-slate-400">
+                      {locale === "zh" ? `重点问题 0${index + 1}` : `Featured Q0${index + 1}`}
+                    </p>
+                    <h3 className="mt-3 text-xl font-semibold text-white">{t(item.question, locale)}</h3>
+                    <p className="mt-4 text-sm leading-7 text-slate-300">{t(item.answer, locale)}</p>
+                  </motion.article>
+                ))}
+              </div>
+
+              <div className="rounded-[1.8rem] border border-white/10 bg-slate-950/45 p-5 backdrop-blur-xl">
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.24em] text-slate-400">{locale === "zh" ? "更多问题" : "More Questions"}</p>
+                    <p className="mt-2 text-sm leading-7 text-slate-300">
+                      {locale === "zh"
+                        ? "下面这些问题更适合用来快速了解坚果猫的能力边界、合作方式和系统作用。"
+                        : "The remaining questions help visitors quickly understand JGMAO's boundaries, collaboration model, and system value."}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-5 space-y-3">
+                  {faqItems.slice(2).map((item, index) => (
+                    <motion.article
+                      key={item.question.en}
+                      initial={{ opacity: 0, y: 14 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true, amount: 0.25 }}
+                      transition={{ duration: 0.32, delay: index * 0.03 }}
+                      className="rounded-[1.35rem] border border-white/10 bg-white/5 px-4 py-4"
+                    >
+                      <div className="flex items-start gap-4">
+                        <span className="mt-0.5 inline-flex h-7 min-w-7 items-center justify-center rounded-full border border-white/10 bg-white/5 px-2 text-[11px] uppercase tracking-[0.16em] text-slate-300">
+                          {String(index + 3).padStart(2, "0")}
+                        </span>
+                        <div>
+                          <h3 className="text-base font-semibold text-white">{t(item.question, locale)}</h3>
+                          <p className="mt-2 text-sm leading-7 text-slate-300">{t(item.answer, locale)}</p>
+                        </div>
+                      </div>
+                    </motion.article>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </section>
