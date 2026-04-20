@@ -1,14 +1,59 @@
 import { execFile } from "node:child_process";
 import http from "node:http";
 import path from "node:path";
+import { setTimeout as sleep } from "node:timers/promises";
+import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 
 const execFileAsync = promisify(execFile);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const rootDir = path.resolve(__dirname, "..");
 
 const port = Number(process.env.PORT || 8788);
 const agentId = process.env.OPENCLAW_AGENT_ID || "jgmao-support-agent";
 const sharedToken = process.env.AGENT_BRIDGE_TOKEN || "";
 const openClawBin = process.env.OPENCLAW_BIN || "/opt/homebrew/bin/openclaw";
+const streamChunkDelayMs = Number(process.env.CHAT_STREAM_CHUNK_DELAY_MS || 26);
+const streamChunkSize = Number(process.env.CHAT_STREAM_CHUNK_SIZE || 22);
+
+const instantReplyRules = [
+  {
+    match: /^(你好|您好|hi|hello|hey)[!！,.。 ]*$/i,
+    reply: {
+      zh: "你好，我在。你可以直接告诉我公司名称、官网地址，或者当前最想提升的增长问题。",
+      en: "Hi, I’m here. You can share your company, website URL, or the main growth issue you want to improve.",
+    },
+  },
+  {
+    match: /(怎么联系|如何联系|联系你们|联系顾问|怎么合作|如何合作|预约咨询|预约演示|demo|consultation|contact)/i,
+    reply: {
+      zh: "可以直接在这里说你的公司、官网和当前问题，我会先帮你梳理需求；如果合适，也可以继续留下联系方式，方便顾问跟进。",
+      en: "You can share your company, website, and current issue here. I’ll help qualify the need first, and you can leave contact details for follow-up if useful.",
+    },
+  },
+  {
+    match: /(你们做什么|做什么的|是什么|能做什么|jgmao是做什么|what do you do|what is jgmao)/i,
+    reply: {
+      zh: "坚果猫 JGMAO 主要帮助企业把 AI 可见性、内容生产、官网承接、智能获客和推荐决策连成一个真正可运转的增长飞轮。",
+      en: "JGMAO helps businesses connect AI visibility, content production, website conversion, lead capture, and recommendation insights into one working growth flywheel.",
+    },
+  },
+  {
+    match: /(价格|收费|多少钱|报价|套餐|price|pricing|quote)/i,
+    reply: {
+      zh: "报价会根据行业、当前网站基础和你最想解决的问题来定。你可以先告诉我官网地址和当前目标，我先帮你判断适合从哪一块开始。",
+      en: "Pricing depends on your industry, website baseline, and what you want to solve first. Share your website and current goal, and I can help narrow down the right starting point.",
+    },
+  },
+  {
+    match: /(企业怎么做增长|怎么做增长|如何做增长|怎么提升增长|how to grow a business|how to drive growth)/i,
+    reply: {
+      zh: "企业做增长，核心不是单纯加投流，而是先找清楚卡点，再把获客、转化、留存和复购这条链路逐段提效。如果你愿意，可以直接告诉我行业、官网和当前最卡的一段，我帮你先判断从哪里下手。",
+      en: "Growth usually starts with finding the main bottleneck first, then improving acquisition, conversion, retention, and repeat purchase step by step. If you want, share your industry, website, and current bottleneck, and I’ll help narrow down the best starting point.",
+    },
+  },
+];
 
 function readJsonBody(req) {
   return new Promise((resolve, reject) => {
@@ -43,25 +88,163 @@ function isAuthorized(req) {
   return authorization === `Bearer ${sharedToken}`;
 }
 
+function normalizeAgentError(output) {
+  const text = output || "";
+
+  if (/session file locked/i.test(text)) {
+    return "Agent session is busy. Please retry in a moment.";
+  }
+
+  if (/timed out|timeout/i.test(text)) {
+    return "Agent request timed out while calling the model.";
+  }
+
+  if (/502 status code|bad gateway/i.test(text)) {
+    return "Agent upstream model service returned 502.";
+  }
+
+  return "";
+}
+
+function isSensitiveCredentialRequest(message) {
+  const text = (message || "").toLowerCase();
+  return [
+    /ssh/,
+    /private key/,
+    /public key/,
+    /api key/,
+    /access token/,
+    /password/,
+    /cookie/,
+    /秘钥/,
+    /密钥/,
+    /私钥/,
+    /公钥/,
+    /密码/,
+    /令牌/,
+    /凭据/,
+    /token/,
+  ].some((pattern) => pattern.test(text));
+}
+
+function getLocalizedCopy(copy, message) {
+  const zh = /[\u4e00-\u9fff]/.test(message || "");
+  return zh ? copy.zh : copy.en;
+}
+
+function getInstantReply(message) {
+  const trimmed = (message || "").trim();
+  if (!trimmed) {
+    return "";
+  }
+
+  const matchedRule = instantReplyRules.find((rule) => rule.match.test(trimmed));
+  return matchedRule ? getLocalizedCopy(matchedRule.reply, trimmed) : "";
+}
+
+function createStreamChunks(text) {
+  const normalized = (text || "").replace(/\r/g, "").trim();
+  if (!normalized) {
+    return [];
+  }
+
+  const chunks = [];
+  const paragraphs = normalized
+    .split(/\n{2,}/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+
+  for (const paragraph of paragraphs) {
+    if (paragraph.length <= streamChunkSize) {
+      chunks.push(paragraph);
+      continue;
+    }
+
+    const segments = paragraph
+      .split(/(?<=[。！？!?；;：:])\s*|(?<=\.)\s+/)
+      .map((part) => part.trim())
+      .filter(Boolean);
+
+    if (!segments.length) {
+      chunks.push(paragraph);
+      continue;
+    }
+
+    let current = "";
+    for (const segment of segments) {
+      if (!current) {
+        current = segment;
+        continue;
+      }
+
+      if ((current + segment).length <= streamChunkSize) {
+        current += segment;
+        continue;
+      }
+
+      chunks.push(current);
+      current = segment;
+    }
+
+    if (current) {
+      chunks.push(current);
+    }
+  }
+
+  return chunks;
+}
+
+function writeStreamEvent(res, event) {
+  res.write(`${JSON.stringify(event)}\n`);
+}
+
+async function streamReply(res, reply, meta = {}, options = {}) {
+  if (!options.skipStart) {
+    writeStreamEvent(res, { type: "start", ...meta });
+  }
+
+  const chunks = createStreamChunks(reply);
+  if (!chunks.length) {
+    writeStreamEvent(res, { type: "done", reply });
+    res.end();
+    return;
+  }
+
+  for (const chunk of chunks) {
+    writeStreamEvent(res, { type: "delta", delta: chunk });
+    await sleep(streamChunkDelayMs);
+  }
+
+  writeStreamEvent(res, { type: "done", reply });
+  res.end();
+}
+
+function getSensitiveCredentialRefusal(message) {
+  const zh = /[\u4e00-\u9fff]/.test(message || "");
+  if (zh) {
+    return "不要在聊天里提供 SSH 密钥、密码、API Key 或其他敏感凭据。我可以继续帮你梳理官网、业务目标、技术栈和接入需求；如果需要正式技术对接，我们会通过安全方式安排工程师跟进。";
+  }
+
+  return "Please do not share SSH keys, passwords, API keys, cookies, or any other sensitive credentials in chat. I can still help with your website context, goals, stack, and integration needs, and an engineer can follow up through a secure process if needed.";
+}
+
 async function runAgent({ message, sessionId }) {
   console.log(`[bridge] running agent for session=${sessionId}`);
   const { stdout, stderr } = await execFileAsync(
-    openClawBin,
+    "/bin/zsh",
     [
-      "agent",
-      "--agent",
-      agentId,
-      "--local",
-      "--json",
-      "--session-id",
-      sessionId,
-      "--message",
-      message,
+      "-lc",
+      'cd "$JGMAO_BRIDGE_ROOT" && exec "$OPENCLAW_BIN" agent --agent "$OPENCLAW_AGENT_ID" --local --json --session-id "$OPENCLAW_SESSION_ID" --message "$OPENCLAW_MESSAGE"',
     ],
     {
       env: {
         ...process.env,
         PATH: [path.dirname(openClawBin), process.env.PATH].filter(Boolean).join(":"),
+        JGMAO_BRIDGE_ROOT: rootDir,
+        OPENCLAW_BIN: openClawBin,
+        OPENCLAW_AGENT_ID: agentId,
+        OPENCLAW_SESSION_ID: sessionId,
+        OPENCLAW_MESSAGE: message,
       },
       timeout: 120000,
       maxBuffer: 2 * 1024 * 1024,
@@ -72,7 +255,7 @@ async function runAgent({ message, sessionId }) {
   const jsonStart = combined.indexOf("{");
 
   if (jsonStart < 0) {
-    throw new Error("No JSON payload returned from OpenClaw agent");
+    throw new Error(normalizeAgentError(combined) || "No JSON payload returned from OpenClaw agent");
   }
 
   const parsed = JSON.parse(combined.slice(jsonStart));
@@ -103,6 +286,7 @@ const server = http.createServer(async (req, res) => {
     const payload = await readJsonBody(req);
     const message = typeof payload?.message === "string" ? payload.message.trim() : "";
     const sessionId = typeof payload?.sessionId === "string" ? payload.sessionId.trim() : "";
+    const stream = Boolean(payload?.stream);
     console.log(`[bridge] incoming request session=${sessionId || "missing"} messageLength=${message.length}`);
 
     if (!message || !sessionId) {
@@ -111,13 +295,63 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
+    if (isSensitiveCredentialRequest(message)) {
+      const reply = getSensitiveCredentialRefusal(message);
+      if (stream) {
+        res.writeHead(200, { "content-type": "application/x-ndjson; charset=utf-8", "cache-control": "no-store" });
+        await streamReply(res, reply, { route: "sensitive-guard" });
+        return;
+      }
+
+      res.writeHead(200, { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" });
+      res.end(JSON.stringify({ ok: true, reply }));
+      return;
+    }
+
+    const instantReply = getInstantReply(message);
+    if (instantReply) {
+      if (stream) {
+        res.writeHead(200, { "content-type": "application/x-ndjson; charset=utf-8", "cache-control": "no-store" });
+        await streamReply(res, instantReply, { route: "instant" });
+        return;
+      }
+
+      res.writeHead(200, { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" });
+      res.end(JSON.stringify({ ok: true, reply: instantReply }));
+      return;
+    }
+
+    if (stream) {
+      res.writeHead(200, { "content-type": "application/x-ndjson; charset=utf-8", "cache-control": "no-store" });
+      writeStreamEvent(res, { type: "start", route: "agent" });
+      writeStreamEvent(res, {
+        type: "status",
+        message: /[\u4e00-\u9fff]/.test(message) ? "我先快速判断问题，再给你一个尽量短的答案。" : "Reviewing the question and preparing a concise answer.",
+      });
+      const result = await runAgent({ message, sessionId });
+      await streamReply(res, result.reply, { route: "agent" }, { skipStart: true });
+      return;
+    }
+
     const result = await runAgent({ message, sessionId });
+
     res.writeHead(200, { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" });
     res.end(JSON.stringify({ ok: true, reply: result.reply }));
   } catch (error) {
     console.error("[bridge] request failed", error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+
+    if (req.headers.accept?.includes("application/x-ndjson")) {
+      if (!res.headersSent) {
+        res.writeHead(500, { "content-type": "application/x-ndjson; charset=utf-8", "cache-control": "no-store" });
+      }
+      writeStreamEvent(res, { type: "error", error: errorMessage });
+      res.end();
+      return;
+    }
+
     res.writeHead(500, { "content-type": "application/json; charset=utf-8" });
-    res.end(JSON.stringify({ ok: false, error: error instanceof Error ? error.message : String(error) }));
+    res.end(JSON.stringify({ ok: false, error: errorMessage }));
   }
 });
 

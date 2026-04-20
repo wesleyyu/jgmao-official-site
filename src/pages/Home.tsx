@@ -1288,6 +1288,54 @@ function renderChatMessageContent(text: string): ReactNode[] {
   return nodes;
 }
 
+function createChatMessageId(prefix: string) {
+  if (typeof window !== "undefined" && window.crypto?.randomUUID) {
+    return `${prefix}-${window.crypto.randomUUID()}`;
+  }
+
+  return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+async function readStreamingChatResponse(
+  response: Response,
+  onEvent: (event: { type: string; delta?: string; reply?: string; error?: string; message?: string }) => void,
+) {
+  const reader = response.body?.getReader();
+  if (!reader) {
+    throw new Error("Streaming response body was unavailable.");
+  }
+
+  const decoder = new TextDecoder();
+  let buffer = "";
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) {
+      break;
+    }
+
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split("\n");
+    buffer = lines.pop() || "";
+
+    for (const rawLine of lines) {
+      const line = rawLine.trim();
+      if (!line) {
+        continue;
+      }
+
+      const parsed = JSON.parse(line) as { type: string; delta?: string; reply?: string; error?: string; message?: string };
+      onEvent(parsed);
+    }
+  }
+
+  const trailing = buffer.trim();
+  if (trailing) {
+    const parsed = JSON.parse(trailing) as { type: string; delta?: string; reply?: string; error?: string; message?: string };
+    onEvent(parsed);
+  }
+}
+
 function displayFlywheelName(module: FlywheelModule, locale: Locale) {
   return module.name;
 }
@@ -1454,6 +1502,7 @@ function Home() {
   const [chatInput, setChatInput] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
   const [chatError, setChatError] = useState<string | null>(null);
+  const [lastFailedMessage, setLastFailedMessage] = useState("");
   const [chatSessionId] = useState(() => {
     if (typeof window === "undefined") {
       return "jgmao-web-local";
@@ -1461,7 +1510,7 @@ function Home() {
 
     return `jgmao-web-${window.crypto?.randomUUID?.() ?? Date.now().toString(36)}`;
   });
-  const [chatMessages, setChatMessages] = useState<Array<{ role: "user" | "assistant"; text: string }>>([]);
+  const [chatMessages, setChatMessages] = useState<Array<{ id: string; role: "user" | "assistant"; text: string }>>([]);
 
   const activeCapability = capabilities[activeIndex];
   const detailCapability = detailIndex === null ? null : capabilities[detailIndex];
@@ -1475,57 +1524,160 @@ function Home() {
       : "";
   const chatEndpoint = configuredChatEndpoint || (isLocalPreview ? "/local-chat/message" : "/api/chat/send");
 
-  async function sendChatMessage(message: string) {
+  function formatChatErrorMessage(messageText: string) {
+    if (locale !== "zh") {
+      return messageText;
+    }
+
+    const normalized = messageText.toLowerCase();
+
+    if (normalized.includes("timed out")) {
+      return "这次回复超时了。你可以直接重试，或者先换一个更短的问题。";
+    }
+
+    if (normalized.includes("502")) {
+      return "模型服务暂时不可用。建议稍后重试一次。";
+    }
+
+    if (normalized.includes("session is busy") || normalized.includes("session file locked")) {
+      return "智能体当前正在处理其他请求，请稍后再试。";
+    }
+
+    if (normalized.includes("failed to fetch") || normalized.includes("fetch failed")) {
+      return "智能体连接失败，请检查本机 bridge、Tailscale 或网络状态。";
+    }
+
+    return messageText;
+  }
+
+  async function sendChatMessage(message: string, options?: { retry?: boolean }) {
     const trimmed = message.trim();
     if (!trimmed || chatLoading) {
       return;
     }
 
-    setChatMessages((current) => [...current, { role: "user", text: trimmed }]);
-    setChatInput("");
+    const assistantMessageId = createChatMessageId("assistant");
+    if (options?.retry) {
+      setChatMessages((current) => [
+        ...current,
+        {
+          id: assistantMessageId,
+          role: "assistant",
+          text: locale === "zh" ? "我再试一次，这次会尽量更快返回。" : "Retrying now. I’ll try to return faster this time.",
+        },
+      ]);
+    } else {
+      setChatMessages((current) => [
+        ...current,
+        { id: createChatMessageId("user"), role: "user", text: trimmed },
+        {
+          id: assistantMessageId,
+          role: "assistant",
+          text: locale === "zh" ? "正在整理回答..." : "Preparing the reply...",
+        },
+      ]);
+    }
+
+    if (!options?.retry) {
+      setChatInput("");
+    }
     setChatLoading(true);
     setChatError(null);
+    setLastFailedMessage(trimmed);
 
     try {
       const response = await fetch(chatEndpoint, {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: {
+          "content-type": "application/json",
+          accept: "application/x-ndjson, application/json",
+        },
         body: JSON.stringify({
           message: trimmed,
           sessionId: chatSessionId,
+          stream: true,
         }),
       });
+      const contentType = response.headers.get("content-type") || "";
 
-      const payload = await response.json();
-      if (!response.ok || !payload?.ok) {
-        throw new Error(payload?.error || "Chat request failed");
+      if (contentType.includes("application/x-ndjson")) {
+        let streamedReply = "";
+
+        await readStreamingChatResponse(response, (event) => {
+          if (event.type === "status" && typeof event.message === "string") {
+            setChatMessages((current) =>
+              current.map((item) => (item.id === assistantMessageId ? { ...item, text: event.message || item.text } : item)),
+            );
+            return;
+          }
+
+          if (event.type === "delta" && event.delta) {
+            streamedReply += event.delta;
+            setChatMessages((current) =>
+              current.map((item) => (item.id === assistantMessageId ? { ...item, text: streamedReply } : item)),
+            );
+            return;
+          }
+
+          if (event.type === "done") {
+            const finalReply = typeof event.reply === "string" && event.reply.trim()
+              ? event.reply.trim()
+              : streamedReply.trim();
+            setChatMessages((current) =>
+              current.map((item) =>
+                item.id === assistantMessageId
+                  ? {
+                      ...item,
+                      text: finalReply || (locale === "zh" ? "已收到，我继续帮你整理。" : "Got it. Let me help from here."),
+                    }
+                  : item,
+              ),
+            );
+            return;
+          }
+
+          if (event.type === "error") {
+            throw new Error(event.error || "Chat stream failed");
+          }
+        });
+      } else {
+        const payload = await response.json();
+        if (!response.ok || !payload?.ok) {
+          throw new Error(payload?.error || "Chat request failed");
+        }
+
+        setChatMessages((current) =>
+          current.map((item) =>
+            item.id === assistantMessageId
+              ? {
+                  ...item,
+                  text:
+                    typeof payload.reply === "string" && payload.reply.trim()
+                      ? payload.reply.trim()
+                      : locale === "zh"
+                        ? "已收到，我继续帮你整理。"
+                        : "Got it. Let me help from here.",
+                }
+              : item,
+          ),
+        );
       }
-
-      setChatMessages((current) => [
-        ...current,
-        {
-          role: "assistant",
-          text:
-            typeof payload.reply === "string" && payload.reply.trim()
-              ? payload.reply.trim()
-              : locale === "zh"
-                ? "已收到，我继续帮你整理。"
-                : "Got it. Let me help from here.",
-        },
-      ]);
     } catch (error) {
       const messageText = error instanceof Error ? error.message : String(error);
-      setChatError(messageText);
-      setChatMessages((current) => [
-        ...current,
-        {
-          role: "assistant",
-          text:
-            locale === "zh"
-              ? "我先记录下你的问题了。目前智能体连接有点小问题，你可以稍后再试，或者继续补充你的需求。"
-              : "I captured your request, but the agent connection hit a small issue. You can retry shortly or keep adding more context.",
-        },
-      ]);
+      setChatError(formatChatErrorMessage(messageText));
+      setChatMessages((current) =>
+        current.map((item) =>
+          item.id === assistantMessageId
+            ? {
+                ...item,
+                text:
+                  locale === "zh"
+                    ? "我先记下你的问题了，但这次返回失败了。你可以点击重试，或者先换一个更短的问题继续问我。"
+                    : "I captured your request, but this reply failed. You can retry it, or try a shorter question first.",
+              }
+            : item,
+        ),
+      );
     } finally {
       setChatLoading(false);
     }
@@ -1538,11 +1690,12 @@ function Home() {
   useEffect(() => {
     setChatMessages([
       {
+        id: createChatMessageId("assistant"),
         role: "assistant",
         text:
           locale === "zh"
-            ? "你好，我是坚果猫AI智能体。你可以直接告诉我你的公司、官网地址，以及当前最想提升的增长问题。"
-            : "Hi, I’m the JianGuoMao AI agent. You can directly share your company, website URL, and the main growth issue you want to improve.",
+            ? "你好，我是坚果猫AI智能体。直接告诉我公司、官网地址，或者当前最想提升的增长问题就可以。"
+            : "Hi, I’m the JianGuoMao AI agent. Share your company, website, or main growth issue to get started.",
       },
     ]);
     setChatInput("");
@@ -2782,11 +2935,6 @@ function Home() {
                     </div>
                   ))}
 
-                  {chatLoading ? (
-                    <div className="ml-auto max-w-[88%] rounded-[1.2rem] rounded-tr-md border border-cyan-300/18 bg-cyan-300/10 px-4 py-3 text-sm leading-7 text-cyan-50">
-                      {locale === "zh" ? "正在思考中..." : "Thinking..."}
-                    </div>
-                  ) : null}
                 </div>
               </div>
 
@@ -2807,7 +2955,7 @@ function Home() {
                     />
                     <button
                       type="button"
-                      disabled={!isLocalPreview || chatLoading || !chatInput.trim()}
+                      disabled={chatLoading || !chatInput.trim()}
                       onClick={() => {
                         void sendChatMessage(chatInput);
                       }}
@@ -2818,9 +2966,24 @@ function Home() {
                     </button>
                   </div>
                   {chatError ? (
-                    <p className="mt-3 text-xs leading-6 text-rose-200">
-                      {locale === "zh" ? `本机智能体连接异常：${chatError}` : `Local agent error: ${chatError}`}
-                    </p>
+                    <div className="mt-3 flex flex-wrap items-center gap-3">
+                      <p className="text-xs leading-6 text-rose-200">
+                        {locale === "zh" ? `智能体返回异常：${chatError}` : `Agent response issue: ${chatError}`}
+                      </p>
+                      {lastFailedMessage ? (
+                        <button
+                          type="button"
+                          disabled={chatLoading}
+                          onClick={() => {
+                            void sendChatMessage(lastFailedMessage, { retry: true });
+                          }}
+                          className="inline-flex items-center gap-1 rounded-full border border-rose-300/20 bg-rose-300/10 px-3 py-1 text-[11px] font-medium text-rose-100 transition hover:border-rose-200/35 hover:bg-rose-300/14 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          {locale === "zh" ? "重试上一次问题" : "Retry last message"}
+                          <ArrowRight className="h-3.5 w-3.5" />
+                        </button>
+                      ) : null}
+                    </div>
                   ) : (
                     <p className="mt-3 text-xs leading-6 text-slate-400">
                       {locale === "zh"

@@ -1,10 +1,9 @@
-import { execFile } from "node:child_process";
 import { createReadStream } from "node:fs";
 import { access, stat } from "node:fs/promises";
 import http from "node:http";
 import path from "node:path";
+import { Readable } from "node:stream";
 import { fileURLToPath } from "node:url";
-import { promisify } from "node:util";
 
 import httpProxy from "http-proxy";
 
@@ -15,9 +14,8 @@ const distDir = path.join(rootDir, "dist");
 
 const port = Number(process.env.PORT || 1688);
 const openClawOrigin = process.env.OPENCLAW_CHAT_ORIGIN || "http://127.0.0.1:18789";
-const openClawAgentId = process.env.OPENCLAW_AGENT_ID || "jgmao-support-agent";
-const openClawBin = process.env.OPENCLAW_BIN || "/opt/homebrew/bin/openclaw";
-const execFileAsync = promisify(execFile);
+const localBridgeOrigin = process.env.LOCAL_AGENT_BRIDGE_ORIGIN || "http://127.0.0.1:8788";
+const localBridgeToken = process.env.AGENT_BRIDGE_TOKEN || "jgmao-local-shared-secret";
 
 const mimeTypes = new Map([
   [".html", "text/html; charset=utf-8"],
@@ -105,53 +103,12 @@ function readJsonBody(req) {
   });
 }
 
-async function runLocalAgentTurn({ message, sessionId }) {
-  const { stdout, stderr } = await execFileAsync(
-    openClawBin,
-    [
-      "agent",
-      "--agent",
-      openClawAgentId,
-      "--local",
-      "--json",
-      "--session-id",
-      sessionId,
-      "--message",
-      message,
-    ],
-    {
-      cwd: rootDir,
-      env: {
-        ...process.env,
-        PATH: [path.dirname(openClawBin), process.env.PATH].filter(Boolean).join(":"),
-      },
-      timeout: 120000,
-      maxBuffer: 2 * 1024 * 1024,
-    },
-  );
-
-  const combined = [stdout, stderr].filter(Boolean).join("\n");
-  const jsonStart = combined.indexOf("{");
-  if (jsonStart < 0) {
-    throw new Error("No JSON payload returned from OpenClaw agent");
-  }
-
-  const parsed = JSON.parse(combined.slice(jsonStart));
-  const reply = Array.isArray(parsed.payloads)
-    ? parsed.payloads
-        .map((payload) => (typeof payload?.text === "string" ? payload.text.trim() : ""))
-        .filter(Boolean)
-        .join("\n\n")
-    : "";
-
-  return { reply, raw: parsed };
-}
-
 async function handleLocalChatRequest(req, res) {
   try {
     const payload = await readJsonBody(req);
     const message = typeof payload?.message === "string" ? payload.message.trim() : "";
     const sessionId = typeof payload?.sessionId === "string" ? payload.sessionId.trim() : "";
+    const stream = Boolean(payload?.stream);
 
     if (!message || !sessionId) {
       res.writeHead(400, { "content-type": "application/json; charset=utf-8" });
@@ -159,9 +116,28 @@ async function handleLocalChatRequest(req, res) {
       return true;
     }
 
-    const result = await runLocalAgentTurn({ message, sessionId });
-    res.writeHead(200, { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" });
-    res.end(JSON.stringify({ ok: true, reply: result.reply }));
+    const response = await fetch(`${localBridgeOrigin}/chat`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        accept: stream ? "application/x-ndjson" : "application/json",
+        ...(localBridgeToken ? { authorization: `Bearer ${localBridgeToken}` } : {}),
+      },
+      body: JSON.stringify({ message, sessionId, stream }),
+    });
+
+    res.writeHead(response.status, {
+      "content-type": response.headers.get("content-type") || "application/json; charset=utf-8",
+      "cache-control": "no-store",
+    });
+
+    if (response.body) {
+      Readable.fromWeb(response.body).pipe(res);
+      return true;
+    }
+
+    const text = await response.text();
+    res.end(text);
     return true;
   } catch (error) {
     res.writeHead(500, { "content-type": "application/json; charset=utf-8" });
@@ -237,7 +213,7 @@ server.on("upgrade", (req, socket, head) => {
   proxy.ws(req, socket, head, { target: openClawOrigin.replace(/^http/i, "ws") });
 });
 
-server.listen(port, () => {
+server.listen(port, "0.0.0.0", () => {
   console.log(`Local preview server running at http://127.0.0.1:${port}`);
   console.log(`Proxying OpenClaw chat from ${openClawOrigin}`);
 });

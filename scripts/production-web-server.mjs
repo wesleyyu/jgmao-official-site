@@ -2,6 +2,7 @@ import { createReadStream } from "node:fs";
 import { access, stat } from "node:fs/promises";
 import http from "node:http";
 import path from "node:path";
+import { Readable } from "node:stream";
 import { fileURLToPath } from "node:url";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -59,15 +60,22 @@ async function proxyChatRequest(req, res) {
       method: "POST",
       headers: {
         "content-type": "application/json",
+        accept: payload?.stream ? "application/x-ndjson" : "application/json",
       },
       body: JSON.stringify(payload),
     });
 
-    const text = await response.text();
     res.writeHead(response.status, {
       "content-type": response.headers.get("content-type") || "application/json; charset=utf-8",
       "cache-control": "no-store",
     });
+
+    if (response.body) {
+      Readable.fromWeb(response.body).pipe(res);
+      return;
+    }
+
+    const text = await response.text();
     res.end(text);
   } catch (error) {
     res.writeHead(502, { "content-type": "application/json; charset=utf-8" });

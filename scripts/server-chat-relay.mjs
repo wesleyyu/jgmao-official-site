@@ -1,4 +1,5 @@
 import http from "node:http";
+import { Readable } from "node:stream";
 
 const port = Number(process.env.PORT || 8789);
 const bridgeUrl = process.env.AGENT_BRIDGE_URL || "http://127.0.0.1:8788/chat";
@@ -56,30 +57,36 @@ const server = http.createServer(async (req, res) => {
       method: "POST",
       headers: {
         "content-type": "application/json",
+        accept: payload?.stream ? "application/x-ndjson" : "application/json",
         ...(bridgeToken ? { authorization: `Bearer ${bridgeToken}` } : {}),
       },
       body: JSON.stringify(payload),
     });
 
-    const text = await response.text();
-    const isJson = (response.headers.get("content-type") || "").includes("application/json");
-    const safePayload = isJson ? JSON.parse(text) : { ok: false, error: "Unexpected relay response" };
-
     res.writeHead(response.status, {
-      "content-type": "application/json; charset=utf-8",
+      "content-type": response.headers.get("content-type") || "application/json; charset=utf-8",
       "cache-control": "no-store",
     });
+
+    const contentType = response.headers.get("content-type") || "";
+    if (contentType.includes("application/x-ndjson") && response.body) {
+      Readable.fromWeb(response.body).pipe(res);
+      return;
+    }
+
+    const text = await response.text();
+    const isJson = contentType.includes("application/json");
+    const safePayload = isJson ? JSON.parse(text) : { ok: false, error: "Unexpected relay response" };
+
     if (response.ok) {
       res.end(JSON.stringify({ ok: true, reply: typeof safePayload.reply === "string" ? safePayload.reply : "" }));
       return;
     }
 
-    res.end(
-      JSON.stringify({
-        ok: false,
-        error: typeof safePayload.error === "string" ? safePayload.error : "Relay upstream error",
-      }),
-    );
+    res.end(JSON.stringify({
+      ok: false,
+      error: typeof safePayload.error === "string" ? safePayload.error : "Relay upstream error",
+    }));
   } catch (error) {
     res.writeHead(502, { "content-type": "application/json; charset=utf-8" });
     res.end(JSON.stringify({ ok: false, error: error instanceof Error ? error.message : String(error) }));
