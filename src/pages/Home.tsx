@@ -147,7 +147,7 @@ const navItems: NavItem[] = [
   { href: "#cases", label: { zh: "案例", en: "Cases" } },
   { href: "#insights", label: { zh: "新闻 / 洞察", en: "News / Insights" } },
   { href: "#faq", label: { zh: "FAQ", en: "FAQ" } },
-  { href: "#contact", label: { zh: "联系咨询", en: "Contact" } },
+  { href: "#contact", label: { zh: "关于我们", en: "About Us" } },
 ];
 
 const orbitPositions: OrbitPosition[] = [
@@ -1240,11 +1240,11 @@ const brandCopy = {
     zh: "这里会持续沉淀坚果猫的最新动态、AI 增长方法、GEO 观察和案例延展内容。",
     en: "This section collects the latest JianGuoMao updates, AI growth methods, GEO observations, and case extensions.",
   },
-  contactTag: { zh: "联系我们", en: "Contact" },
-  contactTitle: { zh: "坚果猫AI智能体", en: "JianGuoMao AI Agent" },
+  contactTag: { zh: "关于我们", en: "About Us" },
+  contactTitle: { zh: "关于我们", en: "About JianGuoMao" },
   contactBody: {
-    zh: "打开对话窗口，即可连接坚果猫智能客服，快速说明你的业务问题、当前网站情况与合作需求。",
-    en: "Open the chat window to connect with the JianGuoMao AI concierge and quickly share your business goals, website context, and project needs.",
+    zh: "欢迎交流 GEO、AI 增长网站、内容增长与企业增长飞轮相关合作。",
+    en: "Talk with us about GEO, AI growth websites, content systems, and enterprise growth flywheels.",
   },
   formSuccess: {
     zh: "信息已记录。下一步可以把这份表单接到 CRM、日历预约或顾问分发流程。",
@@ -1564,6 +1564,11 @@ function Home() {
   const [moduleTab, setModuleTab] = useState<"overview" | "outputs" | "integrations">("overview");
   const [activeSection, setActiveSection] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
+  const [activeCaseIndex, setActiveCaseIndex] = useState<number | null>(null);
+  const [activeInsightIndex, setActiveInsightIndex] = useState<number | null>(null);
+  const [activeFaqIndex, setActiveFaqIndex] = useState<number | null>(null);
+  const [showMobileModuleDetail, setShowMobileModuleDetail] = useState(false);
+  const [activeScenarioIndex, setActiveScenarioIndex] = useState<number | null>(null);
   const [floatingNavOpen, setFloatingNavOpen] = useState(false);
   const [detailIndex, setDetailIndex] = useState<number | null>(null);
   const [flywheelDemoDetailIndex, setFlywheelDemoDetailIndex] = useState<number | null>(null);
@@ -2487,6 +2492,7 @@ function Home() {
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {scenarioCards.map((scenario, index) => {
               const Icon = scenario.icon;
+              const isExpanded = activeScenarioIndex === index;
 
               return (
                 <motion.article
@@ -2497,16 +2503,23 @@ function Home() {
                   transition={{ duration: 0.35, delay: index * 0.04 }}
                   className="rounded-[1.8rem] border border-white/10 bg-white/6 p-5 shadow-[0_20px_80px_rgba(0,0,0,0.2)] backdrop-blur"
                 >
-                  <div className="flex items-center gap-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl border" style={{ borderColor: `${scenario.accent}88`, backgroundColor: scenario.glow, color: scenario.accent }}>
-                      <Icon className="h-5 w-5" />
+                  <button
+                    type="button"
+                    onClick={() => setActiveScenarioIndex((current) => (current === index ? null : index))}
+                    className="w-full text-left"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-2xl border" style={{ borderColor: `${scenario.accent}88`, backgroundColor: scenario.glow, color: scenario.accent }}>
+                        <Icon className="h-5 w-5" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs uppercase tracking-[0.22em] text-slate-400">{locale === "zh" ? `场景 0${index + 1}` : `Scenario 0${index + 1}`}</p>
+                        <h3 className="mt-1 text-xl font-semibold text-white">{t(scenario.title, locale)}</h3>
+                      </div>
+                      <ArrowRight className={cn("h-4 w-4 shrink-0 text-slate-500 transition md:hidden", isExpanded && "rotate-90 text-white")} />
                     </div>
-                    <div>
-                      <p className="text-xs uppercase tracking-[0.22em] text-slate-400">{locale === "zh" ? `场景 0${index + 1}` : `Scenario 0${index + 1}`}</p>
-                      <h3 className="mt-1 text-xl font-semibold text-white">{t(scenario.title, locale)}</h3>
-                    </div>
-                  </div>
-                  <p className="mt-4 text-sm leading-7 text-slate-300">{t(scenario.description, locale)}</p>
+                  </button>
+                  <p className={cn("mt-4 text-sm leading-7 text-slate-300", !isExpanded && "hidden md:block")}>{t(scenario.description, locale)}</p>
                 </motion.article>
               );
             })}
@@ -2528,49 +2541,101 @@ function Home() {
                 const layer = capabilityLayers[index];
 
                 return (
-                  <button
+                  <div
                     key={capability.id}
-                    type="button"
-                    onMouseEnter={() => setActiveIndex(index)}
-                    onFocus={() => setActiveIndex(index)}
-                    onClick={() => setActiveIndex(index)}
                     className={cn(
-                      "w-full rounded-[1.55rem] border px-4 py-4 text-left transition",
+                      "rounded-[1.55rem] border transition",
                       isActive ? "border-white/16 bg-white/8 shadow-[0_18px_50px_rgba(0,0,0,0.18)]" : "border-white/8 bg-white/[0.03] hover:bg-white/[0.06]",
                     )}
                     style={isActive ? { boxShadow: `0 0 0 1px ${capability.accent} inset, 0 0 28px ${capability.glow}` } : undefined}
                   >
-                    <div className="flex items-start gap-4">
-                      <div
-                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border"
-                        style={{ borderColor: isActive ? capability.accent : "rgba(255,255,255,0.12)", backgroundColor: capability.glow, color: capability.accent }}
-                      >
-                        <Icon className="h-4 w-4" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center justify-between gap-3">
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <p className="text-[11px] uppercase tracking-[0.2em]" style={{ color: isActive ? capability.accent : "#94A3B8" }}>{capability.token}</p>
-                              <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] uppercase tracking-[0.16em] text-slate-300">
-                                {t(layer, locale)}
-                              </span>
-                            </div>
-                            <p className="mt-1 text-lg font-semibold text-white">{t(capability.name, locale)}</p>
-                          </div>
-                          <ArrowRight className={cn("h-4 w-4 shrink-0 transition", isActive ? "translate-x-0 text-white" : "text-slate-500")} />
+                    <button
+                      type="button"
+                      onMouseEnter={() => setActiveIndex(index)}
+                      onFocus={() => setActiveIndex(index)}
+                      onClick={() => {
+                        setActiveIndex(index);
+                        setShowMobileModuleDetail((current) => (index === activeIndex ? !current : true));
+                      }}
+                      className="w-full px-4 py-4 text-left"
+                    >
+                      <div className="flex items-start gap-4">
+                        <div
+                          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border"
+                          style={{ borderColor: isActive ? capability.accent : "rgba(255,255,255,0.12)", backgroundColor: capability.glow, color: capability.accent }}
+                        >
+                          <Icon className="h-4 w-4" />
                         </div>
-                        <p className="mt-2 text-sm leading-6 text-slate-300">{t(capability.summary, locale)}</p>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center justify-between gap-3">
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <p className="text-[11px] uppercase tracking-[0.2em]" style={{ color: isActive ? capability.accent : "#94A3B8" }}>{capability.token}</p>
+                                <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] uppercase tracking-[0.16em] text-slate-300">
+                                  {t(layer, locale)}
+                                </span>
+                              </div>
+                              <p className="mt-1 text-lg font-semibold text-white">{t(capability.name, locale)}</p>
+                            </div>
+                            <ArrowRight className={cn("h-4 w-4 shrink-0 transition", isActive && showMobileModuleDetail ? "rotate-90 text-white" : "text-slate-500 lg:rotate-0")} />
+                          </div>
+                          <p className="mt-2 text-sm leading-6 text-slate-300">{t(capability.summary, locale)}</p>
+                        </div>
                       </div>
-                    </div>
-                  </button>
+                    </button>
+
+                    {isActive && showMobileModuleDetail ? (
+                      <div className="border-t border-white/10 px-4 pb-4 pt-4 lg:hidden">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] uppercase tracking-[0.18em] text-slate-300">
+                            {t(capabilityLayers[index], locale)}
+                          </span>
+                          <span
+                            className="rounded-full border px-3 py-1 text-[11px] uppercase tracking-[0.18em]"
+                            style={{ borderColor: `${capability.accent}66`, backgroundColor: capability.glow, color: capability.accent }}
+                          >
+                            {capability.token}
+                          </span>
+                        </div>
+                        <p className="mt-4 text-base leading-8 text-slate-300">{t(capability.description, locale)}</p>
+
+                        <div className="mt-4 flex flex-wrap gap-2">
+                          {capability.signals.slice(0, 4).map((signal) => (
+                            <span key={signal.en} className="rounded-full border px-3 py-2 text-sm text-slate-200" style={{ borderColor: `${capability.accent}66`, backgroundColor: capability.glow }}>
+                              {t(signal, locale)}
+                            </span>
+                          ))}
+                        </div>
+
+                        <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                          {capability.metrics.map((metric) => (
+                            <div key={metric.label.en} className="rounded-[1.25rem] border border-white/10 bg-slate-950/55 p-4">
+                              <p className="text-xs uppercase tracking-[0.18em] text-slate-400">{t(metric.label, locale)}</p>
+                              <p className="mt-3 text-xl font-semibold text-white">{metric.value}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : null}
+                  </div>
                 );
               })}
               <div className="hidden lg:block lg:h-[26rem]" aria-hidden="true" />
             </div>
+
+            {!showMobileModuleDetail ? (
+              <div className="mt-6 rounded-[1.55rem] border border-dashed border-white/10 bg-white/[0.03] px-4 py-4 lg:hidden">
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">{locale === "zh" ? "移动端查看方式" : "Mobile View"}</p>
+                <p className="mt-2 text-sm leading-7 text-slate-300">
+                  {locale === "zh"
+                    ? "手机端先点击上面的任一引擎卡片，再查看对应的核心能力详情。"
+                    : "On mobile, tap any engine card above to view its capability details."}
+                </p>
+              </div>
+            ) : null}
           </div>
 
-          <div className="flex flex-col gap-6 lg:sticky lg:top-28">
+          <div className="hidden flex-col gap-6 lg:sticky lg:top-28 lg:flex">
             <AnimatePresence mode="wait">
               <motion.article
                 key={`${activeCapability.id}-${locale}`}
@@ -2752,27 +2817,42 @@ function Home() {
             </article>
 
             <div className="space-y-5">
-              {caseStudies.map((caseStudy, index) => (
-                <article key={caseStudy.company} className="overflow-hidden rounded-[1.9rem] border border-white/10 bg-white/6 shadow-[0_20px_90px_rgba(0,0,0,0.24)] backdrop-blur">
+              {caseStudies.map((caseStudy, index) => {
+                const isExpanded = activeCaseIndex === index;
+
+                return (
+                <article
+                  key={caseStudy.company}
+                  className="overflow-hidden rounded-[1.9rem] border border-white/10 bg-white/6 shadow-[0_20px_90px_rgba(0,0,0,0.24)] backdrop-blur"
+                >
                   <div className="relative border-b border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(82,230,255,0.12),transparent_34%),linear-gradient(145deg,rgba(8,15,30,0.94),rgba(14,24,40,0.72))] px-6 py-5">
                     <div className="absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,rgba(82,230,255,0.9),rgba(245,197,92,0.35),transparent_88%)]" />
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                      <div>
-                        <div className="flex items-center gap-3">
-                          <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] uppercase tracking-[0.22em] text-slate-300">
-                            {locale === "zh" ? `案例 0${index + 1}` : `Case 0${index + 1}`}
-                          </span>
-                          <p className="text-xs uppercase tracking-[0.22em] text-slate-400">{t(caseStudy.sector, locale)}</p>
+                    <button
+                      type="button"
+                      onClick={() => setActiveCaseIndex((current) => (current === index ? null : index))}
+                      className="w-full text-left"
+                    >
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-3">
+                            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] uppercase tracking-[0.22em] text-slate-300">
+                              {locale === "zh" ? `案例 0${index + 1}` : `Case 0${index + 1}`}
+                            </span>
+                            <p className="text-xs uppercase tracking-[0.22em] text-slate-400">{t(caseStudy.sector, locale)}</p>
+                          </div>
+                          <div className="mt-3 flex items-center justify-between gap-4">
+                            <h3 className="text-2xl font-semibold text-white">{caseStudy.company}</h3>
+                            <ArrowRight className={cn("h-4 w-4 shrink-0 text-slate-400 transition md:hidden", isExpanded && "rotate-90 text-white")} />
+                          </div>
                         </div>
-                        <h3 className="mt-3 text-2xl font-semibold text-white">{caseStudy.company}</h3>
+                        <div className="hidden rounded-full border border-emerald-400/20 bg-emerald-400/10 px-4 py-2 text-xs uppercase tracking-[0.18em] text-emerald-100 md:block">
+                          {locale === "zh" ? "协同增长中" : "Compounding"}
+                        </div>
                       </div>
-                      <div className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-4 py-2 text-xs uppercase tracking-[0.18em] text-emerald-100">
-                        {locale === "zh" ? "协同增长中" : "Compounding"}
-                      </div>
-                    </div>
+                    </button>
                   </div>
 
-                  <div className="p-6">
+                  <div className={cn("p-6", !isExpanded && "hidden md:block")}>
                     <p className="text-base leading-8 text-white">{t(caseStudy.outcome, locale)}</p>
 
                     <div className="mt-5 grid gap-4 md:grid-cols-2">
@@ -2796,80 +2876,80 @@ function Home() {
                     </div>
                   </div>
                 </article>
-              ))}
+              )})}
             </div>
           </div>
         </section>
 
         <section id="insights" className="py-14">
-          <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
+          <div className="grid gap-6 lg:grid-cols-[0.74fr_1.26fr]">
             <article className="rounded-[2rem] border border-white/10 bg-slate-950/55 p-6 backdrop-blur-xl">
-              <SectionTag>{t(brandCopy.insightsTag, locale)}</SectionTag>
               <h2 className="mt-5 text-3xl font-semibold tracking-tight text-white sm:text-[2.45rem]">{t(brandCopy.insightsTitle, locale)}</h2>
-              <p className="mt-4 text-base leading-8 text-slate-300">{t(brandCopy.insightsBody, locale)}</p>
-
-              <div className="mt-8 rounded-[1.7rem] border border-white/10 bg-white/6 p-5">
-                <p className="text-xs uppercase tracking-[0.22em] text-slate-400">{locale === "zh" ? "栏目定位" : "Editorial Focus"}</p>
-                <p className="mt-3 text-sm leading-7 text-slate-300">
-                  {locale === "zh"
-                    ? "首页只展示最新的 2-3 条内容，后面可以继续接独立的新闻 / 洞察列表页，用来承载博客、更新、行业观察和案例延伸。"
-                    : "The homepage only highlights a few recent items. It can later connect to a dedicated insights archive for updates, articles, GEO observations, and case extensions."}
-                </p>
-
-                <a
-                  href="#contact"
-                  className="mt-5 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium text-white transition hover:bg-white/8"
-                >
-                  {locale === "zh" ? "规划内容栏目" : "Plan the content hub"}
-                  <MoveUpRight className="h-4 w-4" />
-                </a>
-              </div>
+              <p className="mt-4 hidden text-base leading-8 text-slate-300 md:block">{t(brandCopy.insightsBody, locale)}</p>
+              <p className="mt-4 text-sm leading-7 text-slate-300 md:hidden">
+                {locale === "zh" ? "点击条目展开查看内容。" : "Tap an item to expand."}
+              </p>
             </article>
 
             <div className="space-y-4">
-              {insightItems.map((item, index) => (
-                <motion.article
-                  key={item.title.en}
-                  initial={{ opacity: 0, x: 18 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true, amount: 0.25 }}
-                  transition={{ duration: 0.35, delay: index * 0.04 }}
-                  className="overflow-hidden rounded-[1.7rem] border border-white/10 bg-white/6 shadow-[0_18px_80px_rgba(0,0,0,0.22)] backdrop-blur"
-                >
-                  <div className="h-1.5 w-full" style={{ background: `linear-gradient(90deg, ${item.accent}, transparent 88%)` }} />
+              {insightItems.map((item, index) => {
+                const isExpanded = activeInsightIndex === index;
 
-                  <div className="p-5">
-                    <div className="flex items-start justify-between gap-4">
-                      <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs uppercase tracking-[0.22em] text-slate-300">
-                        {t(item.category, locale)}
-                      </span>
-                      <div
-                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border"
-                        style={{ borderColor: `${item.accent}55`, backgroundColor: item.glow, color: item.accent }}
-                      >
-                        <item.icon className="h-4 w-4" />
+                return (
+                  <motion.article
+                    key={item.title.en}
+                    initial={{ opacity: 0, x: 18 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true, amount: 0.25 }}
+                    transition={{ duration: 0.35, delay: index * 0.04 }}
+                    className="overflow-hidden rounded-[1.7rem] border border-white/10 bg-white/6 shadow-[0_18px_80px_rgba(0,0,0,0.22)] backdrop-blur"
+                  >
+                    <div className="h-1.5 w-full" style={{ background: `linear-gradient(90deg, ${item.accent}, transparent 88%)` }} />
+
+                    <button
+                      type="button"
+                      onClick={() => setActiveInsightIndex((current) => (current === index ? null : index))}
+                      className="w-full p-5 text-left"
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs uppercase tracking-[0.22em] text-slate-300">
+                          {t(item.category, locale)}
+                        </span>
+                        <div className="flex items-center gap-3">
+                          <div
+                            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border"
+                            style={{ borderColor: `${item.accent}55`, backgroundColor: item.glow, color: item.accent }}
+                          >
+                            <item.icon className="h-4 w-4" />
+                          </div>
+                          <ArrowRight className={cn("h-4 w-4 shrink-0 text-slate-400 transition md:hidden", isExpanded && "rotate-90 text-white")} />
+                        </div>
                       </div>
-                    </div>
-                    <h3 className="text-xl font-semibold text-white">{t(item.title, locale)}</h3>
-                    <p className="mt-4 text-sm leading-7 text-slate-300">{t(item.description, locale)}</p>
-                    <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] uppercase tracking-[0.18em] text-slate-300">
-                      {item.metric}
-                      <span className="text-slate-500">/</span>
-                      {t(item.metricLabel, locale)}
-                    </div>
-                  </div>
-                </motion.article>
-              ))}
+                      <h3 className="text-xl font-semibold text-white">{t(item.title, locale)}</h3>
+                      <div className={cn(!isExpanded && "hidden md:block")}>
+                        <p className="mt-4 text-sm leading-7 text-slate-300">{t(item.description, locale)}</p>
+                        <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] uppercase tracking-[0.18em] text-slate-300">
+                          {item.metric}
+                          <span className="text-slate-500">/</span>
+                          {t(item.metricLabel, locale)}
+                        </div>
+                      </div>
+                    </button>
+                  </motion.article>
+                );
+              })}
             </div>
           </div>
         </section>
 
         <section id="faq" className="py-14">
-          <div className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
+          <div className="grid gap-6 lg:grid-cols-[0.74fr_1.26fr]">
             <article className="rounded-[2rem] border border-white/10 bg-slate-950/55 p-6 backdrop-blur-xl">
-              <SectionTag>{t(brandCopy.faqTag, locale)}</SectionTag>
               <h2 className="mt-5 text-3xl font-semibold tracking-tight text-white sm:text-[2.45rem]">{t(brandCopy.faqTitle, locale)}</h2>
-              <p className="mt-4 text-base leading-8 text-slate-300">{t(brandCopy.faqBody, locale)}</p>
+              <p className="mt-4 hidden text-base leading-8 text-slate-300 md:block">{t(brandCopy.faqBody, locale)}</p>
+              <p className="mt-4 text-sm leading-7 text-slate-300 md:hidden">
+                {locale === "zh" ? "点击问题展开查看回答。" : "Tap a question to expand."}
+              </p>
             </article>
 
             <div className="space-y-5">
@@ -2883,11 +2963,22 @@ function Home() {
                     transition={{ duration: 0.35, delay: index * 0.04 }}
                     className="rounded-[1.7rem] border border-white/10 bg-white/6 p-5 shadow-[0_18px_80px_rgba(0,0,0,0.22)] backdrop-blur"
                   >
-                    <p className="text-xs uppercase tracking-[0.24em] text-slate-400">
-                      {locale === "zh" ? `重点问题 0${index + 1}` : `Featured Q0${index + 1}`}
-                    </p>
-                    <h3 className="mt-3 text-xl font-semibold text-white">{t(item.question, locale)}</h3>
-                    <p className="mt-4 text-sm leading-7 text-slate-300">{t(item.answer, locale)}</p>
+                    <button
+                      type="button"
+                      onClick={() => setActiveFaqIndex((current) => (current === index ? null : index))}
+                      className="w-full text-left"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-xs uppercase tracking-[0.24em] text-slate-400">
+                            {locale === "zh" ? `重点问题 0${index + 1}` : `Featured Q0${index + 1}`}
+                          </p>
+                          <h3 className="mt-3 text-xl font-semibold text-white">{t(item.question, locale)}</h3>
+                        </div>
+                        <ArrowRight className={cn("mt-1 h-4 w-4 shrink-0 text-slate-400 transition md:hidden", activeFaqIndex === index && "rotate-90 text-white")} />
+                      </div>
+                      <p className={cn("mt-4 text-sm leading-7 text-slate-300", activeFaqIndex !== index && "hidden md:block")}>{t(item.answer, locale)}</p>
+                    </button>
                   </motion.article>
                 ))}
               </div>
@@ -2914,15 +3005,24 @@ function Home() {
                       transition={{ duration: 0.32, delay: index * 0.03 }}
                       className="rounded-[1.35rem] border border-white/10 bg-white/5 px-4 py-4"
                     >
-                      <div className="flex items-start gap-4">
-                        <span className="mt-0.5 inline-flex h-7 min-w-7 items-center justify-center rounded-full border border-white/10 bg-white/5 px-2 text-[11px] uppercase tracking-[0.16em] text-slate-300">
-                          {String(index + 3).padStart(2, "0")}
-                        </span>
-                        <div>
-                          <h3 className="text-base font-semibold text-white">{t(item.question, locale)}</h3>
-                          <p className="mt-2 text-sm leading-7 text-slate-300">{t(item.answer, locale)}</p>
+                      <button
+                        type="button"
+                        onClick={() => setActiveFaqIndex((current) => (current === index + 2 ? null : index + 2))}
+                        className="w-full text-left"
+                      >
+                        <div className="flex items-start gap-4">
+                          <span className="mt-0.5 inline-flex h-7 min-w-7 items-center justify-center rounded-full border border-white/10 bg-white/5 px-2 text-[11px] uppercase tracking-[0.16em] text-slate-300">
+                            {String(index + 3).padStart(2, "0")}
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-start justify-between gap-3">
+                              <h3 className="text-base font-semibold text-white">{t(item.question, locale)}</h3>
+                              <ArrowRight className={cn("mt-1 h-4 w-4 shrink-0 text-slate-400 transition md:hidden", activeFaqIndex === index + 2 && "rotate-90 text-white")} />
+                            </div>
+                            <p className={cn("mt-2 text-sm leading-7 text-slate-300", activeFaqIndex !== index + 2 && "hidden md:block")}>{t(item.answer, locale)}</p>
+                          </div>
                         </div>
-                      </div>
+                      </button>
                     </motion.article>
                   ))}
                 </div>
@@ -2934,91 +3034,125 @@ function Home() {
         <section id="contact" className="py-14">
           <div className="grid gap-6">
             <article className="rounded-[2rem] border border-white/10 bg-slate-950/60 p-6 backdrop-blur-xl">
-              <SectionTag>{t(brandCopy.contactTag, locale)}</SectionTag>
               <h2 className="mt-5 text-3xl font-semibold tracking-tight text-white sm:text-[2.45rem]">{t(brandCopy.contactTitle, locale)}</h2>
-              <p className="mt-4 text-base leading-8 text-slate-300">{t(brandCopy.contactBody, locale)}</p>
 
-              <div className="mt-8 grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
-                <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
-                  {[
-                    {
-                      title: { zh: "即时对话", en: "Instant Chat" },
-                      body: {
-                        zh: "无需填写传统表单，打开智能体窗口就能直接开始咨询。",
-                        en: "Skip the traditional form and start the conversation immediately.",
-                      },
-                    },
-                    {
-                      title: { zh: "需求梳理", en: "Need Discovery" },
-                      body: {
-                        zh: "先说明业务问题、网站现状和当前最想提升的部分。",
-                        en: "Clarify the business problem, website context, and what matters most right now.",
-                      },
-                    },
-                    {
-                      title: { zh: "智能留资", en: "Lead Capture" },
-                      body: {
-                        zh: "AI Agent 会记录关键信息，帮助后续顾问快速跟进。",
-                        en: "The AI agent captures key context so the team can follow up faster.",
-                      },
-                    },
-                  ].map((item) => (
-                    <div key={item.title.en} className="rounded-[1.4rem] border border-white/10 bg-white/6 p-4">
-                      <p className="text-xs uppercase tracking-[0.2em] text-slate-400">{t(item.title, locale)}</p>
-                      <p className="mt-3 text-sm leading-7 text-white">{t(item.body, locale)}</p>
+              <div className="mt-8 grid gap-5 lg:grid-cols-[0.88fr_1.12fr]">
+                <div className="relative overflow-hidden rounded-[1.7rem] border border-white/10 bg-[radial-gradient(circle_at_top,rgba(82,230,255,0.14),transparent_52%),linear-gradient(180deg,rgba(8,15,30,0.88),rgba(8,15,30,0.74))] p-5">
+                  <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(245,197,92,0.10),transparent_26%),radial-gradient(circle_at_bottom_left,rgba(82,230,255,0.08),transparent_22%)]" />
+                  <div className="relative">
+                    <p className="text-xs uppercase tracking-[0.22em] text-cyan-100/80">{locale === "zh" ? "公司介绍" : "Company Overview"}</p>
+                    <p className="mt-4 text-sm leading-7 text-slate-300">
+                      {locale === "zh"
+                        ? "北京连接时代科技有限公司是国家高新技术企业，获得清华系基金合伙人战略投资。我们致力于将人工智能与可信技术能力深度融合，构建面向企业增长的可信基础设施，帮助品牌建立可持续的 AI 增长系统。"
+                        : "Beijing Connection Era Technology Co., Ltd. is a national high-tech enterprise backed by strategic investment from Tsinghua-affiliated fund partners. We integrate AI with trusted technology capabilities to build growth infrastructure that helps brands create sustainable AI-driven growth systems."}
+                    </p>
+                    <p className="mt-4 text-sm leading-7 text-slate-300">
+                      {locale === "zh"
+                        ? "团队汇聚来自中科院、清华、复旦等院校的研究人员，以及来自 IBM、阿里、百度等公司的资深行业专家，在人工智能算法、增长技术与产业落地方面有着长期积累。"
+                        : "Our team brings together researchers from leading institutions including CAS, Tsinghua, and Fudan, alongside senior experts from IBM, Alibaba, and Baidu, with deep experience in AI algorithms, growth technology, and real-world implementation."}
+                    </p>
+
+                    <div className="mt-6 rounded-[1.35rem] border border-white/10 bg-white/[0.04] p-4 shadow-[0_16px_48px_rgba(0,0,0,0.18)]">
+                      <p className="text-sm font-medium text-white">
+                        {locale === "zh"
+                          ? "跨越行业，赢得领先品牌的长期信任"
+                          : "Across industries, we earn the long-term trust of leading brands"}
+                      </p>
+                      <div className="mt-4 flex flex-wrap gap-2.5">
+                        {(
+                          locale === "zh"
+                            ? ["奥迪", "沃尔沃", "壳牌", "美孚", "佳通轮胎", "腾讯", "中国平安", "中国人民保险", "中信保诚", "中国航天科工集团", "中国质量认证中心", "人民日报", "万物向上", "西林设计", "紫光股份", "易购机"]
+                            : ["AUDI", "VOLVO", "SHELL", "Mobil", "GITI Tire", "Tencent", "Ping An", "PICC", "CITIC Prudential", "CASIC", "CQC", "People's Daily", "Wanwu Xiangshang", "Xilin Design", "UNIS", "YiGouJi"]
+                        ).map((brand) => (
+                          <span
+                            key={brand}
+                            className="rounded-full border border-white/10 bg-slate-950/55 px-3 py-1.5 text-xs font-medium tracking-[0.14em] text-slate-200"
+                          >
+                            {brand}
+                          </span>
+                        ))}
+                      </div>
                     </div>
-                  ))}
+                  </div>
                 </div>
 
-                <div className="rounded-[1.7rem] border border-cyan-300/16 bg-[radial-gradient(circle_at_top,rgba(82,230,255,0.14),transparent_48%),rgba(8,15,30,0.76)] p-5">
-                  <p className="text-xs uppercase tracking-[0.22em] text-cyan-100/80">{locale === "zh" ? "AI顾问入口" : "AI Concierge Entry"}</p>
-                  <h3 className="mt-3 text-2xl font-semibold text-white">
-                    {locale === "zh" ? "需要时再打开，不打扰首页浏览" : "Open only when needed, without crowding the homepage"}
-                  </h3>
-                  <p className="mt-4 text-sm leading-7 text-slate-300">
-                    {locale === "zh"
-                      ? "右下角悬浮按钮会随时在线。点击后，坚果猫AI智能体会在固定位置展开，适合快速咨询、说明需求和直接留资。"
-                      : "The floating button stays available in the corner. Open it anytime to talk with the JianGuoMao AI agent, clarify your needs, and leave your details."}
-                  </p>
-
-                  <div className="mt-5 rounded-[1.35rem] border border-white/10 bg-slate-950/58 p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="rounded-[1rem] border border-cyan-300/20 bg-cyan-300/12 p-2 text-cyan-100">
-                        <Bot className="h-4 w-4" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-white">{locale === "zh" ? "坚果猫AI智能体" : "JianGuoMao AI Agent"}</p>
-                        <p className="mt-1 text-xs text-slate-400">{locale === "zh" ? "悬浮在线，点击即可展开" : "Floating and ready when you need it"}</p>
-                      </div>
-                    </div>
-
-                    <div className="mt-4 flex flex-wrap gap-2">
+                <div className="space-y-4">
+                  <div className="rounded-[1.55rem] border border-white/10 bg-white/6 p-5 shadow-[0_18px_80px_rgba(0,0,0,0.22)] backdrop-blur">
+                    <div className="grid gap-3">
                       {[
-                        { zh: "整站 GEO 诊断", en: "Site-wide GEO audit" },
-                        { zh: "AI 增长网站升级", en: "AI growth website upgrade" },
+                        {
+                          title: { zh: "国家高新技术企业", en: "National High-Tech Enterprise" },
+                          icon: ShieldCheck,
+                        },
+                        {
+                          title: { zh: "清华系基金战略投资", en: "Tsinghua-Affiliated Strategic Investment" },
+                          icon: Sparkles,
+                        },
+                        {
+                          title: { zh: "顶尖科研与产业团队", en: "Research + Industry Team" },
+                          icon: Radar,
+                        },
+                      ].map((item) => {
+                        const Icon = item.icon;
+
+                        return (
+                          <article key={item.title.en} className="rounded-[1.25rem] border border-white/10 bg-slate-950/55 p-4">
+                            <div className="flex items-start gap-3">
+                              <div className="rounded-[0.95rem] border border-white/10 bg-white/5 p-2 text-cyan-100">
+                                <Icon className="h-4 w-4" />
+                              </div>
+                              <div className="min-w-0">
+                                <h3 className="text-base font-semibold text-white">{t(item.title, locale)}</h3>
+                              </div>
+                            </div>
+                          </article>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="rounded-[1.55rem] border border-white/10 bg-slate-950/50 p-5 backdrop-blur">
+                    <p className="text-xs uppercase tracking-[0.22em] text-slate-400">{locale === "zh" ? "联系方式" : "Contact Details"}</p>
+                    <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                      {[
+                        {
+                          label: { zh: "官网", en: "Website" },
+                          value: { zh: "www.jgmao.com", en: "www.jgmao.com" },
+                          href: "https://www.jgmao.com",
+                        },
+                        {
+                          label: { zh: "商务邮箱", en: "Business Email" },
+                          value: { zh: "service@jgmao.com", en: "service@jgmao.com" },
+                          href: "mailto:service@jgmao.com",
+                        },
+                        {
+                          label: { zh: "电话", en: "Phone" },
+                          value: { zh: "400-9158-315", en: "400-9158-315" },
+                          href: "tel:4009158315",
+                        },
+                        {
+                          label: { zh: "地址", en: "Address" },
+                          value: { zh: "北京市阜外大街乙22号6层", en: "6F, No. 22B Fuwai Street, Beijing" },
+                        },
                       ].map((item) => (
-                        <button
-                          key={item.en}
-                          type="button"
-                          onClick={() => {
-                            setChatModalOpen(true);
-                            void sendChatMessage(t(item, locale));
-                          }}
-                          className="rounded-full border border-cyan-300/20 bg-white/6 px-3 py-1.5 text-sm text-cyan-50 transition hover:border-cyan-200/35 hover:bg-cyan-300/10"
-                        >
-                          {t(item, locale)}
-                        </button>
+                        <div key={item.label.en} className="rounded-[1.1rem] border border-white/10 bg-white/5 px-4 py-3">
+                          <p className="text-[11px] uppercase tracking-[0.18em] text-slate-500">{t(item.label, locale)}</p>
+                          {item.href ? (
+                            <a
+                              href={item.href}
+                              target={item.href.startsWith("https") ? "_blank" : undefined}
+                              rel={item.href.startsWith("https") ? "noreferrer" : undefined}
+                              className="mt-2 inline-flex items-center gap-2 text-sm text-cyan-100 transition hover:text-cyan-50"
+                            >
+                              {t(item.value, locale)}
+                              <MoveUpRight className="h-3.5 w-3.5" />
+                            </a>
+                          ) : (
+                            <p className="mt-2 text-sm leading-7 text-slate-200">{t(item.value, locale)}</p>
+                          )}
+                        </div>
                       ))}
                     </div>
-
-                    <button
-                      type="button"
-                      onClick={() => setChatModalOpen(true)}
-                      className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-[1.1rem] border border-cyan-300/20 bg-cyan-300/12 px-4 py-3 text-sm font-medium text-cyan-50 transition hover:border-cyan-200/40 hover:bg-cyan-300/18"
-                    >
-                      {locale === "zh" ? "打开智能体咨询" : "Open AI Chat"}
-                      <ArrowRight className="h-4 w-4" />
-                    </button>
                   </div>
                 </div>
               </div>
