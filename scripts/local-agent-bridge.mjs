@@ -1,21 +1,24 @@
-import { execFile } from "node:child_process";
+import { readFileSync } from "node:fs";
 import http from "node:http";
 import path from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
-import { promisify } from "node:util";
-
-const execFileAsync = promisify(execFile);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname, "..");
 
 const port = Number(process.env.PORT || 8788);
-const agentId = process.env.OPENCLAW_AGENT_ID || "jgmao-support-agent";
 const sharedToken = process.env.AGENT_BRIDGE_TOKEN || "";
-const openClawBin = process.env.OPENCLAW_BIN || "/opt/homebrew/bin/openclaw";
+const publicChatModel = process.env.PUBLIC_CHAT_MODEL || "qwen3.6-plus";
+const publicChatApiBaseUrl = (process.env.PUBLIC_CHAT_API_BASE_URL || "https://coding.dashscope.aliyuncs.com/v1").replace(/\/$/, "");
+const publicChatApiKey = process.env.PUBLIC_CHAT_API_KEY || "";
+const publicChatApiKeyFile = process.env.PUBLIC_CHAT_API_KEY_FILE || "";
+const publicChatTimeoutMs = Number(process.env.PUBLIC_CHAT_TIMEOUT_MS || 120000);
+const publicChatMaxTokens = Number(process.env.PUBLIC_CHAT_MAX_TOKENS || 240);
+const publicChatTemperature = Number(process.env.PUBLIC_CHAT_TEMPERATURE || 0.3);
 const streamChunkDelayMs = Number(process.env.CHAT_STREAM_CHUNK_DELAY_MS || 26);
 const streamChunkSize = Number(process.env.CHAT_STREAM_CHUNK_SIZE || 22);
+let cachedApiKey = null;
 
 const instantReplyRules = [
   {
@@ -53,6 +56,13 @@ const instantReplyRules = [
       en: "Growth usually starts with finding the main bottleneck first, then improving acquisition, conversion, retention, and repeat purchase step by step. If you want, share your industry, website, and current bottleneck, and I’ll help narrow down the best starting point.",
     },
   },
+  {
+    match: /(官网.*怎么优化|网站.*怎么优化|官网优化|网站优化|how to improve (our )?(website|site))/i,
+    reply: {
+      zh: "官网优化通常先看三件事：信息是否足够清晰、页面是否能承接转化、内容是否容易被 AI 和搜索理解。如果你愿意，可以把官网地址发给我，我先帮你判断最值得优先改的部分。",
+      en: "Website optimization usually starts with three things: clarity of messaging, conversion flow, and whether the content is easy for AI/search systems to understand. If you share the website URL, I can help identify the best place to start.",
+    },
+  },
 ];
 
 function readJsonBody(req) {
@@ -88,19 +98,19 @@ function isAuthorized(req) {
   return authorization === `Bearer ${sharedToken}`;
 }
 
-function normalizeAgentError(output) {
+function normalizeModelError(output) {
   const text = output || "";
 
-  if (/session file locked/i.test(text)) {
-    return "Agent session is busy. Please retry in a moment.";
-  }
-
   if (/timed out|timeout/i.test(text)) {
-    return "Agent request timed out while calling the model.";
+    return "咨询助手响应稍慢，请稍后重试，或直接留下官网地址和问题重点，我会尽量用更简短的方式回答。";
   }
 
-  if (/502 status code|bad gateway/i.test(text)) {
-    return "Agent upstream model service returned 502.";
+  if (/429|too many requests|rate limit/i.test(text)) {
+    return "咨询量有点高，我这边稍后再试一次；如果比较着急，也可以直接通过官网联系方式与我们沟通。";
+  }
+
+  if (/50[0-9]|bad gateway|upstream/i.test(text)) {
+    return "咨询助手暂时连接不稳定，请稍后再试；如果比较着急，也可以直接通过官网联系方式与我们沟通。";
   }
 
   return "";
@@ -228,45 +238,107 @@ function getSensitiveCredentialRefusal(message) {
   return "Please do not share SSH keys, passwords, API keys, cookies, or any other sensitive credentials in chat. I can still help with your website context, goals, stack, and integration needs, and an engineer can follow up through a secure process if needed.";
 }
 
-async function runAgent({ message, sessionId }) {
-  console.log(`[bridge] running agent for session=${sessionId}`);
-  const { stdout, stderr } = await execFileAsync(
-    "/bin/zsh",
-    [
-      "-lc",
-      'cd "$JGMAO_BRIDGE_ROOT" && exec "$OPENCLAW_BIN" agent --agent "$OPENCLAW_AGENT_ID" --local --json --session-id "$OPENCLAW_SESSION_ID" --message "$OPENCLAW_MESSAGE"',
-    ],
-    {
-      env: {
-        ...process.env,
-        PATH: [path.dirname(openClawBin), process.env.PATH].filter(Boolean).join(":"),
-        JGMAO_BRIDGE_ROOT: rootDir,
-        OPENCLAW_BIN: openClawBin,
-        OPENCLAW_AGENT_ID: agentId,
-        OPENCLAW_SESSION_ID: sessionId,
-        OPENCLAW_MESSAGE: message,
+function createPublicChatPrompt(message) {
+  return [
+    "你是坚果猫 JGMAO 官网对外咨询助手，底层模型为 qwen-3.6-plus。",
+    "你的职责只包括：介绍坚果猫公开能力、判断是否适合、回答公开 FAQ、收集基础需求、引导用户通过官网/电话/邮箱继续联系。",
+    "严格禁止：索要源码、SSH、密码、密钥、Token、Cookie、后台权限、数据库信息、私有仓库内容、内部配置文件。",
+    "如果用户问题涉及技术接入、权限操作、代码部署、内容发布后台或任何敏感凭据，只能提醒不要在聊天中提供敏感信息，并引导其通过正式商务/工程师对接方式继续。",
+    "回答要求：默认中文、简洁、可信、官网口吻；优先 1 句核心判断 + 最多 3 个短点；尽量控制在 120 字以内，除非用户明确要求更详细。",
+    "不要暴露内部 Agent、OpenClaw、飞书或后台工作流细节。",
+    "",
+    "用户消息：",
+    message,
+  ].join("\n");
+}
+
+async function runPublicModel({ message, sessionId }) {
+  console.log(`[bridge] running public model for session=${sessionId}`);
+  const apiKey = getPublicChatApiKey();
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), publicChatTimeoutMs);
+
+  try {
+    const response = await fetch(`${publicChatApiBaseUrl}/chat/completions`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        authorization: `Bearer ${apiKey}`,
       },
-      timeout: 120000,
-      maxBuffer: 2 * 1024 * 1024,
-    },
-  );
+      body: JSON.stringify({
+        model: publicChatModel,
+        temperature: publicChatTemperature,
+        max_tokens: publicChatMaxTokens,
+        messages: [
+          {
+            role: "system",
+            content: createPublicChatPrompt(message),
+          },
+        ],
+      }),
+      signal: controller.signal,
+    });
 
-  const combined = [stdout, stderr].filter(Boolean).join("\n");
-  const jsonStart = combined.indexOf("{");
+    const payload = await response.json().catch(async () => {
+      const text = await response.text();
+      throw new Error(normalizeModelError(text) || text || "咨询助手暂时没有成功返回结果，请稍后重试。");
+    });
 
-  if (jsonStart < 0) {
-    throw new Error(normalizeAgentError(combined) || "No JSON payload returned from OpenClaw agent");
+    if (!response.ok) {
+      throw new Error(
+        normalizeModelError(JSON.stringify(payload)) ||
+          payload?.error?.message ||
+          payload?.message ||
+          `Public chat model request failed with status ${response.status}`,
+      );
+    }
+
+    const reply = Array.isArray(payload?.choices)
+      ? payload.choices
+          .map((choice) => {
+            const content = choice?.message?.content;
+            if (typeof content === "string") {
+              return content.trim();
+            }
+            if (Array.isArray(content)) {
+              return content
+                .map((item) => (typeof item?.text === "string" ? item.text.trim() : ""))
+                .filter(Boolean)
+                .join("\n");
+            }
+            return "";
+          })
+          .filter(Boolean)
+          .join("\n\n")
+      : "";
+
+    if (!reply) {
+      throw new Error("咨询助手暂时没有成功返回结果，请稍后重试。");
+    }
+
+    return { reply, raw: payload };
+  } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") {
+      throw new Error("咨询助手响应稍慢，请稍后重试，或直接留下官网地址和问题重点，我会尽量用更简短的方式回答。");
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+function getPublicChatApiKey() {
+  if (cachedApiKey) {
+    return cachedApiKey;
   }
 
-  const parsed = JSON.parse(combined.slice(jsonStart));
-  const reply = Array.isArray(parsed.payloads)
-    ? parsed.payloads
-        .map((payload) => (typeof payload?.text === "string" ? payload.text.trim() : ""))
-        .filter(Boolean)
-        .join("\n\n")
-    : "";
+  const value = publicChatApiKey || (publicChatApiKeyFile ? readFileSync(publicChatApiKeyFile, "utf8").trim() : "");
+  if (!value) {
+    throw new Error("Missing public chat API key.");
+  }
 
-  return { reply, raw: parsed };
+  cachedApiKey = value;
+  return cachedApiKey;
 }
 
 const server = http.createServer(async (req, res) => {
@@ -323,17 +395,17 @@ const server = http.createServer(async (req, res) => {
 
     if (stream) {
       res.writeHead(200, { "content-type": "application/x-ndjson; charset=utf-8", "cache-control": "no-store" });
-      writeStreamEvent(res, { type: "start", route: "agent" });
+      writeStreamEvent(res, { type: "start", route: "public-model" });
       writeStreamEvent(res, {
         type: "status",
-        message: /[\u4e00-\u9fff]/.test(message) ? "我先快速判断问题，再给你一个尽量短的答案。" : "Reviewing the question and preparing a concise answer.",
+        message: /[\u4e00-\u9fff]/.test(message) ? "我先快速整理问题，再给你一个简短答复。" : "Reviewing the question and preparing a concise reply.",
       });
-      const result = await runAgent({ message, sessionId });
-      await streamReply(res, result.reply, { route: "agent" }, { skipStart: true });
+      const result = await runPublicModel({ message, sessionId });
+      await streamReply(res, result.reply, { route: "public-model" }, { skipStart: true });
       return;
     }
 
-    const result = await runAgent({ message, sessionId });
+    const result = await runPublicModel({ message, sessionId });
 
     res.writeHead(200, { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" });
     res.end(JSON.stringify({ ok: true, reply: result.reply }));
@@ -357,5 +429,5 @@ const server = http.createServer(async (req, res) => {
 
 server.listen(port, "0.0.0.0", () => {
   console.log(`Local agent bridge listening on http://0.0.0.0:${port}/chat`);
-  console.log(`Forwarding to OpenClaw agent: ${agentId}`);
+  console.log(`Forwarding website chat directly to public model: ${publicChatModel}`);
 });

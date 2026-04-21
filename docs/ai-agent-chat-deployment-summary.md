@@ -1,214 +1,251 @@
-# 坚果猫官网 AI 智能体接入说明
+# 坚果猫官网聊天架构说明
 
-## 1. 目标
+## 1. 当前目标
 
-当前官网已经接入 `JGMAO Support Agent`，形成这套运行方式：
+当前官网聊天已经调整为这套分层：
 
-- 官网前端部署在服务器
-- 聊天入口展示在官网悬浮按钮与右侧弹出面板中
-- 服务器负责接收前端聊天请求并转发
-- 本机负责运行 `JGMAO Support Agent`
-- 服务器与本机之间通过 `Tailscale` 私网通信
+- **对外**：官网访客只使用 `qwen-3.6-plus`
+- **对内**：`jgmao-support-agent` 继续保留给飞书和内部内容操作使用
 
-这套方案的核心原因是：
+这样做的核心原因是：
 
-- 本机配置更高，适合直接运行 agent
-- 服务器只负责网站与转发，压力更小
-- 前端体验保持统一，不暴露 OpenClaw 原生界面
+- 对外聊天边界更清楚，不暴露 agent 能力
+- 不再让访客请求碰到本机文件、工具链或内容操作链路
+- 网站聊天更容易做安全收口、限流、统计和兜底
 
 ---
 
-## 2. 当前架构
+## 2. 当前对外架构
 
 ```mermaid
 flowchart LR
-  U["访客浏览器"] --> W["官网前端<br/>49.232.252.118:8800"]
-  W --> API["网站同域接口<br/>/api/chat/send"]
-  API --> R["服务器 Chat Relay<br/>127.0.0.1:8789"]
-  R --> T["Tailscale 私网"]
-  T --> B["本机 Agent Bridge<br/>100.115.233.37:8788"]
-  B --> A["JGMAO Support Agent<br/>OpenClaw"]
-  A --> B
-  B --> R
-  R --> W
+  U["访客浏览器"] --> W["官网前端<br/>www.jgmao.com"]
+  W --> API["同域接口<br/>/api/chat/send"]
+  API --> G["服务器 Public Chat Gateway<br/>127.0.0.1:18788/chat"]
+  G --> Q["Dashscope API<br/>qwen-3.6-plus"]
+  Q --> G
+  G --> W
   W --> U
 ```
 
+这条链路的特点：
+
+- **不再依赖 OpenClaw**
+- **不再依赖本机反向隧道**
+- **不再依赖 `jgmao-support-agent`**
+
 ---
 
-## 3. 当前已打通的链路
+## 3. 当前对内架构
 
-当前已经实际验证通过：
+对内仍然保留：
+
+- `jgmao-support-agent`
+- 飞书访问
+- 官网内容维护、FAQ/洞察生成、内容操作
+
+也就是说：
+
+- **对外**：模型直连
+- **对内**：agent 继续服务内部内容工作流
+
+---
+
+## 4. 已打通的链路
+
+当前已经验证通过：
+
+### 本地
 
 - 本地预览站点：`http://127.0.0.1:1688/`
-- 线上官网：`http://49.232.252.118:8800`
-- 本机 bridge：`http://127.0.0.1:8788/chat`
-- 服务器 relay：`http://127.0.0.1:8789/api/chat/send`
+- 本机聊天接口：`http://127.0.0.1:1688/api/chat/send`
+- 本机网关：`http://127.0.0.1:8788/chat`
 
-已经验证过的效果：
+### 线上
 
-- `1688/api/chat/send` 可以得到 `JGMAO Support Agent` 的真实回复
-- `8800/api/chat/send` 可以通过服务器 relay 打到本机 agent，并返回真实回复
+- 官网：`https://www.jgmao.com`
+- 线上聊天接口：`https://www.jgmao.com/api/chat/send`
+- 服务器本地网关：`http://127.0.0.1:18788/chat`
+
+实测结果：
+
+- 本地 `1688` 可以正常返回聊天结果
+- `www.jgmao.com/api/chat/send` 可以正常返回聊天结果
+- 流式返回已验证通过
 
 ---
 
-## 4. 仓库内的关键文件
+## 5. 仓库内关键文件
 
 ### 前端
 
 - [src/pages/Home.tsx](/Users/wesleyyu/Documents/New%20project/jgmao-official-site/src/pages/Home.tsx:1)
-  - 官网悬浮按钮
-  - 右侧固定聊天面板
-  - 聊天请求发送逻辑
+  - 官网聊天面板 UI
+  - 前端请求发送逻辑
+  - 错误提示、重试、流式处理
 
-### 本机 bridge
+### 本机聊天网关
 
 - [scripts/local-agent-bridge.mjs](/Users/wesleyyu/Documents/New%20project/jgmao-official-site/scripts/local-agent-bridge.mjs:1)
-  - 接收聊天请求
-  - 调用 `JGMAO Support Agent`
-  - 返回 `{ ok, reply }`
+  - 现在已变为**本机公共聊天网关**
+  - 直接调用 `qwen-3.6-plus`
+  - 包含：
+    - 敏感信息拦截
+    - 秒回规则
+    - 中文错误兜底
+    - 流式返回
+
+### 服务器聊天网关
+
+- [scripts/public-chat-gateway.py](/Users/wesleyyu/Documents/New%20project/jgmao-official-site/scripts/public-chat-gateway.py:1)
+  - 服务器运行的 Python 网关
+  - 直接调用 Dashscope `qwen-3.6-plus`
+  - 不依赖 Node / OpenClaw
 
 ### 本地预览服务
 
 - [scripts/local-preview-server.mjs](/Users/wesleyyu/Documents/New%20project/jgmao-official-site/scripts/local-preview-server.mjs:1)
   - 本地站点 `1688`
-  - 支持 `/local-chat/message`
   - 支持 `/api/chat/send`
 
-### 服务器 relay
-
-- [scripts/server-chat-relay.mjs](/Users/wesleyyu/Documents/New%20project/jgmao-official-site/scripts/server-chat-relay.mjs:1)
-  - 服务器接口 `/api/chat/send`
-  - 转发到本机 bridge
-
-### 线上一体化 Web 服务
+### 线上静态站服务
 
 - [scripts/production-web-server.mjs](/Users/wesleyyu/Documents/New%20project/jgmao-official-site/scripts/production-web-server.mjs:1)
   - 提供官网静态页面
-  - 同时代理同域 `/api/chat/send`
-
-### 部署文件
-
-- [deploy/jgmao-chat-relay.env.example](/Users/wesleyyu/Documents/New%20project/jgmao-official-site/deploy/jgmao-chat-relay.env.example:1)
-- [deploy/jgmao-chat-relay.service](/Users/wesleyyu/Documents/New%20project/jgmao-official-site/deploy/jgmao-chat-relay.service:1)
-- [start_server.sh](/Users/wesleyyu/Documents/New%20project/jgmao-official-site/start_server.sh:1)
+  - 线上域名下 `/api/chat/send` 由 nginx 直接转发到服务器本地 Python 网关
 
 ---
 
-## 5. 本机系统级文件
+## 6. 本机系统级文件
 
-这部分**不在仓库里**，而是在本机系统中：
+### 本机聊天网关启动脚本
+
+- [run-local-agent-bridge.sh](/Users/wesleyyu/.jgmao/run-local-agent-bridge.sh:1)
+  - 本机 `8788` 网关启动脚本
+  - 现在读取 Dashscope API Key
+  - 不再依赖 OpenClaw
+
+### 本机自启动配置
 
 - [com.jgmao.agent-bridge.plist](/Users/wesleyyu/Library/LaunchAgents/com.jgmao.agent-bridge.plist:1)
   - `launchd` 自启动配置
-- [run-local-agent-bridge.sh](/Users/wesleyyu/.jgmao/run-local-agent-bridge.sh:1)
-  - 本机自启动脚本
 
-用途：
+说明：
 
-- 登录后自动拉起本机 bridge
-- bridge 监听 `8788`
-- 供服务器通过 Tailscale 私网访问
+- 这两项**不在仓库里**
+- 只保存在本机系统中
 
 ---
 
-## 6. 当前网络与机器信息
+## 7. 服务器侧运行状态
 
-### 服务器
+当前服务器 `8.130.11.205` 上运行的是：
 
-- 公网地址：`49.232.252.118`
-- Tailscale IP：`100.125.217.75`
-- 官网端口：`8800`
-- relay 端口：`8789`
+- 官网静态站：`127.0.0.1:8080`
+- 公共聊天网关：`127.0.0.1:18788`
+- nginx：
+  - `location /` -> `127.0.0.1:8080`
+  - `location = /api/chat/send` -> `127.0.0.1:18788/chat`
 
-### 本机
+服务器聊天网关服务名：
 
-- Tailscale IP：`100.115.233.37`
-- bridge 端口：`8788`
-- agent：`jgmao-support-agent`
-
----
-
-## 7. 请求流转说明
-
-访客在官网聊天时，流程如下：
-
-1. 前端将消息发到同域 `/api/chat/send`
-2. 线上 Web 服务将请求转给服务器本地 relay
-3. relay 通过 Tailscale 请求本机 bridge
-4. bridge 调用 `JGMAO Support Agent`
-5. agent 回复后，结果回到前端聊天面板
-
-对访客来说：
-
-- 看到的是 `坚果猫AI智能体`
-- 不会看到 OpenClaw 原生界面
-- 不会跳新窗口
+- `jgmao-public-chat.service`
 
 ---
 
-## 8. 当前的优点
+## 8. 当前对外聊天能力边界
 
-- 前端体验统一，品牌感一致
-- 服务器不承担大模型推理压力
-- agent 放在高配置本机，性能更好
-- 通过 Tailscale 私网通信，避免直接暴露本机 bridge
+对外聊天只允许：
 
----
+- 介绍坚果猫公开能力
+- 回答公开 FAQ
+- 判断是否适合
+- 收集基础需求
+- 引导用户通过官网、邮箱、电话继续联系
 
-## 9. 当前仍需注意的点
+明确禁止：
 
-### 1. 本机必须在线
-
-如果本机关机、休眠、断网，线上聊天会失效。
-
-### 2. bridge 是关键依赖
-
-虽然已经做成自启动，但后续仍建议定期检查：
-
-- 本机 `8788` 是否仍在监听
-- `launchd` 是否正常拉起
-- 日志是否有异常
-
-### 3. 当前接口响应时间主要取决于 agent
-
-网络转发不是主要瓶颈，真正耗时主要在：
-
-- `JGMAO Support Agent` 的推理时间
-
-通常体感在数秒到十几秒之间。
+- 索要源码
+- 索要 SSH / 密钥 / Token / Cookie / 密码
+- 索要后台权限
+- 暴露内部 Agent / OpenClaw / 飞书工作流
 
 ---
 
-## 10. 推荐的后续优化
+## 9. 当前已做的体验层优化
 
-### 优先级高
+官网聊天目前已经具备：
 
-1. 给聊天接口增加流式返回
-2. 给 relay 增加限流与更清晰的日志
-3. 给本机 bridge 增加更明确的健康检查
-
-### 优先级中
-
-1. 给聊天面板增加“连接中 / 正在思考”状态
-2. 优化 `JGMAO Support Agent` 的欢迎语和留资引导
-3. 增加失败重试和超时提示
-
-### 优先级低
-
-1. 将 bridge 再做一层更正式的守护脚本
-2. 后续如果需要，再评估迁移到更稳定的专用高配机器
+- 秒回规则
+  - 问候语
+  - 联系方式
+  - 官网优化
+  - 增长问题
+- 敏感信息拦截
+- 中文错误提示
+- 流式返回
+- 重试体验
 
 ---
 
-## 11. 当前结论
+## 10. 这套架构的优点
 
-截至当前，这套方案已经达到：
+### 对外更安全
 
-- 本地可用
-- 线上可用
-- 前后端连通
-- agent 真回复
-- 不暴露 OpenClaw 原生界面
+- 不再暴露 agent 能力
+- 不再经过本机 OpenClaw
+- 没有本地 session lock 风险
 
-也就是说，`坚果猫官网 AI 智能体` 已经完成第一阶段落地。
+### 对外更稳定
+
+- `www.jgmao.com` 不再依赖你本机在线
+- 本机关机不会影响官网聊天
+
+### 对内能力不受影响
+
+- `jgmao-support-agent` 仍然可以继续服务飞书和内部内容操作
+
+---
+
+## 11. 推荐的后续优化
+
+### 高优先级
+
+1. 增加用户级调用统计
+   - `sessionId`
+   - 用户来源
+   - 问题类型
+   - token 用量
+
+2. 给服务器网关增加日志与限流
+   - 避免被刷
+   - 便于分析问题
+
+3. 继续优化对外咨询提示词
+   - 更像官网咨询助手
+   - 更少模型味
+
+### 中优先级
+
+1. 给对外聊天增加“转人工/邮件/电话”兜底
+2. 为高频问题建立更完整的秒回规则库
+3. 记录高频问题，为 FAQ / 洞察更新提供候选素材
+
+---
+
+## 12. 当前结论
+
+截至当前，坚果猫官网聊天已经完成从：
+
+- **对外经过本机 agent / OpenClaw**
+
+切换到：
+
+- **对外服务器直连 `qwen-3.6-plus`**
+
+并形成了更清晰的分层：
+
+- **对外**：官网咨询助手
+- **对内**：`jgmao-support-agent` 内容与运营助手
+
+这已经是更适合正式官网的架构。

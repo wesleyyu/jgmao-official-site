@@ -118,7 +118,7 @@ type ScenarioCard = {
 };
 
 type CaseStudy = {
-  company: string;
+  company: LocalizedText;
   sector: LocalizedText;
   outcome: LocalizedText;
   challenge: LocalizedText;
@@ -1039,8 +1039,8 @@ const capabilityLayers: LocalizedText[] = [
 
 const caseStudies: CaseStudy[] = [
   {
-    company: "NovaStack",
-    sector: { zh: "B2B SaaS", en: "B2B SaaS" },
+    company: { zh: "西林设计", en: "Sealing" },
+    sector: { zh: "品牌设计", en: "Brand Design" },
     outcome: {
       zh: "通过 GEO 优化引擎与 AI 内容工厂，把官网升级成 AI 搜索的稳定获客入口。",
       en: "Used the GEO engine and content factory to turn the website into a stable acquisition channel in AI search.",
@@ -1060,7 +1060,7 @@ const caseStudies: CaseStudy[] = [
     ],
   },
   {
-    company: "Helio Industrial",
+    company: { zh: "Helio Industrial", en: "Helio Industrial" },
     sector: { zh: "工业制造", en: "Industrial Manufacturing" },
     outcome: {
       zh: "用 AI 增长网站 + 智能获客系统，把复杂产品介绍页变成可解释、可信、可转化的官网体系。",
@@ -1518,11 +1518,11 @@ function Home() {
     }
 
     if (normalized.includes("session is busy") || normalized.includes("session file locked")) {
-      return "智能体当前正在处理其他请求，请稍后再试。";
+      return "咨询助手当前正在处理其他请求，请稍后再试。";
     }
 
     if (normalized.includes("failed to fetch") || normalized.includes("fetch failed")) {
-      return "智能体连接失败，请检查本机 bridge、Tailscale 或网络状态。";
+      return "咨询助手连接失败，请检查本机桥接服务或网络状态。";
     }
 
     return messageText;
@@ -2724,7 +2724,7 @@ function Home() {
 
                 return (
                 <article
-                  key={caseStudy.company}
+                  key={caseStudy.company.en}
                   className="overflow-hidden rounded-[1.9rem] border border-white/10 bg-white/6 shadow-[0_20px_90px_rgba(0,0,0,0.24)] backdrop-blur"
                 >
                   <div className="relative border-b border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(82,230,255,0.12),transparent_34%),linear-gradient(145deg,rgba(8,15,30,0.94),rgba(14,24,40,0.72))] px-6 py-5">
@@ -2743,7 +2743,7 @@ function Home() {
                             <p className="text-xs uppercase tracking-[0.22em] text-slate-400">{t(caseStudy.sector, locale)}</p>
                           </div>
                           <div className="mt-3 flex items-center justify-between gap-4">
-                            <h3 className="text-2xl font-semibold text-white">{caseStudy.company}</h3>
+                            <h3 className="text-2xl font-semibold text-white">{t(caseStudy.company, locale)}</h3>
                             <ArrowRight className={cn("h-4 w-4 shrink-0 text-slate-400 transition md:hidden", isExpanded && "rotate-90 text-white")} />
                           </div>
                         </div>
