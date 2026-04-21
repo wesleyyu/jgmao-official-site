@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { ArrowLeft, ArrowRight, BadgeCheck, Globe, LayoutTemplate, Mail, Phone, Radar, Sparkles } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "wouter";
 
 import growthFlywheelImage from "@/assets/h5-growth-flywheel.jpg";
@@ -70,6 +70,13 @@ function setCanonical(url: string) {
 }
 
 export default function H5LandingPage() {
+  const [leadForm, setLeadForm] = useState({
+    name: "",
+    company: "",
+    contact: "",
+    demand: "",
+  });
+
   useEffect(() => {
     setCanonical(`${siteUrl}/h5`);
     setPageMeta(
@@ -77,6 +84,13 @@ export default function H5LandingPage() {
       "坚果猫帮助企业提升 AI 可见性、内容生产效率、官网转化与智能获客能力。",
     );
   }, []);
+
+  const leadBody = [
+    `姓名 / 称呼：${leadForm.name || "未填写"}`,
+    `公司 / 品牌：${leadForm.company || "未填写"}`,
+    `联系方式：${leadForm.contact || "未填写"}`,
+    `需求简述：${leadForm.demand || "未填写"}`,
+  ].join("\n");
 
   return (
     <main className="min-h-screen bg-[#050816] text-slate-100">
@@ -223,35 +237,50 @@ export default function H5LandingPage() {
           </p>
 
           <div className="mt-5 grid gap-3">
+            <label className="rounded-[1.3rem] border border-white/10 bg-white/10 px-4 py-3">
+              <span className="text-[11px] uppercase tracking-[0.18em] text-slate-400">姓名 / 称呼</span>
+              <input
+                value={leadForm.name}
+                onChange={(event) => setLeadForm((current) => ({ ...current, name: event.target.value }))}
+                placeholder="怎么称呼你"
+                className="mt-2 w-full bg-transparent text-sm text-white placeholder:text-slate-500 focus:outline-none"
+              />
+            </label>
+            <label className="rounded-[1.3rem] border border-white/10 bg-white/10 px-4 py-3">
+              <span className="text-[11px] uppercase tracking-[0.18em] text-slate-400">公司 / 品牌</span>
+              <input
+                value={leadForm.company}
+                onChange={(event) => setLeadForm((current) => ({ ...current, company: event.target.value }))}
+                placeholder="你的公司或品牌名称"
+                className="mt-2 w-full bg-transparent text-sm text-white placeholder:text-slate-500 focus:outline-none"
+              />
+            </label>
+            <label className="rounded-[1.3rem] border border-white/10 bg-white/10 px-4 py-3">
+              <span className="text-[11px] uppercase tracking-[0.18em] text-slate-400">联系方式</span>
+              <input
+                value={leadForm.contact}
+                onChange={(event) => setLeadForm((current) => ({ ...current, contact: event.target.value }))}
+                placeholder="手机号 / 微信 / 邮箱"
+                className="mt-2 w-full bg-transparent text-sm text-white placeholder:text-slate-500 focus:outline-none"
+              />
+            </label>
+            <label className="rounded-[1.3rem] border border-white/10 bg-white/10 px-4 py-3">
+              <span className="text-[11px] uppercase tracking-[0.18em] text-slate-400">需求简述</span>
+              <textarea
+                value={leadForm.demand}
+                onChange={(event) => setLeadForm((current) => ({ ...current, demand: event.target.value }))}
+                placeholder="比如行业场景、官网现状、增长目标或合作方向"
+                rows={4}
+                className="mt-2 w-full resize-none bg-transparent text-sm leading-7 text-white placeholder:text-slate-500 focus:outline-none"
+              />
+            </label>
             <a
-              href="tel:400-9588-315"
-              className="inline-flex items-center justify-between rounded-[1.3rem] border border-white/10 bg-white/10 px-4 py-4 text-sm font-medium text-white"
-            >
-              <span className="inline-flex items-center gap-2">
-                <Phone className="h-4 w-4" />
-                400-9588-315
-              </span>
-              <ArrowRight className="h-4 w-4" />
-            </a>
-            <a
-              href="mailto:service@jgmao.com"
-              className="inline-flex items-center justify-between rounded-[1.3rem] border border-white/10 bg-white/10 px-4 py-4 text-sm font-medium text-white"
+              href={`mailto:service@jgmao.com?subject=${encodeURIComponent("坚果猫 H5 线索提交")}&body=${encodeURIComponent(leadBody)}`}
+              className="inline-flex items-center justify-between rounded-[1.3rem] border border-cyan-300/20 bg-cyan-300/10 px-4 py-4 text-sm font-medium text-cyan-100"
             >
               <span className="inline-flex items-center gap-2">
                 <Mail className="h-4 w-4" />
-                service@jgmao.com
-              </span>
-              <ArrowRight className="h-4 w-4" />
-            </a>
-            <a
-              href="https://www.jgmao.com"
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center justify-between rounded-[1.3rem] border border-white/10 bg-white/10 px-4 py-4 text-sm font-medium text-white"
-            >
-              <span className="inline-flex items-center gap-2">
-                <Globe className="h-4 w-4" />
-                www.jgmao.com
+                提交需求
               </span>
               <ArrowRight className="h-4 w-4" />
             </a>
