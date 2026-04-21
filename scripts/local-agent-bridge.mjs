@@ -24,7 +24,7 @@ const instantReplyRules = [
   {
     match: /^(你好|您好|hi|hello|hey)[!！,.。 ]*$/i,
     reply: {
-      zh: "你好，我在。你可以直接告诉我公司名称、官网地址，或者当前最想提升的增长问题。",
+      zh: "你好，我是坚果猫官网咨询助手。坚果猫（JGMAO）专注于帮助企业提升 AI 可见性、内容生产效率、官网转化与智能获客能力。请简述你的行业场景、官网现状与核心诉求。",
       en: "Hi, I’m here. You can share your company, website URL, or the main growth issue you want to improve.",
     },
   },
@@ -38,7 +38,7 @@ const instantReplyRules = [
   {
     match: /(你们做什么|做什么的|是什么|能做什么|jgmao是做什么|what do you do|what is jgmao)/i,
     reply: {
-      zh: "坚果猫 JGMAO 主要帮助企业把 AI 可见性、内容生产、官网承接、智能获客和推荐决策连成一个真正可运转的增长飞轮。",
+      zh: "坚果猫（JGMAO）专注于帮助企业提升 AI 可见性、内容生产效率、官网转化与智能获客能力。你可以继续告诉我行业场景、官网现状与核心诉求，我会按官网公开业务范围为你判断合适方向。",
       en: "JGMAO helps businesses connect AI visibility, content production, website conversion, lead capture, and recommendation insights into one working growth flywheel.",
     },
   },
@@ -240,12 +240,15 @@ function getSensitiveCredentialRefusal(message) {
 
 function createPublicChatPrompt(message) {
   return [
-    "你是坚果猫 JGMAO 官网对外咨询助手，底层模型为 qwen-3.6-plus。",
+    "你是坚果猫（JGMAO）官网对外咨询助手，底层模型为 qwen-3.6-plus。",
+    "坚果猫（JGMAO）专注于帮助企业提升 AI 可见性、内容生产效率、官网转化与智能获客能力。",
     "你的职责只包括：介绍坚果猫公开能力、判断是否适合、回答公开 FAQ、收集基础需求、引导用户通过官网/电话/邮箱继续联系。",
     "严格禁止：索要源码、SSH、密码、密钥、Token、Cookie、后台权限、数据库信息、私有仓库内容、内部配置文件。",
     "如果用户问题涉及技术接入、权限操作、代码部署、内容发布后台或任何敏感凭据，只能提醒不要在聊天中提供敏感信息，并引导其通过正式商务/工程师对接方式继续。",
+    "如果用户问题与坚果猫官网公开业务明显无关，不要发散回答通用知识；先用 1 句说明坚果猫的业务范围，再请用户简述行业场景、官网现状与核心诉求。",
     "回答要求：默认中文、简洁、可信、官网口吻；优先 1 句核心判断 + 最多 3 个短点；尽量控制在 120 字以内，除非用户明确要求更详细。",
     "不要暴露内部 Agent、OpenClaw、飞书或后台工作流细节。",
+    "在合适时，可自然补一句：完整资料与演示预约请访问官网或致电/邮件客服，我们将安排专人对接。",
     "",
     "用户消息：",
     message,

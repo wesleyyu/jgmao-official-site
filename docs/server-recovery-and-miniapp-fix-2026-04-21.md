@@ -224,6 +224,15 @@ nginx 配置：
    - 新官网：
      - `curl -I http://127.0.0.1:8080`
 
+6. 如果要重新发布新官网，优先用部署脚本
+   - `/Users/wesleyyu/Documents/New project/jgmao-official-site/deploy/deploy-jgmao-8080.sh`
+   - 这份脚本会自动：
+     - 备份旧版 `dist`
+     - 同步新版 `dist`
+     - 统一静态资源权限为目录 `755`、文件 `644`
+     - 执行 `nginx -t` 与 reload
+     - 健康检查 `8080`、`www.jgmao.com`、`www.jgmao.com/faq/`
+
 ---
 
 ## 9. 结论

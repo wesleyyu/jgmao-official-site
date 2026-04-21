@@ -19,7 +19,7 @@ import {
   Workflow,
   X,
 } from "lucide-react";
-import { startTransition, useEffect, useState, type CSSProperties, type ReactNode } from "react";
+import { startTransition, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 
 import logoImage from "@/assets/jgmao-logo-black-square.png";
 import { getPublishedFaqs } from "@/content/faqs";
@@ -1455,6 +1455,7 @@ function FlywheelDemoNode({
 }
 
 function Home() {
+  const firstScreenMotionRef = useRef<HTMLDivElement | null>(null);
   const [locale, setLocale] = useState<Locale>("zh");
   const [activeIndex, setActiveIndex] = useState(0);
   const [flywheelDemoActiveIndex, setFlywheelDemoActiveIndex] = useState(0);
@@ -1468,6 +1469,7 @@ function Home() {
   const [showMobileModuleDetail, setShowMobileModuleDetail] = useState(false);
   const [activeScenarioIndex, setActiveScenarioIndex] = useState<number | null>(null);
   const [floatingNavOpen, setFloatingNavOpen] = useState(false);
+  const [firstScreenMotionActive, setFirstScreenMotionActive] = useState(true);
   const [detailIndex, setDetailIndex] = useState<number | null>(null);
   const [flywheelDemoDetailIndex, setFlywheelDemoDetailIndex] = useState<number | null>(null);
   const [chatModalOpen, setChatModalOpen] = useState(false);
@@ -1672,7 +1674,7 @@ function Home() {
         role: "assistant",
         text:
           locale === "zh"
-            ? "你好，我是坚果猫AI智能体。直接告诉我公司、官网地址，或者当前最想提升的增长问题就可以。"
+            ? "你好，我是坚果猫官网咨询助手。坚果猫（JGMAO）专注于帮助企业提升 AI 可见性、内容生产效率、官网转化与智能获客能力。请简述你的行业场景、官网现状与核心诉求。"
             : "Hi, I’m the JianGuoMao AI agent. Share your company, website, or main growth issue to get started.",
       },
     ]);
@@ -1682,7 +1684,7 @@ function Home() {
   }, [locale]);
 
   useEffect(() => {
-    if (flywheelDemoPaused) {
+    if (flywheelDemoPaused || !firstScreenMotionActive) {
       return undefined;
     }
 
@@ -1693,7 +1695,7 @@ function Home() {
     }, 3600);
 
     return () => window.clearInterval(timer);
-  }, [flywheelDemoPaused]);
+  }, [firstScreenMotionActive, flywheelDemoPaused]);
 
   useEffect(() => {
     const sectionIds = navItems.map((item) => item.href.replace("#", ""));
@@ -1722,6 +1724,33 @@ function Home() {
     );
 
     elements.forEach((element) => observer.observe(element));
+
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const target = firstScreenMotionRef.current;
+
+    if (!target) {
+      return undefined;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (!entry) {
+          return;
+        }
+
+        setFirstScreenMotionActive(entry.isIntersecting || entry.intersectionRatio > 0.08);
+      },
+      {
+        threshold: [0, 0.08, 0.18, 0.35],
+        rootMargin: "0px 0px -18% 0px",
+      },
+    );
+
+    observer.observe(target);
 
     return () => observer.disconnect();
   }, []);
@@ -1827,7 +1856,11 @@ function Home() {
   }, [chatModalOpen, detailIndex, flywheelDemoDetailIndex]);
 
   return (
-    <main id="top" className="relative min-h-screen overflow-hidden bg-[#050816] text-slate-100">
+    <main
+      id="top"
+      data-top-motion-active={firstScreenMotionActive ? "true" : "false"}
+      className="relative min-h-screen overflow-hidden bg-[#050816] text-slate-100"
+    >
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_15%,rgba(82,230,255,0.14),transparent_24%),radial-gradient(circle_at_90%_18%,rgba(245,197,92,0.12),transparent_24%),radial-gradient(circle_at_50%_80%,rgba(181,146,255,0.12),transparent_28%),linear-gradient(180deg,#050816_0%,#091222_38%,#050816_100%)]" />
       <div className="pointer-events-none absolute inset-0 ops-grid opacity-20" />
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(5,8,22,0.18)_58%,rgba(5,8,22,0.94)_100%)]" />
@@ -2023,265 +2056,274 @@ function Home() {
           </AnimatePresence>
         </header>
 
-        <section className="grid gap-7 pb-12 pt-2 lg:grid-cols-[1.04fr_0.96fr] lg:items-center">
-          <div>
-            <SectionTag>{t(brandCopy.heroTag, locale)}</SectionTag>
+        <div ref={firstScreenMotionRef}>
+          <section className="grid gap-7 pb-12 pt-2 lg:grid-cols-[1.04fr_0.96fr] lg:items-center">
+            <div>
+              <SectionTag>{t(brandCopy.heroTag, locale)}</SectionTag>
 
-            <div className="mt-4 flex flex-wrap gap-2">
-              {topQuickFacts.map((fact) => (
-                <div key={fact.en} className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs uppercase tracking-[0.2em] text-slate-300">
-                  {t(fact, locale)}
-                </div>
-              ))}
-            </div>
-
-            <motion.h1
-              initial={{ opacity: 0, y: 18 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7 }}
-              className="mt-5 max-w-4xl text-[2.85rem] font-semibold tracking-tight text-white sm:text-[3.55rem] lg:text-[4.45rem] lg:leading-[1.03]"
-            >
-              {locale === "zh" ? (
-                <>
-                  帮助企业构建
-                  <br />
-                  <span className="bg-gradient-to-r from-cyan-200 via-amber-100 to-violet-200 bg-clip-text text-transparent">AI 时代的增长飞轮</span>
-                </>
-              ) : (
-                <>
-                  Helping enterprises build
-                  <br />
-                  <span className="bg-gradient-to-r from-cyan-200 via-amber-100 to-violet-200 bg-clip-text text-transparent">AI growth flywheels</span>
-                </>
-              )}
-            </motion.h1>
-
-            <motion.p
-              initial={{ opacity: 0, y: 18 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.1 }}
-              className="mt-5 max-w-3xl text-base leading-8 text-slate-300 sm:text-lg"
-            >
-              {t(brandCopy.heroBody, locale)}
-            </motion.p>
-
-            <div className="mt-6 flex flex-wrap gap-3">
-              {capabilities.map((capability) => (
-                <div key={capability.id} className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-200">
-                  {t(capability.name, locale)}
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-8 grid gap-4 sm:grid-cols-3">
-              {heroStats.map((item, index) => (
-                <article key={item.label.en} className="rounded-[1.7rem] border border-white/10 bg-white/6 p-5 shadow-[0_18px_60px_rgba(0,0,0,0.18)] backdrop-blur">
-                  <p className="text-xs uppercase tracking-[0.24em] text-slate-400">{t(item.label, locale)}</p>
-                  <p className="mt-3 text-3xl font-semibold tracking-tight text-white">
-                    <AnimatedStatValue value={item.value} delay={index * 120} />
-                  </p>
-                  <p className="mt-3 text-sm leading-6 text-slate-300">{t(item.detail, locale)}</p>
-                </article>
-              ))}
-            </div>
-          </div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 22 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.75, delay: 0.12 }}
-            className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-slate-950/55 px-6 py-5 shadow-[0_30px_120px_rgba(0,0,0,0.35)] backdrop-blur-xl"
-          >
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(245,197,92,0.18),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(82,230,255,0.12),transparent_30%)]" />
-            <div className="relative">
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <p className="text-xs uppercase tracking-[0.28em] text-slate-400">{locale === "zh" ? "实时系统快照" : "Live System Snapshot"}</p>
-                  <h2 className="mt-2 text-2xl font-semibold text-white">
-                    {locale === "zh" ? "增长不是一条链路，而是一个会自我强化的系统" : "Growth is not a single funnel. It is a self-reinforcing system."}
-                  </h2>
-                </div>
-                <motion.div
-                  key={`loop-status-${flywheelDemoActiveIndex}`}
-                  initial={{ scale: 0.985, opacity: 0.92, boxShadow: "0 0 0 rgba(16,185,129,0)" }}
-                  animate={{
-                    scale: 1,
-                    opacity: 1,
-                    boxShadow: [
-                      "0 0 0 rgba(16,185,129,0)",
-                      "0 0 24px rgba(52,211,153,0.22)",
-                      "0 0 10px rgba(52,211,153,0.1)",
-                    ],
-                  }}
-                  transition={{ duration: 0.72, times: [0, 0.4, 1], ease: "easeOut" }}
-                  className="status-badge-live rounded-full border border-emerald-400/20 bg-emerald-400/10 px-4 py-2 text-xs uppercase tracking-[0.18em] text-emerald-100"
-                >
-                  <span className="status-badge-dot" aria-hidden="true" />
-                  {locale === "zh" ? "飞轮运行中" : "Loop Active"}
-                </motion.div>
-              </div>
-
-              <div className="snapshot-layer-group mt-5">
-                <div className="snapshot-flow-line" aria-hidden="true">
-                  <span className="snapshot-flow-dot" />
-                </div>
-                <div className="space-y-4">
-                  {snapshotLayers.map((row, index) => {
-                    const Icon = row.icon;
-
-                    return (
-                      <motion.div
-                        key={row.label.en}
-                        initial={{ opacity: 0, y: 18 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true, amount: 0.45 }}
-                        transition={{ duration: 0.42, delay: index * 0.1 }}
-                        className="snapshot-layer-card relative rounded-[1.4rem] border border-white/10 bg-white/6 p-4"
-                      >
-                        <div className="flex items-start gap-4">
-                          <div
-                            className="snapshot-layer-icon rounded-2xl border border-white/10 bg-slate-900/80 p-3 text-cyan-100"
-                            style={
-                              {
-                                "--snapshot-accent": row.accent,
-                                "--snapshot-glow": row.glow,
-                              } as CSSProperties
-                            }
-                          >
-                            <Icon className="h-4 w-4" />
-                          </div>
-                          <div>
-                            <p className="text-xs uppercase tracking-[0.22em] text-slate-400">{t(row.label, locale)}</p>
-                            <p className="mt-2 text-sm leading-7 text-white">{t(row.value, locale)}</p>
-                          </div>
-                        </div>
-                      </motion.div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div className="mt-5 rounded-[1.5rem] border border-amber-300/15 bg-amber-300/8 p-5">
-                <p className="text-xs uppercase tracking-[0.24em] text-amber-100/80">{locale === "zh" ? "核心目标" : "Core Outcome"}</p>
-                <p className="mt-3 text-sm leading-7 text-slate-200">
-                  {locale === "zh"
-                    ? "帮助企业把 AI 可见性、内容产能、官网承接、线索转化和推荐判断连成一个真正可持续优化的增长闭环。"
-                    : "Help enterprises connect AI visibility, content production, website conversion, lead capture, and recommendation intelligence into one sustainable growth loop."}
-                </p>
-              </div>
-            </div>
-          </motion.div>
-        </section>
-
-        <section id="flywheel-demo" className="grid gap-8 py-14 lg:grid-cols-[1.08fr_0.92fr]">
-          <div
-            className="relative overflow-hidden rounded-[2.2rem] border border-white/10 bg-slate-950/50 p-6 shadow-[0_24px_100px_rgba(0,0,0,0.32)] backdrop-blur-xl"
-            onMouseEnter={() => setFlywheelDemoPaused(true)}
-            onMouseLeave={() => setFlywheelDemoPaused(false)}
-          >
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(82,230,255,0.12),transparent_30%),radial-gradient(circle_at_bottom,rgba(245,197,92,0.10),transparent_28%)]" />
-            <div className="relative">
-              <SectionTag>{t(brandCopy.flywheelDemoTag, locale)}</SectionTag>
-              <h2 className="mt-5 text-3xl font-semibold tracking-tight text-white sm:text-[2.6rem]">{t(brandCopy.flywheelDemoTitle, locale)}</h2>
-              <p className="mt-4 max-w-2xl text-base leading-8 text-slate-300">{t(brandCopy.flywheelDemoBody, locale)}</p>
-
-              <div className="relative mx-auto mt-8 aspect-square w-full max-w-[352px] sm:max-w-[440px] md:max-w-[520px] lg:max-w-[640px]">
-                <div className="flywheel-ring absolute inset-[10%] rounded-full border border-white/10 opacity-80" />
-                <div className="flywheel-ring-reverse absolute inset-[18%] rounded-full border border-dashed border-white/10 opacity-80" />
-                <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_center,rgba(82,230,255,0.08),transparent_38%),radial-gradient(circle_at_center,rgba(245,197,92,0.06),transparent_60%)]" />
-
-                <svg viewBox="0 0 100 100" className="absolute inset-0 h-full w-full">
-                  <circle cx="50" cy="50" r="35" stroke="rgba(255,255,255,0.08)" strokeWidth="0.8" fill="none" />
-                  <circle cx="50" cy="50" r="22" stroke="rgba(255,255,255,0.06)" strokeWidth="0.6" fill="none" />
-                  {orbitPositions.map((position, index) => {
-                    const module = flywheelModules[index];
-                    const isActive = index === flywheelDemoActiveIndex;
-
-                    return (
-                      <g key={module.id}>
-                        <line
-                          x1="50"
-                          y1="50"
-                          x2={position.x}
-                          y2={position.y}
-                          stroke={isActive ? module.accent : "rgba(255,255,255,0.12)"}
-                          strokeWidth={isActive ? 1.4 : 0.7}
-                          strokeDasharray={isActive ? "0" : "3 3"}
-                          opacity={isActive ? 0.9 : 0.55}
-                        />
-                        <circle cx={position.x} cy={position.y} r="1.8" fill={isActive ? module.accent : "rgba(255,255,255,0.35)"} />
-                      </g>
-                    );
-                  })}
-                </svg>
-
-                {flywheelModules.map((module, index) => (
-                  <FlywheelDemoNode
-                    key={module.id}
-                    module={module}
-                    index={index}
-                    position={orbitPositions[index]}
-                    isActive={index === flywheelDemoActiveIndex}
-                    onActivate={(nextIndex) => {
-                      setFlywheelDemoActiveIndex(nextIndex);
-                      setFlywheelDemoPaused(true);
-                    }}
-                  />
-                ))}
-
-                <motion.div
-                  className="absolute left-1/2 top-1/2 z-10 flex h-[36%] w-[36%] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-full border border-white/12 bg-slate-950/80 px-2 text-center shadow-[0_0_80px_rgba(0,0,0,0.38)] backdrop-blur-xl sm:h-[36%] sm:w-[36%] md:h-[38%] md:w-[38%]"
-                  animate={{ boxShadow: [`0 0 40px ${activeFlywheelModule.glow}`, `0 0 72px ${activeFlywheelModule.glow}`, `0 0 40px ${activeFlywheelModule.glow}`] }}
-                  transition={{ duration: 3.2, repeat: Number.POSITIVE_INFINITY }}
-                >
-                  <div
-                    className="flex h-10 w-10 items-center justify-center rounded-2xl border text-base font-semibold sm:h-12 sm:w-12 sm:text-lg md:h-14 md:w-14 md:text-xl"
-                    style={{ borderColor: activeFlywheelModule.accent, color: activeFlywheelModule.accent, backgroundColor: activeFlywheelModule.glow }}
-                  >
-                    {activeFlywheelModule.letter}
+              <div className="mt-4 flex flex-wrap gap-2">
+                {topQuickFacts.map((fact) => (
+                  <div key={fact.en} className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs uppercase tracking-[0.2em] text-slate-300">
+                    {t(fact, locale)}
                   </div>
-                  <p className="mt-2 text-[10px] uppercase tracking-[0.2em] text-slate-400 sm:mt-3 sm:text-xs sm:tracking-[0.24em] md:mt-4 md:tracking-[0.28em]">{t(brandCopy.flywheelDemoGrowthLoopLabel, locale)}</p>
-                  <p className="mt-1 text-sm font-semibold text-white sm:mt-1.5 sm:text-lg md:mt-2 md:text-2xl">{displayFlywheelName(activeFlywheelModule, locale)}</p>
-                  <p className="mt-1 text-[11px] leading-5 text-slate-300 sm:text-xs md:hidden">{t(activeFlywheelModule.compactTitle, locale)}</p>
-                  <p className="mt-1 hidden max-w-[16rem] text-sm leading-6 text-slate-300 md:block">{t(activeFlywheelModule.title, locale)}</p>
-                </motion.div>
-              </div>
-
-              <div className="mt-8 -mx-1 flex gap-3 overflow-x-auto px-1 pb-2 sm:mx-0 sm:grid sm:grid-cols-5 sm:overflow-visible sm:px-0 sm:pb-0">
-                {flywheelModules.map((module, index) => (
-                  <button
-                    key={module.id}
-                    type="button"
-                    onClick={() => {
-                      setFlywheelDemoActiveIndex(index);
-                      setFlywheelDemoPaused(true);
-                    }}
-                    className={cn(
-                      "min-w-[7.5rem] shrink-0 rounded-2xl border px-3 py-3 text-left transition sm:min-w-0",
-                      index === flywheelDemoActiveIndex ? "bg-white/10 text-white" : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/8",
-                    )}
-                    style={{ borderColor: index === flywheelDemoActiveIndex ? module.accent : undefined }}
-                  >
-                    <p className="text-[11px] uppercase tracking-[0.2em]" style={{ color: index === flywheelDemoActiveIndex ? module.accent : undefined }}>
-                      {module.letter}
-                    </p>
-                    <p className="mt-2 text-sm font-medium">{displayFlywheelName(module, locale)}</p>
-                  </button>
                 ))}
               </div>
-            </div>
-          </div>
 
-          <div className="flex flex-col gap-6">
-            <AnimatePresence mode="wait">
-              <motion.article
-                key={`${activeFlywheelModule.id}-${locale}`}
+              <motion.h1
                 initial={{ opacity: 0, y: 18 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -18 }}
-                transition={{ duration: 0.3 }}
-                className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/6 p-6 shadow-[0_24px_100px_rgba(0,0,0,0.28)] backdrop-blur-xl"
+                transition={{ duration: 0.7 }}
+                className="mt-5 max-w-4xl text-[2.85rem] font-semibold tracking-tight text-white sm:text-[3.55rem] lg:text-[4.45rem] lg:leading-[1.03]"
               >
+                {locale === "zh" ? (
+                  <>
+                    帮助企业构建
+                    <br />
+                    <span className="bg-gradient-to-r from-cyan-200 via-amber-100 to-violet-200 bg-clip-text text-transparent">AI 时代的增长飞轮</span>
+                  </>
+                ) : (
+                  <>
+                    Helping enterprises build
+                    <br />
+                    <span className="bg-gradient-to-r from-cyan-200 via-amber-100 to-violet-200 bg-clip-text text-transparent">AI growth flywheels</span>
+                  </>
+                )}
+              </motion.h1>
+
+              <motion.p
+                initial={{ opacity: 0, y: 18 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.7, delay: 0.1 }}
+                className="mt-5 max-w-3xl text-base leading-8 text-slate-300 sm:text-lg"
+              >
+                {t(brandCopy.heroBody, locale)}
+              </motion.p>
+
+              <div className="mt-6 flex flex-wrap gap-3">
+                {capabilities.map((capability) => (
+                  <div key={capability.id} className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-200">
+                    {t(capability.name, locale)}
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-8 grid gap-4 sm:grid-cols-3">
+                {heroStats.map((item, index) => (
+                  <article key={item.label.en} className="rounded-[1.7rem] border border-white/10 bg-white/6 p-5 shadow-[0_18px_60px_rgba(0,0,0,0.18)] backdrop-blur">
+                    <p className="text-xs uppercase tracking-[0.24em] text-slate-400">{t(item.label, locale)}</p>
+                    <p className="mt-3 text-3xl font-semibold tracking-tight text-white">
+                      <AnimatedStatValue value={item.value} delay={index * 120} />
+                    </p>
+                    <p className="mt-3 text-sm leading-6 text-slate-300">{t(item.detail, locale)}</p>
+                  </article>
+                ))}
+              </div>
+            </div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 22 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.75, delay: 0.12 }}
+              className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-slate-950/55 px-6 py-5 shadow-[0_30px_120px_rgba(0,0,0,0.35)] backdrop-blur-xl"
+            >
+              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(245,197,92,0.18),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(82,230,255,0.12),transparent_30%)]" />
+              <div className="relative">
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.28em] text-slate-400">{locale === "zh" ? "实时系统快照" : "Live System Snapshot"}</p>
+                    <h2 className="mt-2 text-2xl font-semibold text-white">
+                      {locale === "zh" ? "增长不是一条链路，而是一个会自我强化的系统" : "Growth is not a single funnel. It is a self-reinforcing system."}
+                    </h2>
+                  </div>
+                  <motion.div
+                    key={`loop-status-${flywheelDemoActiveIndex}`}
+                    initial={{ scale: 0.985, opacity: 0.92, boxShadow: "0 0 0 rgba(16,185,129,0)" }}
+                    animate={{
+                      scale: 1,
+                      opacity: 1,
+                      boxShadow: [
+                        "0 0 0 rgba(16,185,129,0)",
+                        "0 0 24px rgba(52,211,153,0.22)",
+                        "0 0 10px rgba(52,211,153,0.1)",
+                      ],
+                    }}
+                    transition={{ duration: 0.72, times: [0, 0.4, 1], ease: "easeOut" }}
+                    className="status-badge-live rounded-full border border-emerald-400/20 bg-emerald-400/10 px-4 py-2 text-xs uppercase tracking-[0.18em] text-emerald-100"
+                  >
+                    <span className="status-badge-dot" aria-hidden="true" />
+                    {locale === "zh" ? "飞轮运行中" : "Loop Active"}
+                  </motion.div>
+                </div>
+
+                <div className="snapshot-layer-group mt-5">
+                  <div className="snapshot-flow-line" aria-hidden="true">
+                    <span className="snapshot-flow-dot" />
+                  </div>
+                  <div className="space-y-4">
+                    {snapshotLayers.map((row, index) => {
+                      const Icon = row.icon;
+
+                      return (
+                        <motion.div
+                          key={row.label.en}
+                          initial={{ opacity: 0, y: 18 }}
+                          whileInView={{ opacity: 1, y: 0 }}
+                          viewport={{ once: true, amount: 0.45 }}
+                          transition={{ duration: 0.42, delay: index * 0.1 }}
+                          className="snapshot-layer-card relative rounded-[1.4rem] border border-white/10 bg-white/6 p-4"
+                        >
+                          <div className="flex items-start gap-4">
+                            <div
+                              className="snapshot-layer-icon rounded-2xl border border-white/10 bg-slate-900/80 p-3 text-cyan-100"
+                              style={
+                                {
+                                  "--snapshot-accent": row.accent,
+                                  "--snapshot-glow": row.glow,
+                                } as CSSProperties
+                              }
+                            >
+                              <Icon className="h-4 w-4" />
+                            </div>
+                            <div>
+                              <p className="text-xs uppercase tracking-[0.22em] text-slate-400">{t(row.label, locale)}</p>
+                              <p className="mt-2 text-sm leading-7 text-white">{t(row.value, locale)}</p>
+                            </div>
+                          </div>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="mt-5 rounded-[1.5rem] border border-amber-300/15 bg-amber-300/8 p-5">
+                  <p className="text-xs uppercase tracking-[0.24em] text-amber-100/80">{locale === "zh" ? "核心目标" : "Core Outcome"}</p>
+                  <p className="mt-3 text-sm leading-7 text-slate-200">
+                    {locale === "zh"
+                      ? "帮助企业把 AI 可见性、内容产能、官网承接、线索转化和推荐判断连成一个真正可持续优化的增长闭环。"
+                      : "Help enterprises connect AI visibility, content production, website conversion, lead capture, and recommendation intelligence into one sustainable growth loop."}
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          </section>
+
+          <section id="flywheel-demo" className="grid gap-8 py-14 lg:grid-cols-[1.08fr_0.92fr]">
+            <div
+              className="relative overflow-hidden rounded-[2.2rem] border border-white/10 bg-slate-950/50 p-6 shadow-[0_24px_100px_rgba(0,0,0,0.32)] backdrop-blur-xl"
+              onMouseEnter={() => setFlywheelDemoPaused(true)}
+              onMouseLeave={() => setFlywheelDemoPaused(false)}
+            >
+              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(82,230,255,0.12),transparent_30%),radial-gradient(circle_at_bottom,rgba(245,197,92,0.10),transparent_28%)]" />
+              <div className="relative">
+                <SectionTag>{t(brandCopy.flywheelDemoTag, locale)}</SectionTag>
+                <h2 className="mt-5 text-3xl font-semibold tracking-tight text-white sm:text-[2.6rem]">{t(brandCopy.flywheelDemoTitle, locale)}</h2>
+                <p className="mt-4 max-w-2xl text-base leading-8 text-slate-300">{t(brandCopy.flywheelDemoBody, locale)}</p>
+
+                <div className="relative mx-auto mt-8 aspect-square w-full max-w-[352px] sm:max-w-[440px] md:max-w-[520px] lg:max-w-[640px]">
+                  <div className="flywheel-ring absolute inset-[10%] rounded-full border border-white/10 opacity-80" />
+                  <div className="flywheel-ring-reverse absolute inset-[18%] rounded-full border border-dashed border-white/10 opacity-80" />
+                  <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_center,rgba(82,230,255,0.08),transparent_38%),radial-gradient(circle_at_center,rgba(245,197,92,0.06),transparent_60%)]" />
+
+                  <svg viewBox="0 0 100 100" className="absolute inset-0 h-full w-full">
+                    <circle cx="50" cy="50" r="35" stroke="rgba(255,255,255,0.08)" strokeWidth="0.8" fill="none" />
+                    <circle cx="50" cy="50" r="22" stroke="rgba(255,255,255,0.06)" strokeWidth="0.6" fill="none" />
+                    {orbitPositions.map((position, index) => {
+                      const module = flywheelModules[index];
+                      const isActive = index === flywheelDemoActiveIndex;
+
+                      return (
+                        <g key={module.id}>
+                          <line
+                            x1="50"
+                            y1="50"
+                            x2={position.x}
+                            y2={position.y}
+                            stroke={isActive ? module.accent : "rgba(255,255,255,0.12)"}
+                            strokeWidth={isActive ? 1.4 : 0.7}
+                            strokeDasharray={isActive ? "0" : "3 3"}
+                            opacity={isActive ? 0.9 : 0.55}
+                          />
+                          <circle cx={position.x} cy={position.y} r="1.8" fill={isActive ? module.accent : "rgba(255,255,255,0.35)"} />
+                        </g>
+                      );
+                    })}
+                  </svg>
+
+                  {flywheelModules.map((module, index) => (
+                    <FlywheelDemoNode
+                      key={module.id}
+                      module={module}
+                      index={index}
+                      position={orbitPositions[index]}
+                      isActive={index === flywheelDemoActiveIndex}
+                      onActivate={(nextIndex) => {
+                        setFlywheelDemoActiveIndex(nextIndex);
+                        setFlywheelDemoPaused(true);
+                      }}
+                    />
+                  ))}
+
+                  <motion.div
+                    className="absolute left-1/2 top-1/2 z-10 flex h-[36%] w-[36%] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-full border border-white/12 bg-slate-950/80 px-2 text-center shadow-[0_0_80px_rgba(0,0,0,0.38)] backdrop-blur-xl sm:h-[36%] sm:w-[36%] md:h-[38%] md:w-[38%]"
+                    animate={
+                      firstScreenMotionActive
+                        ? { boxShadow: [`0 0 40px ${activeFlywheelModule.glow}`, `0 0 72px ${activeFlywheelModule.glow}`, `0 0 40px ${activeFlywheelModule.glow}`] }
+                        : { boxShadow: `0 0 40px ${activeFlywheelModule.glow}` }
+                    }
+                    transition={
+                      firstScreenMotionActive
+                        ? { duration: 3.2, repeat: Number.POSITIVE_INFINITY }
+                        : { duration: 0.25 }
+                    }
+                  >
+                    <div
+                      className="flex h-10 w-10 items-center justify-center rounded-2xl border text-base font-semibold sm:h-12 sm:w-12 sm:text-lg md:h-14 md:w-14 md:text-xl"
+                      style={{ borderColor: activeFlywheelModule.accent, color: activeFlywheelModule.accent, backgroundColor: activeFlywheelModule.glow }}
+                    >
+                      {activeFlywheelModule.letter}
+                    </div>
+                    <p className="mt-2 text-[10px] uppercase tracking-[0.2em] text-slate-400 sm:mt-3 sm:text-xs sm:tracking-[0.24em] md:mt-4 md:tracking-[0.28em]">{t(brandCopy.flywheelDemoGrowthLoopLabel, locale)}</p>
+                    <p className="mt-1 text-sm font-semibold text-white sm:mt-1.5 sm:text-lg md:mt-2 md:text-2xl">{displayFlywheelName(activeFlywheelModule, locale)}</p>
+                    <p className="mt-1 text-[11px] leading-5 text-slate-300 sm:text-xs md:hidden">{t(activeFlywheelModule.compactTitle, locale)}</p>
+                    <p className="mt-1 hidden max-w-[16rem] text-sm leading-6 text-slate-300 md:block">{t(activeFlywheelModule.title, locale)}</p>
+                  </motion.div>
+                </div>
+
+                <div className="mt-8 -mx-1 flex gap-3 overflow-x-auto px-1 pb-2 sm:mx-0 sm:grid sm:grid-cols-5 sm:overflow-visible sm:px-0 sm:pb-0">
+                  {flywheelModules.map((module, index) => (
+                    <button
+                      key={module.id}
+                      type="button"
+                      onClick={() => {
+                        setFlywheelDemoActiveIndex(index);
+                        setFlywheelDemoPaused(true);
+                      }}
+                      className={cn(
+                        "min-w-[7.5rem] shrink-0 rounded-2xl border px-3 py-3 text-left transition sm:min-w-0",
+                        index === flywheelDemoActiveIndex ? "bg-white/10 text-white" : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/8",
+                      )}
+                      style={{ borderColor: index === flywheelDemoActiveIndex ? module.accent : undefined }}
+                    >
+                      <p className="text-[11px] uppercase tracking-[0.2em]" style={{ color: index === flywheelDemoActiveIndex ? module.accent : undefined }}>
+                        {module.letter}
+                      </p>
+                      <p className="mt-2 text-sm font-medium">{displayFlywheelName(module, locale)}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-6">
+              <AnimatePresence mode="wait">
+                <motion.article
+                  key={`${activeFlywheelModule.id}-${locale}`}
+                  initial={{ opacity: 0, y: 18 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -18 }}
+                  transition={{ duration: 0.3 }}
+                  className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/6 p-6 shadow-[0_24px_100px_rgba(0,0,0,0.28)] backdrop-blur-xl"
+                >
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <p className="text-xs uppercase tracking-[0.26em] text-slate-400">{t(activeFlywheelModule.outputLabel, locale)}</p>
@@ -2347,8 +2389,8 @@ function Home() {
                     <MoveUpRight className="h-4 w-4" />
                   </button>
                 </div>
-              </motion.article>
-            </AnimatePresence>
+                </motion.article>
+              </AnimatePresence>
 
             <article className="rounded-[1.85rem] border border-white/8 bg-slate-950/40 p-5 backdrop-blur-xl">
               <p className="text-xs uppercase tracking-[0.24em] text-slate-400">{t(brandCopy.flywheelDemoWhyTag, locale)}</p>
@@ -2373,8 +2415,9 @@ function Home() {
               </div>
             </article>
 
-          </div>
-        </section>
+            </div>
+          </section>
+        </div>
 
         <section id="architecture" className="grid gap-6 py-14 lg:grid-cols-[0.88fr_1.12fr]">
           <article className="rounded-[2rem] border border-white/10 bg-slate-950/55 p-6 backdrop-blur-xl">

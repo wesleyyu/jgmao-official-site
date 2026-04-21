@@ -302,6 +302,18 @@
     animation-delay: var(--flow-delay, 0s);
   }
 
+  [data-top-motion-active="false"] .flow-current-edge,
+  [data-top-motion-active="false"] .flywheel-ring,
+  [data-top-motion-active="false"] .flywheel-ring-reverse,
+  [data-top-motion-active="false"] .status-badge-live,
+  [data-top-motion-active="false"] .status-badge-dot,
+  [data-top-motion-active="false"] .snapshot-flow-dot,
+  [data-top-motion-active="false"] .snapshot-layer-card::before,
+  [data-top-motion-active="false"] .snapshot-layer-icon,
+  [data-top-motion-active="false"] .flywheel-why-connector::after {
+    animation-play-state: paused !important;
+  }
+
   @keyframes flow-dash {
     from {
       stroke-dashoffset: 0;
