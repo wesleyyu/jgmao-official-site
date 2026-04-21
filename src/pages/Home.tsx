@@ -9,6 +9,7 @@ import {
   FileSearch,
   Gauge,
   Globe2,
+  GraduationCap,
   Menu,
   MoveUpRight,
   Radar,
@@ -21,6 +22,8 @@ import {
 import { startTransition, useEffect, useState, type CSSProperties, type ReactNode } from "react";
 
 import logoImage from "@/assets/jgmao-logo-black-square.png";
+import { getPublishedFaqs } from "@/content/faqs";
+import { getPublishedInsights } from "@/content/insights";
 import { cn } from "@/lib/utils";
 
 type Locale = "zh" | "en";
@@ -121,22 +124,6 @@ type CaseStudy = {
   challenge: LocalizedText;
   solution: LocalizedText;
   metrics: Array<{ label: LocalizedText; value: string }>;
-};
-
-type InsightItem = {
-  category: LocalizedText;
-  title: LocalizedText;
-  description: LocalizedText;
-  icon: LucideIcon;
-  accent: string;
-  glow: string;
-  metric: string;
-  metricLabel: LocalizedText;
-};
-
-type FaqItem = {
-  question: LocalizedText;
-  answer: LocalizedText;
 };
 
 const siteUrl = "http://49.232.252.118:8800/";
@@ -1095,95 +1082,6 @@ const caseStudies: CaseStudy[] = [
   },
 ];
 
-const insightItems: InsightItem[] = [
-  {
-    category: { zh: "GEO 洞察", en: "GEO Insight" },
-    title: {
-      zh: "AI 搜索时代，官网内容为什么要从页面思维转向答案思维",
-      en: "Why websites must shift from page thinking to answer thinking in the AI search era",
-    },
-    description: {
-      zh: "从 AI 可见性、FAQ 结构到证据内容，拆解官网为什么需要重新组织信息表达方式。",
-      en: "A look at why site structure, FAQ design, and proof-led content must adapt for AI visibility.",
-    },
-    icon: Radar,
-    accent: "#52E6FF",
-    glow: "rgba(82, 230, 255, 0.18)",
-    metric: "GEO",
-    metricLabel: { zh: "可见性信号", en: "Visibility Signals" },
-  },
-  {
-    category: { zh: "增长方法", en: "Growth Method" },
-    title: {
-      zh: "企业增长飞轮不是概念，而是一套可持续运转的内容与转化系统",
-      en: "The enterprise growth flywheel is a working system, not just a concept",
-    },
-    description: {
-      zh: "把内容生产、官网承接、智能获客与推荐决策连成闭环，才能真正形成增长资产。",
-      en: "Growth becomes durable when content, website conversion, lead capture, and recommendation intelligence work as one loop.",
-    },
-    icon: Workflow,
-    accent: "#F5C55C",
-    glow: "rgba(245, 197, 92, 0.16)",
-    metric: "Loop",
-    metricLabel: { zh: "增长方法论", en: "Growth Logic" },
-  },
-  {
-    category: { zh: "案例延展", en: "Case Extension" },
-    title: {
-      zh: "从 FAQ 到案例页：哪些内容更容易被 AI 理解、引用与推荐",
-      en: "From FAQ to case pages: what content is easier for AI to understand and recommend",
-    },
-    description: {
-      zh: "总结高质量官网内容的常见结构，帮助后续博客、案例和问答栏目形成统一体系。",
-      en: "Patterns for building high-quality site content across FAQs, case studies, and answer-led articles.",
-    },
-    icon: FileSearch,
-    accent: "#B592FF",
-    glow: "rgba(181, 146, 255, 0.16)",
-    metric: "Case",
-    metricLabel: { zh: "内容结构", en: "Content Structure" },
-  },
-];
-
-const faqItems: FaqItem[] = [
-  {
-    question: { zh: "什么是坚果猫 JGMAO AI 增长引擎？", en: "What is the JGMAO AI Growth Engine?" },
-    answer: {
-      zh: "坚果猫 JGMAO AI 增长引擎是一套帮助企业在 AI 时代构建增长飞轮的系统，包含 GEO 优化引擎、AI 内容工厂、AI 增长网站、智能获客系统和 AI 推荐分析五大部分。",
-      en: "JGMAO AI Growth Engine is a system for helping enterprises build AI growth flywheels, combining a GEO engine, AI content factory, AI growth website, intelligent lead system, and AI recommendation analytics.",
-    },
-  },
-  {
-    question: { zh: "GEO 优化和传统 SEO 有什么区别？", en: "How is GEO different from traditional SEO?" },
-    answer: {
-      zh: "SEO 更偏向网页排名，GEO 更关注品牌在 AI 问答、生成式搜索和推荐场景中是否容易被抽取、总结、引用和采信。它要求网站具备更好的答案结构、FAQ 设计、证据表达和可信来源。",
-      en: "SEO focuses more on search rankings, while GEO focuses on whether a brand is easy to retrieve, summarize, cite, and trust in AI answer and recommendation environments. That requires better answer structures, FAQ design, proof blocks, and source signals.",
-    },
-  },
-  {
-    question: { zh: "AI 内容工厂为什么必须和官网一起做？", en: "Why must the AI content factory be connected to the website?" },
-    answer: {
-      zh: "因为内容如果不回流到官网结构、FAQ、案例页和线索页，就很难形成可持续的增长资产。AI 内容工厂的价值在于持续生成可被看见、可被推荐、可被转化的官网内容系统。",
-      en: "Because content alone does not create durable growth assets unless it flows back into the website structure, FAQ, case studies, and lead pages. The content factory matters when it continuously creates visible, recommendable, conversion-ready site assets.",
-    },
-  },
-  {
-    question: { zh: "智能获客系统在网站里起什么作用？", en: "What role does the intelligent lead system play on the website?" },
-    answer: {
-      zh: "它负责把浏览行为、FAQ 阅读、案例访问和 CTA 点击转成高质量线索，并通过标签、分层和 CRM 回写，把增长结果真正带到销售和客户成功流程里。",
-      en: "It turns browsing behavior, FAQ reading, case-study visits, and CTA clicks into qualified leads, then routes them with tags, segmentation, and CRM write-back so growth impacts pipeline.",
-    },
-  },
-  {
-    question: { zh: "AI 推荐分析为什么对 GEO 很关键？", en: "Why is AI recommendation analytics critical for GEO?" },
-    answer: {
-      zh: "因为企业不仅要知道有没有流量，更要知道 AI 为什么推荐你、哪些页面在带来高质量线索、哪些内容虽然曝光高却没有商业价值。推荐分析是整站 GEO 优化的判断层。",
-      en: "Because enterprises need to know not just whether they have traffic, but why AI recommends them, which pages create qualified pipeline, and which content attracts exposure without business value. Recommendation analytics is the judgment layer for site-wide GEO.",
-    },
-  },
-];
-
 const brandCopy = {
   heroTag: { zh: "AI时代企业增长系统", en: "Enterprise growth system for the AI era" },
   heroTitle: { zh: "帮助企业构建 AI 时代的增长飞轮", en: "Helping enterprises build AI growth flywheels in the AI era" },
@@ -1590,8 +1488,14 @@ function Home() {
   const detailCapability = detailIndex === null ? null : capabilities[detailIndex];
   const activeFlywheelModule = flywheelModules[flywheelDemoActiveIndex];
   const detailFlywheelModule = flywheelDemoDetailIndex === null ? null : flywheelModules[flywheelDemoDetailIndex];
+  const insightItems = getPublishedInsights().slice(0, 3);
+  const faqItems = getPublishedFaqs();
   const isLocalPreview =
     typeof window !== "undefined" && ["127.0.0.1", "localhost"].includes(window.location.hostname);
+  const mobileAccordionHint =
+    locale === "zh" ? "点击卡片展开查看详情，再次点击即可收起。" : "Tap a card to expand details. Tap again to collapse.";
+  const mobileFaqHint =
+    locale === "zh" ? "点击问题展开查看回答，再次点击即可收起。" : "Tap a question to expand the answer. Tap again to collapse.";
   const configuredChatEndpoint =
     typeof import.meta !== "undefined" && typeof import.meta.env?.VITE_CHAT_ENDPOINT === "string"
       ? import.meta.env.VITE_CHAT_ENDPOINT.trim()
@@ -2000,7 +1904,7 @@ function Home() {
         </span>
       </a>
 
-      <div className="relative mx-auto flex min-h-screen w-full max-w-[1440px] flex-col px-5 pb-20 pt-6 sm:px-6 lg:px-10">
+      <div className="relative mx-auto flex min-h-screen w-full max-w-[1440px] flex-col px-5 pb-0 pt-6 sm:px-6 lg:px-10">
         <header className="sticky top-4 z-40 mb-10 rounded-[1.6rem] border border-white/10 bg-slate-950/55 px-4 py-3 backdrop-blur-xl sm:px-5">
           <div className="flex items-center justify-between gap-4">
             <a href="#top" onClick={() => setActiveSection("")} className="flex items-center gap-[14px]">
@@ -2486,6 +2390,7 @@ function Home() {
                   ? "品牌能做内容，但不一定能被 AI 看见；有流量，也不一定能形成线索；有推荐，也不一定知道结果为什么好或不好。"
                   : "Many teams can publish content, but not all of it becomes visible to AI, converts visitors, or turns recommendations into measurable pipeline."}
               </p>
+              <p className="mt-4 text-sm leading-7 text-slate-300 md:hidden">{mobileAccordionHint}</p>
             </div>
           </article>
 
@@ -2516,7 +2421,7 @@ function Home() {
                         <p className="text-xs uppercase tracking-[0.22em] text-slate-400">{locale === "zh" ? `场景 0${index + 1}` : `Scenario 0${index + 1}`}</p>
                         <h3 className="mt-1 text-xl font-semibold text-white">{t(scenario.title, locale)}</h3>
                       </div>
-                      <ArrowRight className={cn("h-4 w-4 shrink-0 text-slate-500 transition md:hidden", isExpanded && "rotate-90 text-white")} />
+                      <ArrowRight className={cn("h-4 w-4 shrink-0 text-slate-400 transition md:hidden", isExpanded && "rotate-90 text-white")} />
                     </div>
                   </button>
                   <p className={cn("mt-4 text-sm leading-7 text-slate-300", !isExpanded && "hidden md:block")}>{t(scenario.description, locale)}</p>
@@ -2567,8 +2472,8 @@ function Home() {
                           <Icon className="h-4 w-4" />
                         </div>
                         <div className="min-w-0 flex-1">
-                          <div className="flex items-center justify-between gap-3">
-                            <div>
+                        <div className="flex items-center justify-between gap-3">
+                          <div>
                               <div className="flex items-center gap-2">
                                 <p className="text-[11px] uppercase tracking-[0.2em]" style={{ color: isActive ? capability.accent : "#94A3B8" }}>{capability.token}</p>
                                 <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] uppercase tracking-[0.16em] text-slate-300">
@@ -2577,7 +2482,7 @@ function Home() {
                               </div>
                               <p className="mt-1 text-lg font-semibold text-white">{t(capability.name, locale)}</p>
                             </div>
-                            <ArrowRight className={cn("h-4 w-4 shrink-0 transition", isActive && showMobileModuleDetail ? "rotate-90 text-white" : "text-slate-500 lg:rotate-0")} />
+                            <ArrowRight className={cn("h-4 w-4 shrink-0 transition", isActive && showMobileModuleDetail ? "rotate-90 text-white" : "text-slate-400 lg:rotate-0")} />
                           </div>
                           <p className="mt-2 text-sm leading-6 text-slate-300">{t(capability.summary, locale)}</p>
                         </div>
@@ -2626,11 +2531,7 @@ function Home() {
             {!showMobileModuleDetail ? (
               <div className="mt-6 rounded-[1.55rem] border border-dashed border-white/10 bg-white/[0.03] px-4 py-4 lg:hidden">
                 <p className="text-xs uppercase tracking-[0.2em] text-slate-400">{locale === "zh" ? "移动端查看方式" : "Mobile View"}</p>
-                <p className="mt-2 text-sm leading-7 text-slate-300">
-                  {locale === "zh"
-                    ? "手机端先点击上面的任一引擎卡片，再查看对应的核心能力详情。"
-                    : "On mobile, tap any engine card above to view its capability details."}
-                </p>
+                <p className="mt-2 text-sm leading-7 text-slate-300">{mobileAccordionHint}</p>
               </div>
             ) : null}
           </div>
@@ -2769,6 +2670,7 @@ function Home() {
               <SectionTag>{t(brandCopy.casesTag, locale)}</SectionTag>
               <h2 className="mt-5 text-3xl font-semibold tracking-tight text-white sm:text-[2.45rem]">{t(brandCopy.casesTitle, locale)}</h2>
               <p className="mt-4 text-base leading-8 text-slate-300">{t(brandCopy.casesBody, locale)}</p>
+              <p className="mt-4 text-sm leading-7 text-slate-300 md:hidden">{mobileAccordionHint}</p>
 
               <div className="mt-8 rounded-[1.7rem] border border-white/10 bg-white/6 p-5">
                 <p className="text-xs uppercase tracking-[0.22em] text-slate-400">{locale === "zh" ? "增长结果观察维度" : "Growth Result Dimensions"}</p>
@@ -2887,17 +2789,26 @@ function Home() {
               <h2 className="mt-5 text-3xl font-semibold tracking-tight text-white sm:text-[2.45rem]">{t(brandCopy.insightsTitle, locale)}</h2>
               <p className="mt-4 hidden text-base leading-8 text-slate-300 md:block">{t(brandCopy.insightsBody, locale)}</p>
               <p className="mt-4 text-sm leading-7 text-slate-300 md:hidden">
-                {locale === "zh" ? "点击条目展开查看内容。" : "Tap an item to expand."}
+                {mobileAccordionHint}
               </p>
+              <a
+                href="/insights"
+                className="mt-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium text-white transition hover:bg-white/8"
+              >
+                {locale === "zh" ? "查看全部洞察" : "View all insights"}
+                <MoveUpRight className="h-4 w-4" />
+              </a>
             </article>
 
             <div className="space-y-4">
               {insightItems.map((item, index) => {
                 const isExpanded = activeInsightIndex === index;
+                const InsightIcon =
+                  item.iconKey === "radar" ? Radar : item.iconKey === "workflow" ? Workflow : FileSearch;
 
                 return (
                   <motion.article
-                    key={item.title.en}
+                    key={item.slug}
                     initial={{ opacity: 0, x: 18 }}
                     whileInView={{ opacity: 1, x: 0 }}
                     viewport={{ once: true, amount: 0.25 }}
@@ -2920,21 +2831,30 @@ function Home() {
                             className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border"
                             style={{ borderColor: `${item.accent}55`, backgroundColor: item.glow, color: item.accent }}
                           >
-                            <item.icon className="h-4 w-4" />
+                            <InsightIcon className="h-4 w-4" />
                           </div>
                           <ArrowRight className={cn("h-4 w-4 shrink-0 text-slate-400 transition md:hidden", isExpanded && "rotate-90 text-white")} />
                         </div>
                       </div>
                       <h3 className="text-xl font-semibold text-white">{t(item.title, locale)}</h3>
-                      <div className={cn(!isExpanded && "hidden md:block")}>
-                        <p className="mt-4 text-sm leading-7 text-slate-300">{t(item.description, locale)}</p>
-                        <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] uppercase tracking-[0.18em] text-slate-300">
+                    </button>
+                    <div className={cn("px-5 pb-5", !isExpanded && "hidden md:block")}>
+                      <p className="text-sm leading-7 text-slate-300">{t(item.description, locale)}</p>
+                      <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
+                        <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] uppercase tracking-[0.18em] text-slate-300">
                           {item.metric}
                           <span className="text-slate-500">/</span>
                           {t(item.metricLabel, locale)}
-                        </div>
+                        </span>
+                        <a
+                          href={`/insights/${item.slug}`}
+                          className="inline-flex items-center gap-2 text-sm font-medium text-cyan-100 transition hover:text-cyan-50"
+                        >
+                          {locale === "zh" ? "查看文章" : "Read article"}
+                          <MoveUpRight className="h-4 w-4" />
+                        </a>
                       </div>
-                    </button>
+                    </div>
                   </motion.article>
                 );
               })}
@@ -2948,7 +2868,7 @@ function Home() {
               <h2 className="mt-5 text-3xl font-semibold tracking-tight text-white sm:text-[2.45rem]">{t(brandCopy.faqTitle, locale)}</h2>
               <p className="mt-4 hidden text-base leading-8 text-slate-300 md:block">{t(brandCopy.faqBody, locale)}</p>
               <p className="mt-4 text-sm leading-7 text-slate-300 md:hidden">
-                {locale === "zh" ? "点击问题展开查看回答。" : "Tap a question to expand."}
+                {mobileFaqHint}
               </p>
             </article>
 
@@ -2993,6 +2913,13 @@ function Home() {
                         : "The remaining questions help visitors quickly understand JGMAO's boundaries, collaboration model, and system value."}
                     </p>
                   </div>
+                  <a
+                    href="/faq"
+                    className="hidden items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/8 md:inline-flex"
+                  >
+                    {locale === "zh" ? "查看全部 FAQ" : "View all FAQ"}
+                    <MoveUpRight className="h-4 w-4" />
+                  </a>
                 </div>
 
                 <div className="mt-5 space-y-3">
@@ -3026,12 +2953,20 @@ function Home() {
                     </motion.article>
                   ))}
                 </div>
+
+                <a
+                  href="/faq"
+                  className="mt-5 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/8 md:hidden"
+                >
+                  {locale === "zh" ? "查看全部 FAQ" : "View all FAQ"}
+                  <MoveUpRight className="h-4 w-4" />
+                </a>
               </div>
             </div>
           </div>
         </section>
 
-        <section id="contact" className="py-14">
+        <section id="contact" className="pb-4 pt-14">
           <div className="grid gap-6">
             <article className="rounded-[2rem] border border-white/10 bg-slate-950/60 p-6 backdrop-blur-xl">
               <h2 className="mt-5 text-3xl font-semibold tracking-tight text-white sm:text-[2.45rem]">{t(brandCopy.contactTitle, locale)}</h2>
@@ -3076,44 +3011,46 @@ function Home() {
                   </div>
                 </div>
 
-                <div className="space-y-4">
-                  <div className="rounded-[1.55rem] border border-white/10 bg-white/6 p-5 shadow-[0_18px_80px_rgba(0,0,0,0.22)] backdrop-blur">
-                    <div className="grid gap-3">
-                      {[
-                        {
-                          title: { zh: "国家高新技术企业", en: "National High-Tech Enterprise" },
-                          icon: ShieldCheck,
-                        },
-                        {
-                          title: { zh: "清华系基金战略投资", en: "Tsinghua-Affiliated Strategic Investment" },
-                          icon: Sparkles,
-                        },
-                        {
-                          title: { zh: "顶尖科研与产业团队", en: "Research + Industry Team" },
-                          icon: Radar,
-                        },
-                      ].map((item) => {
-                        const Icon = item.icon;
+                <div className="rounded-[1.7rem] border border-white/10 bg-[linear-gradient(180deg,rgba(10,17,34,0.92),rgba(8,14,28,0.86))] p-5 shadow-[0_20px_90px_rgba(0,0,0,0.24)] backdrop-blur">
+                  <div className="grid gap-3">
+                    {[
+                      {
+                        title: { zh: "国家高新技术企业", en: "National High-Tech Enterprise" },
+                        icon: ShieldCheck,
+                      },
+                      {
+                        title: { zh: "清华系基金战略投资", en: "Tsinghua-Affiliated Strategic Investment" },
+                        icon: Sparkles,
+                      },
+                      {
+                        title: { zh: "顶尖科研与产业团队", en: "Research + Industry Team" },
+                        icon: Radar,
+                      },
+                      {
+                        title: { zh: "北京工业大学研究生实习基地", en: "BJUT Graduate Internship Base" },
+                        icon: GraduationCap,
+                      },
+                    ].map((item, index) => {
+                      const Icon = item.icon;
 
-                        return (
-                          <article key={item.title.en} className="rounded-[1.25rem] border border-white/10 bg-slate-950/55 p-4">
-                            <div className="flex items-start gap-3">
-                              <div className="rounded-[0.95rem] border border-white/10 bg-white/5 p-2 text-cyan-100">
-                                <Icon className="h-4 w-4" />
-                              </div>
-                              <div className="min-w-0">
-                                <h3 className="text-base font-semibold text-white">{t(item.title, locale)}</h3>
-                              </div>
+                      return (
+                        <article key={item.title.en} className="rounded-[1.2rem] border border-white/10 bg-white/[0.04] px-4 py-4">
+                          <div className="flex items-start gap-3">
+                            <div className="rounded-[0.95rem] border border-white/10 bg-cyan-300/10 p-2 text-cyan-100">
+                              <Icon className="h-4 w-4" />
                             </div>
-                          </article>
-                        );
-                      })}
-                    </div>
+                            <div className="min-w-0">
+                              <p className="text-[11px] uppercase tracking-[0.18em] text-slate-500">{String(index + 1).padStart(2, "0")}</p>
+                              <h3 className="mt-1 text-base font-semibold text-white">{t(item.title, locale)}</h3>
+                            </div>
+                          </div>
+                        </article>
+                      );
+                    })}
                   </div>
 
-                  <div className="rounded-[1.55rem] border border-white/10 bg-slate-950/50 p-5 backdrop-blur">
-                    <p className="text-xs uppercase tracking-[0.22em] text-slate-400">{locale === "zh" ? "联系方式" : "Contact Details"}</p>
-                    <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  <div className="mt-5 border-t border-white/10 pt-5">
+                    <div className="grid gap-3 sm:grid-cols-2">
                       {[
                         {
                           label: { zh: "官网", en: "Website" },
@@ -3135,7 +3072,7 @@ function Home() {
                           value: { zh: "北京市阜外大街乙22号6层", en: "6F, No. 22B Fuwai Street, Beijing" },
                         },
                       ].map((item) => (
-                        <div key={item.label.en} className="rounded-[1.1rem] border border-white/10 bg-white/5 px-4 py-3">
+                        <div key={item.label.en} className="rounded-[1.1rem] border border-white/10 bg-slate-950/45 px-4 py-3">
                           <p className="text-[11px] uppercase tracking-[0.18em] text-slate-500">{t(item.label, locale)}</p>
                           {item.href ? (
                             <a
@@ -3502,6 +3439,46 @@ function Home() {
           </motion.div>
         ) : null}
       </AnimatePresence>
+
+      <footer className="relative mt-5 border-t border-white/10 bg-slate-950/55">
+        <div className="mx-auto flex w-full max-w-[1440px] items-center justify-center px-5 py-4 text-center text-xs text-slate-500 sm:px-6 lg:px-10">
+          {locale === "zh" ? (
+            <div className="space-y-1.5">
+              <p>{`© ${new Date().getFullYear()} 北京连接时代科技有限公司 版权所有`}</p>
+              <p className="leading-6 text-slate-600">
+                <a
+                  href="https://dxzhgl.miit.gov.cn/"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="underline decoration-white/10 underline-offset-4 transition hover:text-slate-400"
+                >
+                  经营许可证编号：京B2-20222927
+                </a>
+                <span className="mx-2 text-slate-700">·</span>
+                <a
+                  href="https://beian.miit.gov.cn/"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="underline decoration-white/10 underline-offset-4 transition hover:text-slate-400"
+                >
+                  京ICP备19049430号-1
+                </a>
+                <span className="mx-2 text-slate-700">·</span>
+                <a
+                  href="https://beian.mps.gov.cn/"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="underline decoration-white/10 underline-offset-4 transition hover:text-slate-400"
+                >
+                  京公网安备11010702002574号
+                </a>
+              </p>
+            </div>
+          ) : (
+            <p>{`© ${new Date().getFullYear()} Beijing Connection Era Technology Co., Ltd. All rights reserved.`}</p>
+          )}
+        </div>
+      </footer>
     </main>
   );
 }
