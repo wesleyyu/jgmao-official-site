@@ -3,6 +3,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { FaqIndexPage } from "@/pages/Faq";
+import H5LandingPage from "@/pages/H5";
 import Home from "@/pages/Home";
 import { InsightDetailPage, InsightsIndexPage } from "@/pages/Insights";
 import { Route, Switch } from "wouter";
@@ -23,6 +24,9 @@ function App() {
             </Route>
             <Route path="/faq">
               <FaqIndexPage locale="zh" />
+            </Route>
+            <Route path="/h5">
+              <H5LandingPage />
             </Route>
             <Route>
               <Home />
