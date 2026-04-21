@@ -1060,24 +1060,24 @@ const caseStudies: CaseStudy[] = [
     ],
   },
   {
-    company: { zh: "Helio Industrial", en: "Helio Industrial" },
-    sector: { zh: "工业制造", en: "Industrial Manufacturing" },
+    company: { zh: "某保险公司", en: "An Insurance Company" },
+    sector: { zh: "保险服务", en: "Insurance Services" },
     outcome: {
-      zh: "用 AI 增长网站 + 智能获客系统，把复杂产品介绍页变成可解释、可信、可转化的官网体系。",
-      en: "Used the AI growth website and lead system to turn complex product pages into a trustworthy and conversion-ready site.",
+      zh: "用 AI 增长网站与智能获客系统，把复杂险种介绍页升级成可信、清晰、可转化的官网体系。",
+      en: "Used the AI growth website and lead system to turn complex insurance product pages into a trustworthy and conversion-ready site.",
     },
     challenge: {
-      zh: "品牌可信度不足，客户很难快速理解产品逻辑，销售只能靠人工解释补位。",
-      en: "Trust signals were weak, buyers struggled to understand the product, and sales relied on manual explanation.",
+      zh: "产品条线复杂、用户决策周期长，官网缺少清晰的保障说明、FAQ 与信任证明，高意向咨询容易流失。",
+      en: "Product lines were complex, the decision cycle was long, and the site lacked clear coverage explanations, FAQ patterns, and trust proof, causing high-intent consultations to drop.",
     },
     solution: {
-      zh: "建立案例、资质、FAQ、方案页和线索分发流程，让 AI 推荐分析反向校准内容与入口设计。",
-      en: "Built case studies, credentials, FAQ, solution pages, and lead routing while using recommendation analytics to refine content and entry design.",
+      zh: "重构保障说明页、FAQ、理赔与服务指引、资质证明和咨询入口，并用推荐分析反向校准内容结构与转化路径。",
+      en: "Rebuilt coverage pages, FAQ, claims and service guidance, trust credentials, and consultation paths while using recommendation analytics to refine content structure and conversion flow.",
     },
     metrics: [
       { label: { zh: "咨询质量", en: "Lead Quality" }, value: "+34%" },
-      { label: { zh: "停留时长", en: "Dwell Time" }, value: "+22%" },
-      { label: { zh: "推荐转商机", en: "Recommendation to SQL" }, value: "+18%" },
+      { label: { zh: "方案页停留", en: "Solution Page Dwell" }, value: "+22%" },
+      { label: { zh: "咨询转商机", en: "Consultation to SQL" }, value: "+18%" },
     ],
   },
 ];
@@ -1455,6 +1455,7 @@ function FlywheelDemoNode({
 }
 
 function Home() {
+  const heroSectionRef = useRef<HTMLElement | null>(null);
   const firstScreenMotionRef = useRef<HTMLDivElement | null>(null);
   const [locale, setLocale] = useState<Locale>("zh");
   const [activeIndex, setActiveIndex] = useState(0);
@@ -1698,12 +1699,15 @@ function Home() {
   }, [firstScreenMotionActive, flywheelDemoPaused]);
 
   useEffect(() => {
+    const heroSection = heroSectionRef.current;
     const sectionIds = navItems.map((item) => item.href.replace("#", ""));
     const elements = sectionIds
       .map((id) => document.getElementById(id))
       .filter((element): element is HTMLElement => Boolean(element));
 
-    if (!elements.length) {
+    const observedElements = heroSection ? [heroSection, ...elements] : elements;
+
+    if (!observedElements.length) {
       return undefined;
     }
 
@@ -1723,7 +1727,7 @@ function Home() {
       },
     );
 
-    elements.forEach((element) => observer.observe(element));
+    observedElements.forEach((element) => observer.observe(element));
 
     return () => observer.disconnect();
   }, []);
@@ -2057,7 +2061,7 @@ function Home() {
         </header>
 
         <div ref={firstScreenMotionRef}>
-          <section className="grid gap-7 pb-12 pt-2 lg:grid-cols-[1.04fr_0.96fr] lg:items-center">
+          <section ref={heroSectionRef} id="flywheel-demo" className="grid gap-7 pb-12 pt-2 lg:grid-cols-[1.04fr_0.96fr] lg:items-center">
             <div>
               <SectionTag>{t(brandCopy.heroTag, locale)}</SectionTag>
 
@@ -2719,7 +2723,7 @@ function Home() {
                 <p className="text-xs uppercase tracking-[0.22em] text-slate-400">{locale === "zh" ? "增长结果观察维度" : "Growth Result Dimensions"}</p>
                 <p className="mt-3 text-sm leading-7 text-slate-300">
                   {locale === "zh"
-                    ? "我们不只看流量，而是看 AI 可见性、内容表现与商机转化如何沿着同一条增长链路被持续放大。"
+                    ? "我们关注的不只是流量，而是 AI 可见性、内容表现与商机转化是否真正形成增长闭环。"
                     : "We do not just track traffic. We track how AI visibility, content performance, and pipeline conversion compound across one connected growth loop."}
                 </p>
 
@@ -2733,10 +2737,10 @@ function Home() {
                       ],
                     },
                     {
-                      title: { zh: "内容表现", en: "Content Performance" },
+                      title: { zh: "内容资产", en: "Content Assets" },
                       items: [
-                        { zh: "FAQ 抽取表现", en: "FAQ extraction performance" },
-                        { zh: "高意图 CTA 点击", en: "High-intent CTA clicks" },
+                        { zh: "内容结构完整度", en: "Content structure completeness" },
+                        { zh: "关键主题覆盖度", en: "Key topic coverage" },
                       ],
                     },
                     {
@@ -3514,6 +3518,15 @@ function Home() {
                   className="underline decoration-white/10 underline-offset-4 transition hover:text-slate-400"
                 >
                   京公网安备11010702002574号
+                </a>
+                <span className="mx-2 text-slate-700">·</span>
+                <a
+                  href="https://bcbeian.ifcert.cn/"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="underline decoration-white/10 underline-offset-4 transition hover:text-slate-400"
+                >
+                  区块链备案：京网信备11010820540499910011号
                 </a>
               </p>
             </div>
