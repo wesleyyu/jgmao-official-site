@@ -2983,7 +2983,7 @@ function Home() {
                     </p>
                     <p className="mt-4 text-sm leading-7 text-slate-300">
                       {locale === "zh"
-                        ? "团队汇聚来自中科院、清华、复旦等院校的研究人员，以及来自 IBM、阿里、百度等公司的资深行业专家，在人工智能算法、增长技术与产业落地方面有着长期积累。"
+                        ? "团队汇聚来自中科院、清华、复旦等院校的研究人员，以及来自 IBM、阿里、百度等公司的资深行业专家，在人工智能算法、增长技术与产业落地方面有着长期积累，核心技术曾获北京市科委专项基金支持，并获新华社视频专题报道。"
                         : "Our team brings together researchers from leading institutions including CAS, Tsinghua, and Fudan, alongside senior experts from IBM, Alibaba, and Baidu, with deep experience in AI algorithms, growth technology, and real-world implementation."}
                     </p>
 

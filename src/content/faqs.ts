@@ -7,6 +7,7 @@ export type FaqItem = {
   answer: FaqLocalizedText;
   featured: boolean;
   tags: FaqLocalizedText[];
+  relatedInsightSlugs: string[];
   publishing: {
     status: "published" | "draft";
     source: "local";
@@ -26,6 +27,7 @@ export const faqItems: FaqItem[] = [
     },
     featured: true,
     tags: [{ zh: "产品定义", en: "Product Definition" }],
+    relatedInsightSlugs: ["enterprise-growth-flywheel-is-an-operating-system"],
     publishing: {
       status: "published",
       source: "local",
@@ -43,6 +45,7 @@ export const faqItems: FaqItem[] = [
     },
     featured: true,
     tags: [{ zh: "GEO", en: "GEO" }],
+    relatedInsightSlugs: ["ai-search-answer-first-website-structure", "faq-and-case-pages-for-ai-citation"],
     publishing: {
       status: "published",
       source: "local",
@@ -60,6 +63,7 @@ export const faqItems: FaqItem[] = [
     },
     featured: false,
     tags: [{ zh: "内容增长", en: "Content Growth" }],
+    relatedInsightSlugs: ["enterprise-growth-flywheel-is-an-operating-system"],
     publishing: {
       status: "published",
       source: "local",
@@ -77,6 +81,7 @@ export const faqItems: FaqItem[] = [
     },
     featured: false,
     tags: [{ zh: "获客转化", en: "Lead Conversion" }],
+    relatedInsightSlugs: ["enterprise-growth-flywheel-is-an-operating-system"],
     publishing: {
       status: "published",
       source: "local",
@@ -94,6 +99,7 @@ export const faqItems: FaqItem[] = [
     },
     featured: false,
     tags: [{ zh: "推荐分析", en: "Recommendation Analytics" }],
+    relatedInsightSlugs: ["faq-and-case-pages-for-ai-citation"],
     publishing: {
       status: "published",
       source: "local",
@@ -110,4 +116,11 @@ export function getPublishedFaqs() {
 
 export function getFeaturedFaqs() {
   return getPublishedFaqs().filter((item) => item.featured);
+}
+
+export function getPublishedFaqsByIds(ids: string[]) {
+  const published = getPublishedFaqs();
+  return ids
+    .map((id) => published.find((item) => item.id === id))
+    .filter((item): item is FaqItem => Boolean(item));
 }

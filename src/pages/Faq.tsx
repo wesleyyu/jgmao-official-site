@@ -5,6 +5,7 @@ import { Link } from "wouter";
 
 import logoImage from "@/assets/jgmao-logo-black-square.png";
 import { getFeaturedFaqs, getPublishedFaqs, type FaqItem } from "@/content/faqs";
+import { getPublishedInsightsBySlugs, type InsightArticle } from "@/content/insights";
 import { cn } from "@/lib/utils";
 
 type Locale = "zh" | "en";
@@ -46,6 +47,7 @@ function FaqCard({
   onToggle,
   index,
   featured = false,
+  relatedInsights,
 }: {
   item: FaqItem;
   locale: Locale;
@@ -53,9 +55,11 @@ function FaqCard({
   onToggle: () => void;
   index: number;
   featured?: boolean;
+  relatedInsights: InsightArticle[];
 }) {
   return (
     <motion.article
+      id={item.id}
       initial={{ opacity: 0, y: 14 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.25 }}
@@ -78,19 +82,44 @@ function FaqCard({
               <h3 className={cn("font-semibold text-white", featured ? "text-xl" : "text-base")}>{t(item.question, locale)}</h3>
               <ArrowRight className={cn("mt-1 h-4 w-4 shrink-0 text-slate-400 transition", expanded && "rotate-90 text-white")} />
             </div>
-            <div className={cn("overflow-hidden transition-[max-height,opacity,margin] duration-300", expanded ? "mt-3 max-h-[520px] opacity-100" : "max-h-0 opacity-0")}>
-              <p className="text-sm leading-7 text-slate-300">{t(item.answer, locale)}</p>
-              <div className="mt-4 flex flex-wrap gap-2">
-                {item.tags.map((tag) => (
-                  <span key={tag.en} className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] uppercase tracking-[0.18em] text-slate-300">
-                    {t(tag, locale)}
-                  </span>
-                ))}
-              </div>
-            </div>
           </div>
         </div>
       </button>
+
+      <div className={cn("overflow-hidden transition-[max-height,opacity,margin] duration-300", expanded ? "mt-3 max-h-[640px] opacity-100" : "max-h-0 opacity-0")}>
+        <div className="pl-11">
+          <p className="text-sm leading-7 text-slate-300">{t(item.answer, locale)}</p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {item.tags.map((tag) => (
+              <span key={tag.en} className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] uppercase tracking-[0.18em] text-slate-300">
+                {t(tag, locale)}
+              </span>
+            ))}
+          </div>
+          {relatedInsights.length ? (
+            <div className="mt-4 rounded-[1.2rem] border border-white/10 bg-slate-950/45 p-4">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-[11px] uppercase tracking-[0.22em] text-slate-400">{locale === "zh" ? "相关阅读" : "Related Insights"}</p>
+                <Link href="/insights" className="text-xs text-slate-400 transition hover:text-white">
+                  {locale === "zh" ? "查看全部" : "View all"}
+                </Link>
+              </div>
+              <div className="mt-3 space-y-2">
+                {relatedInsights.map((insight) => (
+                  <Link
+                    key={insight.slug}
+                    href={`/insights/${insight.slug}`}
+                    className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-200 transition hover:bg-white/8 hover:text-white"
+                  >
+                    <span className="line-clamp-1">{t(insight.title, locale)}</span>
+                    <MoveUpRight className="h-4 w-4 shrink-0 text-slate-500" />
+                  </Link>
+                ))}
+              </div>
+            </div>
+          ) : null}
+        </div>
+      </div>
     </motion.article>
   );
 }
@@ -100,6 +129,16 @@ export function FaqIndexPage({ locale }: FaqPageProps) {
   const allFaqs = getPublishedFaqs();
   const moreFaqs = allFaqs.filter((item) => !item.featured);
   const [activeIds, setActiveIds] = useState<string[]>(featuredFaqs.slice(0, 1).map((item) => item.id));
+
+  useEffect(() => {
+    if (!window.location.hash) return;
+    const id = decodeURIComponent(window.location.hash.replace(/^#/, ""));
+    if (!id) return;
+    setActiveIds((current) => (current.includes(id) ? current : [...current, id]));
+    requestAnimationFrame(() => {
+      document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }, []);
 
   useEffect(() => {
     setCanonical(`${siteUrl}/faq`);
@@ -204,6 +243,7 @@ export function FaqIndexPage({ locale }: FaqPageProps) {
                   featured
                   expanded={activeIds.includes(item.id)}
                   onToggle={() => toggle(item.id)}
+                  relatedInsights={getPublishedInsightsBySlugs(item.relatedInsightSlugs)}
                 />
               ))}
             </div>
@@ -233,6 +273,7 @@ export function FaqIndexPage({ locale }: FaqPageProps) {
                     index={index + featuredFaqs.length}
                     expanded={activeIds.includes(item.id)}
                     onToggle={() => toggle(item.id)}
+                    relatedInsights={getPublishedInsightsBySlugs(item.relatedInsightSlugs)}
                   />
                 ))}
               </div>

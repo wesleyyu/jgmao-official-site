@@ -30,6 +30,7 @@ export type InsightArticle = {
     distributionTargets: Array<"website" | "feishu">;
     feishuReady: boolean;
   };
+  relatedFaqIds: string[];
   sections: InsightSection[];
 };
 
@@ -78,6 +79,7 @@ export const insightArticles: InsightArticle[] = [
       distributionTargets: ["website", "feishu"],
       feishuReady: true,
     },
+    relatedFaqIds: ["geo-vs-seo", "what-is-jgmao-growth-engine"],
     sections: [
       {
         title: {
@@ -169,6 +171,11 @@ export const insightArticles: InsightArticle[] = [
       distributionTargets: ["website", "feishu"],
       feishuReady: true,
     },
+    relatedFaqIds: [
+      "what-is-jgmao-growth-engine",
+      "why-content-factory-needs-website",
+      "what-intelligent-lead-system-does",
+    ],
     sections: [
       {
         title: {
@@ -260,6 +267,7 @@ export const insightArticles: InsightArticle[] = [
       distributionTargets: ["website", "feishu"],
       feishuReady: true,
     },
+    relatedFaqIds: ["geo-vs-seo", "why-ai-recommendation-analytics-matters"],
     sections: [
       {
         title: {
@@ -303,4 +311,11 @@ export function getPublishedInsights() {
   return insightArticles
     .filter((item) => item.publishing.status === "published")
     .sort((a, b) => (a.publishedAt < b.publishedAt ? 1 : -1));
+}
+
+export function getPublishedInsightsBySlugs(slugs: string[]) {
+  const published = getPublishedInsights();
+  return slugs
+    .map((slug) => published.find((item) => item.slug === slug))
+    .filter((item): item is InsightArticle => Boolean(item));
 }
