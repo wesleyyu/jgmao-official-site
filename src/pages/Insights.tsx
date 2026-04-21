@@ -3,6 +3,7 @@ import { ArrowLeft, ArrowRight, CalendarDays, FileSearch, MoveUpRight, Radar, Wo
 import { useEffect } from "react";
 import { Link, useLocation, useParams } from "wouter";
 
+import logoImage from "@/assets/jgmao-logo-black-square.png";
 import { getInsightArticleBySlug, getPublishedInsights, type InsightArticle } from "@/content/insights";
 import { cn } from "@/lib/utils";
 
@@ -18,6 +19,8 @@ const iconMap = {
   "file-search": FileSearch,
 } as const;
 
+const siteUrl = "http://49.232.252.118:8800";
+
 function t(text: Record<Locale, string>, locale: Locale) {
   return text[locale];
 }
@@ -28,6 +31,18 @@ function setPageMeta(title: string, description: string) {
   if (metaDescription) {
     metaDescription.setAttribute("content", description);
   }
+}
+
+function setCanonical(url: string) {
+  let link = document.querySelector("link[rel='canonical']") as HTMLLinkElement | null;
+
+  if (!link) {
+    link = document.createElement("link");
+    link.setAttribute("rel", "canonical");
+    document.head.appendChild(link);
+  }
+
+  link.setAttribute("href", url);
 }
 
 function InsightHero({ article, locale }: { article: InsightArticle; locale: Locale }) {
@@ -68,6 +83,7 @@ export function InsightsIndexPage({ locale }: InsightsPageProps) {
   const insights = getPublishedInsights();
 
   useEffect(() => {
+    setCanonical(`${siteUrl}/insights`);
     setPageMeta(
       locale === "zh" ? "新闻 / 洞察 | 坚果猫 JGMAO" : "News / Insights | JGMAO",
       locale === "zh"
@@ -178,6 +194,7 @@ export function InsightDetailPage({ locale }: InsightsPageProps) {
 
   useEffect(() => {
     if (!article) {
+      setCanonical(`${siteUrl}/insights`);
       setPageMeta(
         locale === "zh" ? "文章未找到 | 坚果猫 JGMAO" : "Article not found | JGMAO",
         locale === "zh" ? "未找到对应的新闻 / 洞察内容。" : "The requested insight article could not be found.",
@@ -185,7 +202,59 @@ export function InsightDetailPage({ locale }: InsightsPageProps) {
       return;
     }
 
+    const articleUrl = `${siteUrl}/insights/${article.slug}`;
+    setCanonical(articleUrl);
     setPageMeta(t(article.seoTitle, locale), t(article.seoDescription, locale));
+  }, [article, locale]);
+
+  useEffect(() => {
+    const scriptId = "jgmao-insight-structured-data";
+    const existing = document.getElementById(scriptId);
+
+    if (!article) {
+      existing?.remove();
+      return;
+    }
+
+    let script = existing as HTMLScriptElement | null;
+    if (!script) {
+      script = document.createElement("script");
+      script.id = scriptId;
+      script.type = "application/ld+json";
+      document.head.appendChild(script);
+    }
+
+    const articleUrl = `${siteUrl}/insights/${article.slug}`;
+    const structuredData = {
+      "@context": "https://schema.org",
+      "@type": "BlogPosting",
+      headline: t(article.title, locale),
+      description: t(article.seoDescription, locale),
+      articleSection: t(article.category, locale),
+      datePublished: article.publishedAt,
+      dateModified: article.publishedAt,
+      mainEntityOfPage: articleUrl,
+      url: articleUrl,
+      inLanguage: locale === "zh" ? "zh-CN" : "en",
+      author: {
+        "@type": "Organization",
+        name: locale === "zh" ? "坚果猫 JGMAO" : "JGMAO",
+      },
+      publisher: {
+        "@type": "Organization",
+        name: locale === "zh" ? "坚果猫 JGMAO" : "JGMAO",
+        logo: {
+          "@type": "ImageObject",
+          url: new URL(logoImage, window.location.origin).href,
+        },
+      },
+    };
+
+    script.textContent = JSON.stringify(structuredData);
+
+    return () => {
+      script?.remove();
+    };
   }, [article, locale]);
 
   if (!article) {

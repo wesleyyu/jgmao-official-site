@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: http://49.232.252.118:8800/sitemap.xml

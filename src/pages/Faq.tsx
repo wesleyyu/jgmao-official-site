@@ -3,6 +3,7 @@ import { ArrowLeft, ArrowRight, HelpCircle, MoveUpRight } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "wouter";
 
+import logoImage from "@/assets/jgmao-logo-black-square.png";
 import { getFeaturedFaqs, getPublishedFaqs, type FaqItem } from "@/content/faqs";
 import { cn } from "@/lib/utils";
 
@@ -11,6 +12,8 @@ type Locale = "zh" | "en";
 type FaqPageProps = {
   locale: Locale;
 };
+
+const siteUrl = "http://49.232.252.118:8800";
 
 function t(text: Record<Locale, string>, locale: Locale) {
   return text[locale];
@@ -22,6 +25,18 @@ function setPageMeta(title: string, description: string) {
   if (metaDescription) {
     metaDescription.setAttribute("content", description);
   }
+}
+
+function setCanonical(url: string) {
+  let link = document.querySelector("link[rel='canonical']") as HTMLLinkElement | null;
+
+  if (!link) {
+    link = document.createElement("link");
+    link.setAttribute("rel", "canonical");
+    document.head.appendChild(link);
+  }
+
+  link.setAttribute("href", url);
 }
 
 function FaqCard({
@@ -87,6 +102,7 @@ export function FaqIndexPage({ locale }: FaqPageProps) {
   const [activeIds, setActiveIds] = useState<string[]>(featuredFaqs.slice(0, 1).map((item) => item.id));
 
   useEffect(() => {
+    setCanonical(`${siteUrl}/faq`);
     setPageMeta(
       locale === "zh" ? "FAQ | 坚果猫 JGMAO" : "FAQ | JGMAO",
       locale === "zh"
@@ -94,6 +110,58 @@ export function FaqIndexPage({ locale }: FaqPageProps) {
         : "A continuously updated FAQ hub covering JGMAO's GEO, AI growth websites, content systems, lead conversion, and collaboration model.",
     );
   }, [locale]);
+
+  useEffect(() => {
+    const scriptId = "jgmao-faq-structured-data";
+    let script = document.getElementById(scriptId) as HTMLScriptElement | null;
+
+    if (!script) {
+      script = document.createElement("script");
+      script.id = scriptId;
+      script.type = "application/ld+json";
+      document.head.appendChild(script);
+    }
+
+    const structuredData = [
+      {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        mainEntity: allFaqs.map((item) => ({
+          "@type": "Question",
+          name: t(item.question, locale),
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: t(item.answer, locale),
+          },
+        })),
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        name: locale === "zh" ? "FAQ | 坚果猫 JGMAO" : "FAQ | JGMAO",
+        url: `${siteUrl}/faq`,
+        inLanguage: locale === "zh" ? "zh-CN" : "en",
+        description:
+          locale === "zh"
+            ? "围绕坚果猫 JGMAO 的 GEO、AI 增长网站、内容系统、获客转化与合作方式沉淀高频问题。"
+            : "Frequently asked questions about JGMAO's GEO, AI growth websites, content systems, conversion, and collaboration.",
+        publisher: {
+          "@type": "Organization",
+          name: locale === "zh" ? "坚果猫 JGMAO" : "JGMAO",
+          logo: {
+            "@type": "ImageObject",
+            url: new URL(logoImage, window.location.origin).href,
+          },
+        },
+      },
+    ];
+
+    script.textContent = JSON.stringify(structuredData);
+
+    return () => {
+      script?.remove();
+    };
+  }, [allFaqs, locale]);
 
   const toggle = (id: string) => {
     setActiveIds((current) => (current.includes(id) ? current.filter((item) => item !== id) : [...current, id]));
