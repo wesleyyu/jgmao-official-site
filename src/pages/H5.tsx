@@ -57,6 +57,26 @@ function setPageMeta(title: string, description: string) {
   }
 }
 
+function setNamedMeta(name: string, content: string) {
+  let meta = document.querySelector(`meta[name="${name}"]`) as HTMLMetaElement | null;
+  if (!meta) {
+    meta = document.createElement("meta");
+    meta.setAttribute("name", name);
+    document.head.appendChild(meta);
+  }
+  meta.setAttribute("content", content);
+}
+
+function setPropertyMeta(property: string, content: string) {
+  let meta = document.querySelector(`meta[property="${property}"]`) as HTMLMetaElement | null;
+  if (!meta) {
+    meta = document.createElement("meta");
+    meta.setAttribute("property", property);
+    document.head.appendChild(meta);
+  }
+  meta.setAttribute("content", content);
+}
+
 function setCanonical(url: string) {
   let link = document.querySelector("link[rel='canonical']") as HTMLLinkElement | null;
 
@@ -76,21 +96,80 @@ export default function H5LandingPage() {
     contact: "",
     demand: "",
   });
+  const [isSubmittingLead, setIsSubmittingLead] = useState(false);
+  const [leadSubmitMessage, setLeadSubmitMessage] = useState("");
+  const [leadSubmitError, setLeadSubmitError] = useState("");
 
   useEffect(() => {
-    setCanonical(`${siteUrl}/h5`);
-    setPageMeta(
-      "坚果猫 JGMAO | 企业 AI 增长系统",
-      "坚果猫帮助企业提升 AI 可见性、内容生产效率、官网转化与智能获客能力。",
-    );
+    const pageTitle = "帮助企业构建 AI 时代的增长飞轮 | 坚果猫 JGMAO";
+    const pageDescription = "帮助企业把 AI 可见性、内容、官网、获客与推荐反馈连成一个可持续运转的增长系统。";
+    const shareImageUrl = `${siteUrl}/h5-share-cover.jpg`;
+    const currentPath = typeof window !== "undefined" ? window.location.pathname : "/h5";
+
+    setCanonical(`${siteUrl}${currentPath === "/ai-growth" ? "/ai-growth" : "/h5"}`);
+    setPageMeta(pageTitle, pageDescription);
+    setPropertyMeta("og:title", pageTitle);
+    setPropertyMeta("og:description", pageDescription);
+    setPropertyMeta("og:type", "website");
+    setPropertyMeta("og:image", shareImageUrl);
+    setPropertyMeta("og:url", `${siteUrl}${currentPath === "/ai-growth" ? "/ai-growth" : "/h5"}`);
+    setNamedMeta("twitter:card", "summary_large_image");
+    setNamedMeta("twitter:title", pageTitle);
+    setNamedMeta("twitter:description", pageDescription);
+    setNamedMeta("twitter:image", shareImageUrl);
   }, []);
 
-  const leadBody = [
-    `姓名 / 称呼：${leadForm.name || "未填写"}`,
-    `公司 / 品牌：${leadForm.company || "未填写"}`,
-    `联系方式：${leadForm.contact || "未填写"}`,
-    `需求简述：${leadForm.demand || "未填写"}`,
-  ].join("\n");
+  async function handleLeadSubmit() {
+    const name = leadForm.name.trim();
+    const company = leadForm.company.trim();
+    const contact = leadForm.contact.trim();
+    const demand = leadForm.demand.trim();
+
+    setLeadSubmitMessage("");
+    setLeadSubmitError("");
+
+    if (!contact || !demand) {
+      setLeadSubmitError("请至少填写联系方式和需求简述。");
+      return;
+    }
+
+    setIsSubmittingLead(true);
+
+    try {
+      const response = await fetch("/api/lead/submit", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          name,
+          company,
+          contact,
+          demand,
+          source: "h5",
+          page: "/h5",
+        }),
+      });
+
+      const payload = await response.json().catch(() => ({}));
+
+      if (!response.ok || payload?.ok === false) {
+        throw new Error(payload?.error || "提交失败，请稍后再试。");
+      }
+
+      setLeadForm({
+        name: "",
+        company: "",
+        contact: "",
+        demand: "",
+      });
+      setLeadSubmitMessage("需求已提交，我们会尽快与你联系。");
+    } catch (error) {
+      setLeadSubmitError(error instanceof Error ? error.message : "提交失败，请稍后再试。");
+    } finally {
+      setIsSubmittingLead(false);
+    }
+  }
 
   return (
     <main className="min-h-screen bg-[#050816] text-slate-100">
@@ -274,16 +353,21 @@ export default function H5LandingPage() {
                 className="mt-2 w-full resize-none bg-transparent text-sm leading-7 text-white placeholder:text-slate-500 focus:outline-none"
               />
             </label>
-            <a
-              href={`mailto:service@jgmao.com?subject=${encodeURIComponent("坚果猫 H5 线索提交")}&body=${encodeURIComponent(leadBody)}`}
-              className="inline-flex items-center justify-between rounded-[1.3rem] border border-cyan-300/20 bg-cyan-300/10 px-4 py-4 text-sm font-medium text-cyan-100"
+            <button
+              type="button"
+              onClick={handleLeadSubmit}
+              disabled={isSubmittingLead}
+              className="inline-flex items-center justify-between rounded-[1.3rem] border border-cyan-300/20 bg-cyan-300/10 px-4 py-4 text-sm font-medium text-cyan-100 disabled:cursor-not-allowed disabled:opacity-60"
             >
               <span className="inline-flex items-center gap-2">
                 <Mail className="h-4 w-4" />
-                提交需求
+                {isSubmittingLead ? "提交中..." : "提交需求"}
               </span>
               <ArrowRight className="h-4 w-4" />
-            </a>
+            </button>
+
+            {leadSubmitMessage ? <p className="text-sm leading-7 text-cyan-100">{leadSubmitMessage}</p> : null}
+            {leadSubmitError ? <p className="text-sm leading-7 text-rose-200">{leadSubmitError}</p> : null}
           </div>
         </section>
       </div>

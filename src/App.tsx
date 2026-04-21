@@ -28,6 +28,9 @@ function App() {
             <Route path="/h5">
               <H5LandingPage />
             </Route>
+            <Route path="/ai-growth">
+              <H5LandingPage />
+            </Route>
             <Route>
               <Home />
             </Route>

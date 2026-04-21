@@ -1,9 +1,10 @@
 import { createReadStream } from "node:fs";
-import { access, stat } from "node:fs/promises";
+import { access, mkdir, stat } from "node:fs/promises";
 import http from "node:http";
 import path from "node:path";
 import { Readable } from "node:stream";
 import { fileURLToPath } from "node:url";
+import { appendFile } from "node:fs/promises";
 
 import httpProxy from "http-proxy";
 
@@ -16,6 +17,12 @@ const port = Number(process.env.PORT || 1688);
 const openClawOrigin = process.env.OPENCLAW_CHAT_ORIGIN || "http://127.0.0.1:18789";
 const localBridgeOrigin = process.env.LOCAL_AGENT_BRIDGE_ORIGIN || "http://127.0.0.1:8788";
 const localBridgeToken = process.env.AGENT_BRIDGE_TOKEN || "jgmao-local-shared-secret";
+const feishuWebhookUrl = process.env.FEISHU_WEBHOOK_URL || "";
+const feishuAppId = process.env.FEISHU_APP_ID || "";
+const feishuAppSecret = process.env.FEISHU_APP_SECRET || "";
+const feishuTargetChatId = process.env.FEISHU_TARGET_CHAT_ID || "";
+const feishuTargetUserOpenId = process.env.FEISHU_TARGET_USER_OPEN_ID || "";
+const leadLogFile = process.env.LEAD_LOG_FILE || path.join(rootDir, "tmp", "lead-submissions.ndjson");
 
 const mimeTypes = new Map([
   [".html", "text/html; charset=utf-8"],
@@ -146,6 +153,133 @@ async function handleLocalChatRequest(req, res) {
   }
 }
 
+async function appendLeadLog(entry) {
+  await mkdir(path.dirname(leadLogFile), { recursive: true });
+  await appendFile(leadLogFile, `${JSON.stringify(entry, null, 0)}\n`, "utf8");
+}
+
+async function pushLeadToFeishu(entry) {
+  const lines = [
+    "收到一条新的 H5 留资线索",
+    `姓名 / 称呼：${entry.name || "未填写"}`,
+    `公司 / 品牌：${entry.company || "未填写"}`,
+    `联系方式：${entry.contact || "未填写"}`,
+    `需求简述：${entry.demand || "未填写"}`,
+    `来源页面：${entry.page || "未知"}`,
+    `提交时间：${entry.createdAt}`,
+  ];
+
+  const messageText = lines.join("\n");
+
+  if (feishuWebhookUrl) {
+    const response = await fetch(feishuWebhookUrl, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        msg_type: "text",
+        content: {
+          text: messageText,
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`飞书推送失败（${response.status}）`);
+    }
+    return;
+  }
+
+  if (feishuAppId && feishuAppSecret) {
+    const tokenResponse = await fetch("https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        app_id: feishuAppId,
+        app_secret: feishuAppSecret,
+      }),
+    });
+
+    const tokenPayload = await tokenResponse.json().catch(() => ({}));
+    if (!tokenResponse.ok || tokenPayload?.code !== 0 || !tokenPayload?.tenant_access_token) {
+      throw new Error(tokenPayload?.msg || "飞书 tenant_access_token 获取失败。");
+    }
+
+    const receiveIdType = feishuTargetChatId ? "chat_id" : feishuTargetUserOpenId ? "open_id" : "";
+    const receiveId = feishuTargetChatId || feishuTargetUserOpenId;
+
+    if (!receiveIdType || !receiveId) {
+      throw new Error("尚未配置飞书接收目标（chat_id 或 user open_id）。");
+    }
+
+    const sendResponse = await fetch(`https://open.feishu.cn/open-apis/im/v1/messages?receive_id_type=${receiveIdType}`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        authorization: `Bearer ${tokenPayload.tenant_access_token}`,
+      },
+      body: JSON.stringify({
+        receive_id: receiveId,
+        msg_type: "text",
+        content: JSON.stringify({ text: messageText }),
+      }),
+    });
+
+    const sendPayload = await sendResponse.json().catch(() => ({}));
+    if (!sendResponse.ok || sendPayload?.code !== 0) {
+      throw new Error(sendPayload?.msg || sendPayload?.error?.message || `飞书消息发送失败（${sendResponse.status}）`);
+    }
+    return;
+  }
+
+  throw new Error("尚未配置飞书 webhook 或飞书应用凭证。");
+}
+
+async function handleLeadSubmit(req, res) {
+  try {
+    const payload = await readJsonBody(req);
+    const name = typeof payload?.name === "string" ? payload.name.trim() : "";
+    const company = typeof payload?.company === "string" ? payload.company.trim() : "";
+    const contact = typeof payload?.contact === "string" ? payload.contact.trim() : "";
+    const demand = typeof payload?.demand === "string" ? payload.demand.trim() : "";
+    const source = typeof payload?.source === "string" ? payload.source.trim() : "website";
+    const page = typeof payload?.page === "string" ? payload.page.trim() : "";
+
+    if (!contact || !demand) {
+      res.writeHead(400, { "content-type": "application/json; charset=utf-8" });
+      res.end(JSON.stringify({ ok: false, error: "请至少填写联系方式和需求简述。" }));
+      return true;
+    }
+
+    const entry = {
+      name,
+      company,
+      contact,
+      demand,
+      source,
+      page,
+      createdAt: new Date().toISOString(),
+    };
+
+    await appendLeadLog(entry);
+    await pushLeadToFeishu(entry);
+
+    res.writeHead(200, {
+      "content-type": "application/json; charset=utf-8",
+      "cache-control": "no-store",
+    });
+    res.end(JSON.stringify({ ok: true }));
+    return true;
+  } catch (error) {
+    res.writeHead(500, { "content-type": "application/json; charset=utf-8" });
+    res.end(JSON.stringify({ ok: false, error: error instanceof Error ? error.message : "提交失败，请稍后再试。" }));
+    return true;
+  }
+}
+
 async function fileExists(filePath) {
   try {
     await access(filePath);
@@ -179,6 +313,11 @@ const server = http.createServer(async (req, res) => {
 
   if (req.method === "POST" && (urlPath === "/local-chat/message" || urlPath === "/api/chat/send")) {
     await handleLocalChatRequest(req, res);
+    return;
+  }
+
+  if (req.method === "POST" && urlPath === "/api/lead/submit") {
+    await handleLeadSubmit(req, res);
     return;
   }
 

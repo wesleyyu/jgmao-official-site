@@ -9,13 +9,14 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname, "..");
 const distDir = path.join(rootDir, "dist");
-const siteUrl = "http://49.232.252.118:8800";
+const siteUrl = "https://www.jgmao.com";
 
 type PageConfig = {
   routePath: string;
   title: string;
   description: string;
   ogType?: "website" | "article";
+  ogImage?: string;
   structuredData?: Record<string, unknown> | Array<Record<string, unknown>>;
   contentHtml: string;
 };
@@ -36,7 +37,18 @@ function replaceMeta(html: string, name: string, content: string) {
 
 function replacePropertyMeta(html: string, property: string, content: string) {
   const pattern = new RegExp(`<meta\\s+property="${property}"\\s+content="[^"]*"\\s*/?>`);
-  return html.replace(pattern, `<meta property="${property}" content="${escapeHtml(content)}" />`);
+  if (pattern.test(html)) {
+    return html.replace(pattern, `<meta property="${property}" content="${escapeHtml(content)}" />`);
+  }
+  return html.replace("</head>", `  <meta property="${property}" content="${escapeHtml(content)}" />\n</head>`);
+}
+
+function replaceOrAppendNamedMeta(html: string, name: string, content: string) {
+  const pattern = new RegExp(`<meta\\s+name="${name}"\\s+content="[^"]*"\\s*/?>`);
+  if (pattern.test(html)) {
+    return html.replace(pattern, `<meta name="${name}" content="${escapeHtml(content)}" />`);
+  }
+  return html.replace("</head>", `  <meta name="${name}" content="${escapeHtml(content)}" />\n</head>`);
 }
 
 function renderInsightList() {
@@ -155,6 +167,23 @@ function renderInsightDetail(slug: string) {
   `;
 }
 
+function renderH5Landing() {
+  return `
+    <main style="background:#050816;color:#e5eef8;min-height:100vh;padding:40px 20px 88px;font-family:'IBM Plex Sans',system-ui,sans-serif;">
+      <section style="max-width:430px;margin:0 auto;border:1px solid rgba(255,255,255,.1);border-radius:32px;background:rgba(255,255,255,.04);padding:24px;">
+        <p style="margin:0 0 12px;color:#8fa3bc;font-size:12px;letter-spacing:.24em;text-transform:uppercase;">坚果猫 JGMAO</p>
+        <h1 style="margin:0;font-size:40px;line-height:1.15;color:#fff;">帮助企业构建<br/>AI 时代的增长飞轮</h1>
+        <p style="margin:20px 0 0;font-size:16px;line-height:1.9;color:#c9d6e5;">
+          把 AI 可见性、内容、官网、获客与推荐反馈连成一个可持续运转的增长系统。
+        </p>
+        <div style="margin-top:24px;border-radius:24px;overflow:hidden;border:1px solid rgba(255,255,255,.08);">
+          <img src="${siteUrl}/h5-share-cover.jpg" alt="AI 时代增长飞轮主视觉" style="display:block;width:100%;height:auto;" />
+        </div>
+      </section>
+    </main>
+  `;
+}
+
 async function writeRoute(config: PageConfig, template: string) {
   const routeUrl = `${siteUrl}${config.routePath}`;
   let html = template;
@@ -164,6 +193,13 @@ async function writeRoute(config: PageConfig, template: string) {
   html = replacePropertyMeta(html, "og:title", config.title);
   html = replacePropertyMeta(html, "og:description", config.description);
   html = replacePropertyMeta(html, "og:type", config.ogType || "website");
+  if (config.ogImage) {
+    html = replacePropertyMeta(html, "og:image", config.ogImage);
+    html = replaceOrAppendNamedMeta(html, "twitter:card", "summary_large_image");
+    html = replaceOrAppendNamedMeta(html, "twitter:title", config.title);
+    html = replaceOrAppendNamedMeta(html, "twitter:description", config.description);
+    html = replaceOrAppendNamedMeta(html, "twitter:image", config.ogImage);
+  }
 
   if (html.includes('rel="canonical"')) {
     html = html.replace(/<link rel="canonical" href="[^"]*"\s*\/?>/, `<link rel="canonical" href="${routeUrl}" />`);
@@ -230,6 +266,23 @@ async function main() {
     },
     template,
   );
+
+  const h5Title = "帮助企业构建 AI 时代的增长飞轮 | 坚果猫 JGMAO";
+  const h5Description = "帮助企业把 AI 可见性、内容、官网、获客与推荐反馈连成一个可持续运转的增长系统。";
+  const h5Image = `${siteUrl}/h5-share-cover.jpg`;
+
+  for (const routePath of ["/h5", "/ai-growth"]) {
+    await writeRoute(
+      {
+        routePath,
+        title: h5Title,
+        description: h5Description,
+        ogImage: h5Image,
+        contentHtml: renderH5Landing(),
+      },
+      template,
+    );
+  }
 
   for (const article of insightArticles) {
     await writeRoute(

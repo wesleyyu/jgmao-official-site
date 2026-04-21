@@ -5,7 +5,10 @@ import re
 import subprocess
 import time
 from http.server import BaseHTTPRequestHandler, HTTPServer
+from pathlib import Path
 from socketserver import ThreadingMixIn
+from urllib.error import HTTPError
+from urllib import request as urllib_request
 
 
 HOST = os.environ.get("HOST", "127.0.0.1")
@@ -20,6 +23,12 @@ PUBLIC_CHAT_MAX_TOKENS = int(os.environ.get("PUBLIC_CHAT_MAX_TOKENS", "240"))
 PUBLIC_CHAT_TEMPERATURE = float(os.environ.get("PUBLIC_CHAT_TEMPERATURE", "0.3"))
 STREAM_CHUNK_DELAY_MS = int(os.environ.get("CHAT_STREAM_CHUNK_DELAY_MS", "26"))
 STREAM_CHUNK_SIZE = int(os.environ.get("CHAT_STREAM_CHUNK_SIZE", "22"))
+FEISHU_WEBHOOK_URL = os.environ.get("FEISHU_WEBHOOK_URL", "").strip()
+FEISHU_APP_ID = os.environ.get("FEISHU_APP_ID", "").strip()
+FEISHU_APP_SECRET = os.environ.get("FEISHU_APP_SECRET", "").strip()
+FEISHU_TARGET_CHAT_ID = os.environ.get("FEISHU_TARGET_CHAT_ID", "").strip()
+FEISHU_TARGET_USER_OPEN_ID = os.environ.get("FEISHU_TARGET_USER_OPEN_ID", "").strip()
+LEAD_LOG_FILE = os.environ.get("LEAD_LOG_FILE", "/tmp/jgmao-leads.ndjson")
 
 SENSITIVE_PATTERNS = [
     re.compile(pattern, re.I)
@@ -275,7 +284,7 @@ class Handler(BaseHTTPRequestHandler):
         print("[gateway] {} - {}".format(self.address_string(), format % args))
 
     def do_OPTIONS(self):
-        if self.path != "/chat":
+        if self.path not in ["/chat", "/lead"]:
             self.send_error(404, "Not found")
             return
         self.send_response(204)
@@ -285,6 +294,10 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_POST(self):
+        if self.path == "/lead":
+            self._handle_lead_submit()
+            return
+
         if self.path != "/chat":
             self._write_json(404, {"ok": False, "error": "Not found"})
             return
@@ -355,6 +368,43 @@ class Handler(BaseHTTPRequestHandler):
                 return
             self._write_json(500, {"ok": False, "error": message_text})
 
+    def _handle_lead_submit(self):
+        if not is_authorized(self):
+            self._write_json(401, {"ok": False, "error": "Unauthorized"})
+            return
+
+        try:
+            content_length = int(self.headers.get("Content-Length", "0"))
+            raw_body = self.rfile.read(content_length) if content_length > 0 else b"{}"
+            payload = json.loads(raw_body.decode("utf-8"))
+
+            name = (payload.get("name") or "").strip()
+            company = (payload.get("company") or "").strip()
+            contact = (payload.get("contact") or "").strip()
+            demand = (payload.get("demand") or "").strip()
+            source = (payload.get("source") or "website").strip()
+            page = (payload.get("page") or "").strip()
+
+            if not contact or not demand:
+                self._write_json(400, {"ok": False, "error": "请至少填写联系方式和需求简述。"})
+                return
+
+            entry = {
+                "name": name,
+                "company": company,
+                "contact": contact,
+                "demand": demand,
+                "source": source,
+                "page": page,
+                "createdAt": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
+            }
+
+            self._append_lead_log(entry)
+            self._push_lead_to_feishu(entry)
+            self._write_json(200, {"ok": True}, cache_control=True)
+        except Exception as error:
+            self._write_json(500, {"ok": False, "error": str(error) or "提交失败，请稍后再试。"})
+
     def _write_json(self, status, payload, cache_control=False):
         body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
         self.send_response(status)
@@ -387,6 +437,132 @@ class Handler(BaseHTTPRequestHandler):
             time.sleep(float(STREAM_CHUNK_DELAY_MS) / 1000.0)
 
         self._write_stream_event({"type": "done", "reply": reply})
+
+    def _append_lead_log(self, entry):
+        log_path = Path(LEAD_LOG_FILE)
+        log_path.parent.mkdir(parents=True, exist_ok=True)
+        with log_path.open("a", encoding="utf-8") as handle:
+            handle.write(json.dumps(entry, ensure_ascii=False) + "\n")
+
+    def _push_lead_to_feishu(self, entry):
+        lines = [
+            "收到一条新的 H5 留资线索",
+            "姓名 / 称呼：{}".format(entry.get("name") or "未填写"),
+            "公司 / 品牌：{}".format(entry.get("company") or "未填写"),
+            "联系方式：{}".format(entry.get("contact") or "未填写"),
+            "需求简述：{}".format(entry.get("demand") or "未填写"),
+            "来源页面：{}".format(entry.get("page") or "未知"),
+            "提交时间：{}".format(entry.get("createdAt") or ""),
+        ]
+        message_text = "\n".join(lines)
+
+        if FEISHU_WEBHOOK_URL:
+            payload = json.dumps(
+                {
+                    "msg_type": "text",
+                    "content": {
+                        "text": message_text,
+                    },
+                },
+                ensure_ascii=False,
+            ).encode("utf-8")
+
+            req = urllib_request.Request(
+                FEISHU_WEBHOOK_URL,
+                data=payload,
+                headers={"Content-Type": "application/json; charset=utf-8"},
+                method="POST",
+            )
+
+            with urllib_request.urlopen(req, timeout=10) as response:
+                status = getattr(response, "status", 200)
+                if status < 200 or status >= 300:
+                    raise RuntimeError("飞书推送失败（{}）".format(status))
+            return
+
+        if FEISHU_APP_ID and FEISHU_APP_SECRET:
+            tenant_access_token = self._fetch_feishu_tenant_access_token()
+            self._send_feishu_app_message(tenant_access_token, message_text)
+            return
+
+        raise RuntimeError("尚未配置飞书 webhook 或飞书应用凭证。")
+
+    def _fetch_feishu_tenant_access_token(self):
+        payload = json.dumps(
+            {
+                "app_id": FEISHU_APP_ID,
+                "app_secret": FEISHU_APP_SECRET,
+            },
+            ensure_ascii=False,
+        ).encode("utf-8")
+
+        req = urllib_request.Request(
+            "https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal",
+            data=payload,
+            headers={"Content-Type": "application/json; charset=utf-8"},
+            method="POST",
+        )
+
+        try:
+            with urllib_request.urlopen(req, timeout=10) as response:
+                body = response.read().decode("utf-8")
+        except HTTPError as error:
+            body = error.read().decode("utf-8", errors="ignore")
+            raise RuntimeError("飞书 tenant_access_token 获取失败：{}".format(body or error.reason))
+
+        try:
+            data = json.loads(body)
+        except Exception as error:
+            raise RuntimeError("飞书 tenant_access_token 返回无法解析。") from error
+
+        if data.get("code") != 0 or not data.get("tenant_access_token"):
+            raise RuntimeError("飞书 tenant_access_token 获取失败：{}".format(data.get("msg") or "unknown error"))
+
+        return data["tenant_access_token"]
+
+    def _send_feishu_app_message(self, tenant_access_token, message_text):
+        if FEISHU_TARGET_CHAT_ID:
+            receive_id_type = "chat_id"
+            receive_id = FEISHU_TARGET_CHAT_ID
+        elif FEISHU_TARGET_USER_OPEN_ID:
+            receive_id_type = "open_id"
+            receive_id = FEISHU_TARGET_USER_OPEN_ID
+        else:
+            raise RuntimeError("尚未配置飞书接收目标（chat_id 或 user open_id）。")
+
+        payload = json.dumps(
+            {
+                "receive_id": receive_id,
+                "msg_type": "text",
+                "content": json.dumps({"text": message_text}, ensure_ascii=False),
+            },
+            ensure_ascii=False,
+        ).encode("utf-8")
+
+        req = urllib_request.Request(
+            "https://open.feishu.cn/open-apis/im/v1/messages?receive_id_type={}".format(receive_id_type),
+            data=payload,
+            headers={
+                "Content-Type": "application/json; charset=utf-8",
+                "Authorization": "Bearer {}".format(tenant_access_token),
+            },
+            method="POST",
+        )
+
+        try:
+            with urllib_request.urlopen(req, timeout=10) as response:
+                body = response.read().decode("utf-8")
+        except HTTPError as error:
+            body = error.read().decode("utf-8", errors="ignore")
+            raise RuntimeError("飞书消息发送失败：{}".format(body or error.reason))
+
+        try:
+            data = json.loads(body)
+        except Exception as error:
+            raise RuntimeError("飞书消息发送返回无法解析。") from error
+
+        if data.get("code") != 0:
+            raise RuntimeError("飞书消息发送失败：{}".format(data.get("msg") or "unknown error"))
 
 
 def main():
