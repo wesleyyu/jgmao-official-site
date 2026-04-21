@@ -92,7 +92,7 @@ export default function H5LandingPage() {
             返回官网
           </Link>
           <a
-            href="tel:400-9158-315"
+            href="tel:400-9588-315"
             className="inline-flex items-center gap-2 rounded-full border border-cyan-300/25 bg-cyan-300/10 px-3 py-2 text-xs uppercase tracking-[0.16em] text-cyan-100"
           >
             <Phone className="h-3.5 w-3.5" />
@@ -224,12 +224,12 @@ export default function H5LandingPage() {
 
           <div className="mt-5 grid gap-3">
             <a
-              href="tel:400-9158-315"
+              href="tel:400-9588-315"
               className="inline-flex items-center justify-between rounded-[1.3rem] border border-white/10 bg-white/10 px-4 py-4 text-sm font-medium text-white"
             >
               <span className="inline-flex items-center gap-2">
                 <Phone className="h-4 w-4" />
-                400-9158-315
+                400-9588-315
               </span>
               <ArrowRight className="h-4 w-4" />
             </a>
@@ -262,7 +262,7 @@ export default function H5LandingPage() {
       <div className="fixed inset-x-0 bottom-0 z-30 border-t border-white/10 bg-slate-950/92 p-3 backdrop-blur-xl">
         <div className="mx-auto flex w-full max-w-[430px] gap-3">
           <a
-            href="tel:400-9158-315"
+            href="tel:400-9588-315"
             className="flex-1 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-4 py-3 text-center text-sm font-medium text-cyan-100"
           >
             电话咨询
