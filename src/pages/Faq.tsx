@@ -14,7 +14,7 @@ type FaqPageProps = {
   locale: Locale;
 };
 
-const siteUrl = "http://49.232.252.118:8800";
+const siteUrl = "https://www.jgmao.com";
 
 function t(text: Record<Locale, string>, locale: Locale) {
   return text[locale];
@@ -100,7 +100,7 @@ function FaqCard({
             <div className="mt-4 rounded-[1.2rem] border border-white/10 bg-slate-950/45 p-4">
               <div className="flex items-center justify-between gap-3">
                 <p className="text-[11px] uppercase tracking-[0.22em] text-slate-400">{locale === "zh" ? "相关阅读" : "Related Insights"}</p>
-                <Link href="/insights" className="text-xs text-slate-400 transition hover:text-white">
+                <Link href="/insights/" className="text-xs text-slate-400 transition hover:text-white">
                   {locale === "zh" ? "查看全部" : "View all"}
                 </Link>
               </div>
@@ -108,7 +108,7 @@ function FaqCard({
                 {relatedInsights.map((insight) => (
                   <Link
                     key={insight.slug}
-                    href={`/insights/${insight.slug}`}
+                    href={`/insights/${insight.slug}/`}
                     className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-200 transition hover:bg-white/8 hover:text-white"
                   >
                     <span className="line-clamp-1">{t(insight.title, locale)}</span>
@@ -141,7 +141,7 @@ export function FaqIndexPage({ locale }: FaqPageProps) {
   }, []);
 
   useEffect(() => {
-    setCanonical(`${siteUrl}/faq`);
+    setCanonical(`${siteUrl}/faq/`);
     setPageMeta(
       locale === "zh" ? "FAQ | 坚果猫 JGMAO" : "FAQ | JGMAO",
       locale === "zh"
@@ -178,7 +178,7 @@ export function FaqIndexPage({ locale }: FaqPageProps) {
         "@context": "https://schema.org",
         "@type": "WebPage",
         name: locale === "zh" ? "FAQ | 坚果猫 JGMAO" : "FAQ | JGMAO",
-        url: `${siteUrl}/faq`,
+        url: `${siteUrl}/faq/`,
         inLanguage: locale === "zh" ? "zh-CN" : "en",
         description:
           locale === "zh"
@@ -280,7 +280,7 @@ export function FaqIndexPage({ locale }: FaqPageProps) {
             </div>
 
             <div className="flex justify-end">
-              <Link href="/insights" className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/8">
+              <Link href="/insights/" className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/8">
                 {locale === "zh" ? "查看新闻 / 洞察" : "View Insights"}
                 <MoveUpRight className="h-4 w-4" />
               </Link>

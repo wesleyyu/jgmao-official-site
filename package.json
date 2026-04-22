@@ -5,9 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build && npm run prerender",
+    "build": "npm run sync:geo-shell && tsc -b && vite build && npm run prerender",
     "lint": "eslint .",
     "preview": "vite preview",
+    "sync:geo-shell": "node --experimental-strip-types scripts/sync-home-geo-shell.mts",
     "prerender": "node --experimental-strip-types scripts/prerender-routes.mts",
     "serve:local": "node scripts/local-preview-server.mjs",
     "serve:prod": "node scripts/production-web-server.mjs",

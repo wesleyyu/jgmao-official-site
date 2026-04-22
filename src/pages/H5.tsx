@@ -5,8 +5,30 @@ import { Link } from "wouter";
 
 import growthFlywheelImage from "@/assets/h5-growth-flywheel.jpg";
 import logoImage from "@/assets/jgmao-logo-black-square.png";
+import {
+  aiGrowthCanonicalPath,
+  h5CanonicalPath,
+  h5WechatShareUrl,
+  siteOrigin,
+} from "@/lib/share";
 
-const siteUrl = "https://www.jgmao.com";
+const h5ShareTitle = "帮助企业构建 AI 时代的增长飞轮 | 坚果猫 JGMAO";
+const h5ShareDescription = "帮助企业把 AI 可见性、内容、官网、获客与推荐反馈连成一个可持续运转的增长系统。";
+const h5ShareImageUrl = `${siteOrigin}/h5-share-cover.jpg`;
+
+declare global {
+  interface Window {
+    wx?: {
+      config: (options: Record<string, unknown>) => void;
+      ready: (handler: () => void) => void;
+      error: (handler: (error: unknown) => void) => void;
+      updateAppMessageShareData?: (payload: Record<string, unknown>) => void;
+      updateTimelineShareData?: (payload: Record<string, unknown>) => void;
+      onMenuShareAppMessage?: (payload: Record<string, unknown>) => void;
+      onMenuShareTimeline?: (payload: Record<string, unknown>) => void;
+    };
+  }
+}
 
 const painPoints = [
   {
@@ -77,6 +99,31 @@ function setPropertyMeta(property: string, content: string) {
   meta.setAttribute("content", content);
 }
 
+async function loadWechatSdk() {
+  if (window.wx) {
+    return window.wx;
+  }
+
+  await new Promise<void>((resolve, reject) => {
+    const existing = document.querySelector('script[data-wechat-sdk="true"]') as HTMLScriptElement | null;
+    if (existing) {
+      existing.addEventListener("load", () => resolve(), { once: true });
+      existing.addEventListener("error", () => reject(new Error("微信 JS-SDK 加载失败。")), { once: true });
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = "https://res.wx.qq.com/open/js/jweixin-1.6.0.js";
+    script.async = true;
+    script.dataset.wechatSdk = "true";
+    script.addEventListener("load", () => resolve(), { once: true });
+    script.addEventListener("error", () => reject(new Error("微信 JS-SDK 加载失败。")), { once: true });
+    document.head.appendChild(script);
+  });
+
+  return window.wx;
+}
+
 function setCanonical(url: string) {
   let link = document.querySelector("link[rel='canonical']") as HTMLLinkElement | null;
 
@@ -101,22 +148,107 @@ export default function H5LandingPage() {
   const [leadSubmitError, setLeadSubmitError] = useState("");
 
   useEffect(() => {
-    const pageTitle = "帮助企业构建 AI 时代的增长飞轮 | 坚果猫 JGMAO";
-    const pageDescription = "帮助企业把 AI 可见性、内容、官网、获客与推荐反馈连成一个可持续运转的增长系统。";
-    const shareImageUrl = `${siteUrl}/h5-share-cover.jpg`;
-    const currentPath = typeof window !== "undefined" ? window.location.pathname : "/h5";
+    const currentPath = typeof window !== "undefined" ? window.location.pathname : "/h5/";
+    const canonicalPath = currentPath.startsWith("/ai-growth") ? aiGrowthCanonicalPath : h5CanonicalPath;
 
-    setCanonical(`${siteUrl}${currentPath === "/ai-growth" ? "/ai-growth" : "/h5"}`);
-    setPageMeta(pageTitle, pageDescription);
-    setPropertyMeta("og:title", pageTitle);
-    setPropertyMeta("og:description", pageDescription);
+    setCanonical(`${siteOrigin}${canonicalPath}`);
+    setPageMeta(h5ShareTitle, h5ShareDescription);
+    setPropertyMeta("og:title", h5ShareTitle);
+    setPropertyMeta("og:description", h5ShareDescription);
     setPropertyMeta("og:type", "website");
-    setPropertyMeta("og:image", shareImageUrl);
-    setPropertyMeta("og:url", `${siteUrl}${currentPath === "/ai-growth" ? "/ai-growth" : "/h5"}`);
+    setPropertyMeta("og:image", h5ShareImageUrl);
+    setPropertyMeta("og:url", `${siteOrigin}${canonicalPath}`);
     setNamedMeta("twitter:card", "summary_large_image");
-    setNamedMeta("twitter:title", pageTitle);
-    setNamedMeta("twitter:description", pageDescription);
-    setNamedMeta("twitter:image", shareImageUrl);
+    setNamedMeta("twitter:title", h5ShareTitle);
+    setNamedMeta("twitter:description", h5ShareDescription);
+    setNamedMeta("twitter:image", h5ShareImageUrl);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const ua = window.navigator.userAgent || "";
+    if (!/MicroMessenger/i.test(ua)) {
+      return;
+    }
+
+    let cancelled = false;
+
+    async function setupWechatShare() {
+      try {
+        const wx = await loadWechatSdk();
+        if (!wx || cancelled) {
+          return;
+        }
+
+        const pageUrl = window.location.href.split("#")[0];
+        const response = await fetch("/api/wechat/share-config", {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({ url: pageUrl }),
+        });
+
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok || payload?.ok === false || !payload?.config) {
+          return;
+        }
+
+        wx.config({
+          debug: false,
+          appId: payload.config.appId,
+          timestamp: payload.config.timestamp,
+          nonceStr: payload.config.nonceStr,
+          signature: payload.config.signature,
+          jsApiList: [
+            "updateAppMessageShareData",
+            "updateTimelineShareData",
+            "onMenuShareAppMessage",
+            "onMenuShareTimeline",
+          ],
+        });
+
+        const sharePayload = {
+          title: h5ShareTitle,
+          desc: h5ShareDescription,
+          link: h5WechatShareUrl,
+          imgUrl: h5ShareImageUrl,
+        };
+
+        wx.ready(() => {
+          if (cancelled) {
+            return;
+          }
+          wx.updateAppMessageShareData?.(sharePayload);
+          wx.updateTimelineShareData?.({
+            title: h5ShareTitle,
+            link: h5WechatShareUrl,
+            imgUrl: h5ShareImageUrl,
+          });
+          wx.onMenuShareAppMessage?.(sharePayload);
+          wx.onMenuShareTimeline?.({
+            title: h5ShareTitle,
+            link: h5WechatShareUrl,
+            imgUrl: h5ShareImageUrl,
+          });
+        });
+
+        wx.error(() => {
+          // keep silent in production; metadata fallback still exists
+        });
+      } catch {
+        // noop: keep OG/Twitter metadata fallback
+      }
+    }
+
+    void setupWechatShare();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   async function handleLeadSubmit() {
@@ -147,7 +279,7 @@ export default function H5LandingPage() {
           contact,
           demand,
           source: "h5",
-          page: "/h5",
+          page: "/h5/",
         }),
       });
 

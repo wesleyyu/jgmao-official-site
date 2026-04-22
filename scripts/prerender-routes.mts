@@ -4,20 +4,23 @@ import { fileURLToPath } from "node:url";
 
 import { faqItems } from "../src/content/faqs.ts";
 import { insightArticles } from "../src/content/insights.ts";
+import {
+  aiGrowthGeoShell,
+  applyGeoShellToHtml,
+  geoScoreGeoShell,
+  h5GeoShell,
+  siteUrl,
+  type GeoShellConfig,
+} from "./shared-geo-shell.mts";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname, "..");
 const distDir = path.join(rootDir, "dist");
-const siteUrl = "https://www.jgmao.com";
 
 type PageConfig = {
   routePath: string;
-  title: string;
-  description: string;
-  ogType?: "website" | "article";
-  ogImage?: string;
-  structuredData?: Record<string, unknown> | Array<Record<string, unknown>>;
+  geoShell: GeoShellConfig;
   contentHtml: string;
 };
 
@@ -28,27 +31,6 @@ function escapeHtml(text: string) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;");
-}
-
-function replaceMeta(html: string, name: string, content: string) {
-  const pattern = new RegExp(`<meta\\s+name="${name}"\\s+content="[^"]*"\\s*/?>`);
-  return html.replace(pattern, `<meta name="${name}" content="${escapeHtml(content)}" />`);
-}
-
-function replacePropertyMeta(html: string, property: string, content: string) {
-  const pattern = new RegExp(`<meta\\s+property="${property}"\\s+content="[^"]*"\\s*/?>`);
-  if (pattern.test(html)) {
-    return html.replace(pattern, `<meta property="${property}" content="${escapeHtml(content)}" />`);
-  }
-  return html.replace("</head>", `  <meta property="${property}" content="${escapeHtml(content)}" />\n</head>`);
-}
-
-function replaceOrAppendNamedMeta(html: string, name: string, content: string) {
-  const pattern = new RegExp(`<meta\\s+name="${name}"\\s+content="[^"]*"\\s*/?>`);
-  if (pattern.test(html)) {
-    return html.replace(pattern, `<meta name="${name}" content="${escapeHtml(content)}" />`);
-  }
-  return html.replace("</head>", `  <meta name="${name}" content="${escapeHtml(content)}" />\n</head>`);
 }
 
 function renderInsightList() {
@@ -179,51 +161,63 @@ function renderH5Landing() {
         <div style="margin-top:24px;border-radius:24px;overflow:hidden;border:1px solid rgba(255,255,255,.08);">
           <img src="${siteUrl}/h5-share-cover.jpg" alt="AI 时代增长飞轮主视觉" style="display:block;width:100%;height:auto;" />
         </div>
+        <div style="margin-top:24px;display:grid;gap:14px;">
+          <article style="border:1px solid rgba(255,255,255,.08);border-radius:22px;background:rgba(255,255,255,.03);padding:18px;">
+            <h2 style="margin:0 0 10px;font-size:20px;line-height:1.35;color:#fff;">适合哪些团队</h2>
+            <p style="margin:0;font-size:14px;line-height:1.8;color:#c9d6e5;">
+              适合需要提升 AI 可见性、官网 GEO 与内容增长能力的企业团队，尤其适合正在升级官网、FAQ、案例页、专题页与获客承接路径的品牌方。
+            </p>
+          </article>
+          <article style="border:1px solid rgba(255,255,255,.08);border-radius:22px;background:rgba(255,255,255,.03);padding:18px;">
+            <h2 style="margin:0 0 10px;font-size:20px;line-height:1.35;color:#fff;">核心增长问题</h2>
+            <p style="margin:0;font-size:14px;line-height:1.8;color:#c9d6e5;">
+              常见问题包括 AI 搜索中看不见、官网既难被看见也难以转化、内容做了很多却没有形成增长资产。坚果猫会通过 GEO、官网结构优化、FAQ、案例与内容资产体系，帮助企业建立真正可持续的增长闭环。
+            </p>
+          </article>
+        </div>
+      </section>
+    </main>
+  `;
+}
+
+function renderGeoScoreLanding() {
+  return `
+    <main style="background:#050816;color:#e5eef8;min-height:100vh;padding:40px 20px 88px;font-family:'IBM Plex Sans',system-ui,sans-serif;">
+      <section style="max-width:430px;margin:0 auto;border:1px solid rgba(255,255,255,.1);border-radius:32px;background:rgba(255,255,255,.04);padding:24px;">
+        <p style="margin:0 0 12px;color:#8fa3bc;font-size:12px;letter-spacing:.24em;text-transform:uppercase;">官网 GEO 评分器</p>
+        <h1 style="margin:0;font-size:40px;line-height:1.15;color:#fff;">输入官网网址，<br/>快速获取基础 GEO 评分</h1>
+        <p style="margin:20px 0 0;font-size:16px;line-height:1.9;color:#c9d6e5;">
+          快速查看官网在抓取、结构、FAQ 与承接方面的基础表现，并领取详细分析建议。
+        </p>
+        <div style="margin-top:24px;border-radius:24px;overflow:hidden;border:1px solid rgba(255,255,255,.08);padding:16px;background:rgba(255,255,255,.03);">
+          <p style="margin:0 0 8px;color:#fff;font-size:18px;">适合谁</p>
+          <p style="margin:0;color:#c9d6e5;font-size:14px;line-height:1.8;">需要提升 AI 可见性、官网 GEO 与内容增长能力的企业团队。</p>
+        </div>
+        <div style="margin-top:24px;display:grid;gap:14px;">
+          <article style="border:1px solid rgba(255,255,255,.08);border-radius:22px;background:rgba(255,255,255,.03);padding:18px;">
+            <h2 style="margin:0 0 10px;font-size:20px;line-height:1.35;color:#fff;">评分会看什么</h2>
+            <p style="margin:0;font-size:14px;line-height:1.8;color:#c9d6e5;">
+              评分会重点检查 HTTPS、标题与描述、首页主题表达、canonical、结构化数据、FAQ 信号、联系方式、robots.txt、sitemap.xml 以及官网内容深度，快速判断官网在 GEO 方面的基础完整度。
+            </p>
+          </article>
+          <article style="border:1px solid rgba(255,255,255,.08);border-radius:22px;background:rgba(255,255,255,.03);padding:18px;">
+            <h2 style="margin:0 0 10px;font-size:20px;line-height:1.35;color:#fff;">提交后会得到什么</h2>
+            <p style="margin:0;font-size:14px;line-height:1.8;color:#c9d6e5;">
+              你会先看到一个基础 GEO 分数和优先改进项，留下联系方式后，顾问团队会结合官网结构、FAQ、主题覆盖与承接路径，继续给出更具体的优化建议。
+            </p>
+          </article>
+        </div>
       </section>
     </main>
   `;
 }
 
 async function writeRoute(config: PageConfig, template: string) {
-  const routeUrl = `${siteUrl}${config.routePath}`;
-  let html = template;
-
-  html = html.replace(/<title>[\s\S]*?<\/title>/, `<title>${escapeHtml(config.title)}</title>`);
-  html = replaceMeta(html, "description", config.description);
-  html = replacePropertyMeta(html, "og:title", config.title);
-  html = replacePropertyMeta(html, "og:description", config.description);
-  html = replacePropertyMeta(html, "og:type", config.ogType || "website");
-  if (config.ogImage) {
-    html = replacePropertyMeta(html, "og:image", config.ogImage);
-    html = replaceOrAppendNamedMeta(html, "twitter:card", "summary_large_image");
-    html = replaceOrAppendNamedMeta(html, "twitter:title", config.title);
-    html = replaceOrAppendNamedMeta(html, "twitter:description", config.description);
-    html = replaceOrAppendNamedMeta(html, "twitter:image", config.ogImage);
-  }
-
-  if (html.includes('rel="canonical"')) {
-    html = html.replace(/<link rel="canonical" href="[^"]*"\s*\/?>/, `<link rel="canonical" href="${routeUrl}" />`);
-  } else {
-    html = html.replace("</head>", `  <link rel="canonical" href="${routeUrl}" />\n</head>`);
-  }
-
+  let html = applyGeoShellToHtml(template, config.geoShell);
   html = html.replace(
     '<div id="root"></div>',
     `<div id="root">${config.contentHtml}</div>`,
   );
-
-  if (config.structuredData) {
-    const payload = Array.isArray(config.structuredData) ? config.structuredData : [config.structuredData];
-    html = html.replace(
-      "</head>",
-      `${payload
-        .map(
-          (item) =>
-            `  <script type="application/ld+json">${JSON.stringify(item)}</script>`,
-        )
-        .join("\n")}\n</head>`,
-    );
-  }
 
   const outputDir = path.join(distDir, config.routePath.replace(/^\//, ""));
   await mkdir(outputDir, { recursive: true });
@@ -248,10 +242,14 @@ async function main() {
 
   await writeRoute(
     {
-      routePath: "/faq",
-      title: "FAQ | 坚果猫 JGMAO",
-      description: "持续更新的 FAQ 栏目，围绕坚果猫 JGMAO 的 GEO、AI 增长网站、内容系统、获客转化与合作方式沉淀高频问题。",
-      structuredData: faqStructuredData,
+      routePath: "/faq/",
+      geoShell: {
+        title: "FAQ | 坚果猫 JGMAO",
+        description:
+          "持续更新的 FAQ 栏目，围绕坚果猫 JGMAO 的 GEO、AI 增长网站、内容系统、获客转化与合作方式沉淀高频问题。",
+        canonicalUrl: `${siteUrl}/faq/`,
+        structuredData: faqStructuredData,
+      },
       contentHtml: renderFaqList(),
     },
     template,
@@ -259,56 +257,73 @@ async function main() {
 
   await writeRoute(
     {
-      routePath: "/insights",
-      title: "新闻 / 洞察 | 坚果猫 JGMAO",
-      description: "坚果猫 JGMAO 关于 GEO、AI 增长网站、内容结构与增长方法论的持续洞察栏目。",
+      routePath: "/insights/",
+      geoShell: {
+        title: "新闻 / 洞察 | 坚果猫 JGMAO",
+        description:
+          "坚果猫 JGMAO 关于 GEO、AI 增长网站、内容结构与增长方法论的持续洞察栏目。",
+        canonicalUrl: `${siteUrl}/insights/`,
+      },
       contentHtml: renderInsightList(),
     },
     template,
   );
 
-  const h5Title = "帮助企业构建 AI 时代的增长飞轮 | 坚果猫 JGMAO";
-  const h5Description = "帮助企业把 AI 可见性、内容、官网、获客与推荐反馈连成一个可持续运转的增长系统。";
-  const h5Image = `${siteUrl}/h5-share-cover.jpg`;
+  await writeRoute(
+    {
+      routePath: "/h5/",
+      geoShell: h5GeoShell,
+      contentHtml: renderH5Landing(),
+    },
+    template,
+  );
 
-  for (const routePath of ["/h5", "/ai-growth"]) {
-    await writeRoute(
-      {
-        routePath,
-        title: h5Title,
-        description: h5Description,
-        ogImage: h5Image,
-        contentHtml: renderH5Landing(),
-      },
-      template,
-    );
-  }
+  await writeRoute(
+    {
+      routePath: "/ai-growth/",
+      geoShell: aiGrowthGeoShell,
+      contentHtml: renderH5Landing(),
+    },
+    template,
+  );
+
+  await writeRoute(
+    {
+      routePath: "/geo-score/",
+      geoShell: geoScoreGeoShell,
+      contentHtml: "",
+    },
+    template,
+  );
 
   for (const article of insightArticles) {
     await writeRoute(
       {
-        routePath: `/insights/${article.slug}`,
-        title: article.seoTitle.zh,
-        description: article.seoDescription.zh,
-        ogType: "article",
-        structuredData: {
-          "@context": "https://schema.org",
-          "@type": "BlogPosting",
-          headline: article.title.zh,
+        routePath: `/insights/${article.slug}/`,
+        geoShell: {
+          title: article.seoTitle.zh,
           description: article.seoDescription.zh,
-          articleSection: article.category.zh,
-          datePublished: article.publishedAt,
-          dateModified: article.publishedAt,
-          mainEntityOfPage: `${siteUrl}/insights/${article.slug}`,
-          url: `${siteUrl}/insights/${article.slug}`,
-          inLanguage: "zh-CN",
-          author: {
-            "@type": "Organization",
-            name: "坚果猫 JGMAO",
-          },
-          publisher: {
-            "@type": "Organization",
-            name: "坚果猫 JGMAO",
+          ogType: "article",
+          canonicalUrl: `${siteUrl}/insights/${article.slug}/`,
+          structuredData: {
+            "@context": "https://schema.org",
+            "@type": "BlogPosting",
+            headline: article.title.zh,
+            description: article.seoDescription.zh,
+            articleSection: article.category.zh,
+            datePublished: article.publishedAt,
+            dateModified: article.publishedAt,
+            mainEntityOfPage: `${siteUrl}/insights/${article.slug}/`,
+            url: `${siteUrl}/insights/${article.slug}/`,
+            inLanguage: "zh-CN",
+            author: {
+              "@type": "Organization",
+              name: "坚果猫 JGMAO",
+            },
+            publisher: {
+              "@type": "Organization",
+              name: "坚果猫 JGMAO",
+            },
           },
         },
         contentHtml: renderInsightDetail(article.slug),

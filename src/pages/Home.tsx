@@ -126,7 +126,7 @@ type CaseStudy = {
   metrics: Array<{ label: LocalizedText; value: string }>;
 };
 
-const siteUrl = "http://49.232.252.118:8800/";
+const siteUrl = "https://www.jgmao.com/";
 const navItems: NavItem[] = [
   { href: "#flywheel-demo", label: { zh: "增长飞轮", en: "Growth Flywheel" } },
   { href: "#architecture", label: { zh: "核心场景", en: "Architecture" } },
@@ -1784,6 +1784,14 @@ function Home() {
     setMetaTag("name", "twitter:title", title);
     setMetaTag("name", "twitter:description", description);
 
+    let canonicalLink = document.querySelector("link[rel='canonical']") as HTMLLinkElement | null;
+    if (!canonicalLink) {
+      canonicalLink = document.createElement("link");
+      canonicalLink.setAttribute("rel", "canonical");
+      document.head.appendChild(canonicalLink);
+    }
+    canonicalLink.href = siteUrl;
+
     const scriptId = "jgmao-structured-data";
     let script = document.getElementById(scriptId) as HTMLScriptElement | null;
 
@@ -2839,7 +2847,7 @@ function Home() {
                 {mobileAccordionHint}
               </p>
               <a
-                href="/insights"
+                href="/insights/"
                 className="mt-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium text-white transition hover:bg-white/8"
               >
                 {locale === "zh" ? "查看全部洞察" : "View all insights"}
@@ -2894,7 +2902,7 @@ function Home() {
                           {t(item.metricLabel, locale)}
                         </span>
                         <a
-                          href={`/insights/${item.slug}`}
+                          href={`/insights/${item.slug}/`}
                           className="inline-flex items-center gap-2 text-sm font-medium text-cyan-100 transition hover:text-cyan-50"
                         >
                           {locale === "zh" ? "查看文章" : "Read article"}
@@ -2961,7 +2969,7 @@ function Home() {
                     </p>
                   </div>
                   <a
-                    href="/faq"
+                    href="/faq/"
                     className="hidden items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/8 md:inline-flex"
                   >
                     {locale === "zh" ? "查看全部 FAQ" : "View all FAQ"}
@@ -3002,7 +3010,7 @@ function Home() {
                 </div>
 
                 <a
-                  href="/faq"
+                  href="/faq/"
                   className="mt-5 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/8 md:hidden"
                 >
                   {locale === "zh" ? "查看全部 FAQ" : "View all FAQ"}

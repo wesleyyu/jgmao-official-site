@@ -4,11 +4,17 @@ import os
 import re
 import subprocess
 import time
+import hashlib
+import random
+import string
+import secrets
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 from socketserver import ThreadingMixIn
+from datetime import datetime, timezone, timedelta
 from urllib.error import HTTPError
 from urllib import request as urllib_request
+from urllib.parse import parse_qs, quote, urljoin, urlparse
 
 
 HOST = os.environ.get("HOST", "127.0.0.1")
@@ -28,7 +34,13 @@ FEISHU_APP_ID = os.environ.get("FEISHU_APP_ID", "").strip()
 FEISHU_APP_SECRET = os.environ.get("FEISHU_APP_SECRET", "").strip()
 FEISHU_TARGET_CHAT_ID = os.environ.get("FEISHU_TARGET_CHAT_ID", "").strip()
 FEISHU_TARGET_USER_OPEN_ID = os.environ.get("FEISHU_TARGET_USER_OPEN_ID", "").strip()
+WECHAT_APP_ID = os.environ.get("WECHAT_APP_ID", "").strip()
+WECHAT_APP_SECRET = os.environ.get("WECHAT_APP_SECRET", "").strip()
 LEAD_LOG_FILE = os.environ.get("LEAD_LOG_FILE", "/tmp/jgmao-leads.ndjson")
+PUBLIC_SITE_URL = os.environ.get("PUBLIC_SITE_URL", "https://www.jgmao.com").rstrip("/")
+GEO_REPORT_DIR = os.environ.get("GEO_REPORT_DIR", "/tmp/jgmao-geo-reports")
+WECHAT_ACCESS_TOKEN_CACHE = {"value": "", "expires_at": 0}
+WECHAT_JSAPI_TICKET_CACHE = {"value": "", "expires_at": 0}
 
 SENSITIVE_PATTERNS = [
     re.compile(pattern, re.I)
@@ -209,6 +221,299 @@ def create_stream_chunks(text):
     return chunks
 
 
+def normalize_website_url(value):
+    trimmed = str(value or "").strip()
+    if not trimmed:
+        raise RuntimeError("请填写官网网址。")
+
+    if not re.match(r"^https?://", trimmed, re.I):
+        trimmed = "https://" + trimmed
+
+    parsed = urlparse(trimmed)
+    if parsed.scheme not in ("http", "https") or not parsed.netloc:
+        raise RuntimeError("官网网址格式不正确，请检查后再试。")
+    return trimmed
+
+
+def strip_html(html):
+    text = re.sub(r"<script[\s\S]*?</script>", " ", html, flags=re.I)
+    text = re.sub(r"<style[\s\S]*?</style>", " ", text, flags=re.I)
+    text = re.sub(r"<[^>]+>", " ", text)
+    text = re.sub(r"\s+", " ", text)
+    return text.strip()
+
+
+def extract_tag_content(html, pattern):
+    match = re.search(pattern, html, re.I)
+    if not match:
+        return ""
+    return (match.group(1) or "").strip()
+
+
+DIMENSION_META = {
+    "crawl": {
+        "title": "抓取与索引基础",
+        "advice": "优先补齐 HTTPS、canonical、robots.txt 与 sitemap.xml，确保官网地址规范、抓取稳定、可被搜索与 AI 系统持续发现。",
+    },
+    "theme": {
+        "title": "主题结构与页面语义",
+        "advice": "集中首页主题表达，补齐 H1、标题、描述和更清晰的页面语义，让 AI 与用户都能更快理解官网重点。",
+    },
+    "ai": {
+        "title": "AI 可见性信号",
+        "advice": "继续完善 FAQ、结构化数据与分享语义，增强内容被 AI 理解、抽取、引用与推荐的稳定性。",
+    },
+    "content": {
+        "title": "内容资产与 FAQ 体系",
+        "advice": "继续补齐 FAQ、案例、专题页与洞察栏目，让内容形成可复用、可沉淀、可持续扩展的资产体系。",
+    },
+    "convert": {
+        "title": "承接路径与转化能力",
+        "advice": "强化电话、企微、表单与 CTA 等高意向承接入口，让官网不只被看见，也能有效承接咨询动作。",
+    },
+    "trust": {
+        "title": "品牌可信度与信任信号",
+        "advice": "继续补齐公司信息、备案资质、客户背书与媒体报道等信任信号，增强官网的可信度与商务说服力。",
+    },
+}
+
+
+def build_detailed_score(metrics, final_url):
+    total_weight = sum(item["weight"] for item in metrics)
+    raw_score = sum(item["weight"] for item in metrics if item["ok"])
+    score = round((raw_score / total_weight) * 100) if total_weight else 0
+
+    strengths = [item["positive"] for item in metrics if item["ok"]][:3]
+    priorities = [item["negative"] for item in metrics if not item["ok"]][:3]
+
+    grouped = {}
+    for item in metrics:
+        grouped.setdefault(item["dimension"], []).append(item)
+
+    dimensions = []
+    for key, items in grouped.items():
+        max_score = sum(item["weight"] for item in items)
+        dimension_score = sum(item["weight"] for item in items if item["ok"])
+        dimensions.append(
+            {
+                "key": key,
+                "title": DIMENSION_META.get(key, {}).get("title", key),
+                "score": round((dimension_score / max_score) * 100) if max_score else 0,
+                "rawScore": dimension_score,
+                "maxScore": max_score,
+                "items": [
+                    {
+                        "key": item["key"],
+                        "label": item["label"],
+                        "ok": item["ok"],
+                        "weight": item["weight"],
+                        "positive": item["positive"],
+                        "negative": item["negative"],
+                    }
+                    for item in items
+                ],
+            }
+        )
+
+    dimension_order = ["crawl", "theme", "ai", "content", "convert", "trust"]
+    dimensions.sort(key=lambda item: dimension_order.index(item["key"]) if item["key"] in dimension_order else 99)
+    deep_advice = [
+        {
+            "priority": index + 1,
+            "title": item["title"],
+            "summary": DIMENSION_META.get(item["key"], {}).get("advice", "建议继续补齐这一维度的基础能力。"),
+        }
+        for index, item in enumerate(sorted([dim for dim in dimensions if dim["score"] < 100], key=lambda dim: dim["score"])[:3])
+    ]
+
+    return {
+        "score": score,
+        "level": get_score_level(score),
+        "strengths": strengths or ["官网已有一定基础，可以继续强化 GEO 结构与承接路径。"],
+        "priorities": priorities or ["建议继续扩大 FAQ、专题页与结构化数据覆盖，进一步提升 GEO 表现。"],
+        "checkedUrl": final_url,
+        "dimensions": dimensions,
+        "deepAdvice": deep_advice,
+    }
+
+
+def save_geo_report(entry):
+    token = secrets.token_hex(16)
+    report = {
+        "token": token,
+        "type": "geo-score",
+        "createdAt": entry["createdAt"],
+        "reportUrl": "{}/geo-report/{}/".format(PUBLIC_SITE_URL, token),
+        "input": {
+            "name": entry.get("name") or "",
+            "company": entry.get("company") or "",
+            "contact": entry.get("contact") or "",
+            "websiteUrl": entry.get("websiteUrl") or "",
+            "source": entry.get("source") or "",
+            "page": entry.get("page") or "",
+        },
+        "result": entry.get("result") or {},
+    }
+
+    report_dir = Path(GEO_REPORT_DIR)
+    report_dir.mkdir(parents=True, exist_ok=True)
+    (report_dir / "{}.json".format(token)).write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+    return report
+
+
+def read_geo_report(token):
+    file_path = Path(GEO_REPORT_DIR) / "{}.json".format(token)
+    if not file_path.exists():
+        raise FileNotFoundError(token)
+    return json.loads(file_path.read_text(encoding="utf-8"))
+
+
+def check_remote_file(url):
+    req = urllib_request.Request(url, headers={"User-Agent": "JGMAO GEO Score Bot/1.0"})
+    try:
+        with urllib_request.urlopen(req, timeout=10) as response:
+            status = getattr(response, "status", 200)
+            return 200 <= status < 300
+    except Exception:
+        return False
+
+
+def analyze_homepage(html, final_url):
+    title = extract_tag_content(html, r"<title[^>]*>([\s\S]*?)</title>")
+    meta_description = extract_tag_content(html, r'<meta[^>]+name=["\']description["\'][^>]+content=["\']([^"\']+)["\']')
+    if not meta_description:
+        meta_description = extract_tag_content(html, r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+name=["\']description["\']')
+    canonical = extract_tag_content(html, r'<link[^>]+rel=["\']canonical["\'][^>]+href=["\']([^"\']+)["\']')
+    if not canonical:
+        canonical = extract_tag_content(html, r'<link[^>]+href=["\']([^"\']+)["\'][^>]+rel=["\']canonical["\']')
+    h1 = extract_tag_content(html, r"<h1[^>]*>([\s\S]*?)</h1>")
+    has_structured_data = bool(re.search(r"application/ld\+json", html, re.I))
+    has_faq_signal = bool(re.search(r"FAQPage|常见问题|faq", html, re.I))
+    has_og_title = bool(re.search(r'property=["\']og:title["\']', html, re.I))
+    has_og_description = bool(re.search(r'property=["\']og:description["\']', html, re.I))
+    contact_signal = bool(re.search(r"(400-\d{4}-\d{3}|@\w|联系电话|商务邮箱|联系我们|电话咨询)", html, re.I))
+    content_text = strip_html(html)
+    has_theme_focus = bool(re.search(r"(GEO|AI增长|增长飞轮|智能获客|AI 可见性|官网 GEO)", " ".join([title, meta_description, h1, content_text[:800]]), re.I))
+    has_content_assets = bool(re.search(r"(案例|新闻|洞察|blog|insights|专题|白皮书|报告|FAQ|常见问题)", html, re.I))
+    has_cta_signal = bool(re.search(r"(预约|咨询|提交需求|立即联系|联系我们|电话咨询|扫码|表单|demo)", html, re.I))
+    has_company_signal = bool(re.search(r"(有限公司|公司地址|北京市|商务邮箱|联系电话|service@|400-\d{4}-\d{3})", html, re.I))
+    has_trust_signal = bool(re.search(r"(高新技术企业|新华社|备案|许可证|PICC|奥迪|沃尔沃|壳牌|美孚|中国平安|人民日报)", html, re.I))
+    has_topic_depth = len(content_text) >= 1200
+
+    return {
+        "metrics": [
+            {"ok": final_url.startswith("https://"), "weight": 8, "positive": "已启用 HTTPS，基础可信度较好。", "negative": "建议优先确保官网全站使用 HTTPS。", "key": "https", "label": "HTTPS", "dimension": "crawl"},
+            {"ok": 8 <= len(title) <= 65, "weight": 6, "positive": "页面标题长度较合适。", "negative": "页面标题过短或过长，建议优化标题表达。", "key": "title", "label": "Title 标题长度", "dimension": "theme"},
+            {"ok": 30 <= len(meta_description) <= 180, "weight": 6, "positive": "已配置较完整的 meta description。", "negative": "缺少清晰的 meta description。", "key": "description", "label": "Meta Description", "dimension": "theme"},
+            {"ok": bool(h1), "weight": 6, "positive": "首页已有明确 H1 主题。", "negative": "首页缺少明确 H1，主题表达不够集中。", "key": "h1", "label": "首页 H1", "dimension": "theme"},
+            {"ok": has_theme_focus, "weight": 6, "positive": "首页主题关键词较集中，页面语义比较明确。", "negative": "首页主题关键词分散，建议收紧主题表达与页面语义。", "key": "theme-focus", "label": "主题聚焦度", "dimension": "theme"},
+            {"ok": bool(canonical), "weight": 7, "positive": "已配置 canonical 规范地址。", "negative": "建议补 canonical，减少重复地址干扰。", "key": "canonical", "label": "Canonical", "dimension": "crawl"},
+            {"ok": has_og_title and has_og_description, "weight": 5, "positive": "社交分享标题与描述较完整。", "negative": "建议补全 og:title / og:description。", "key": "og", "label": "OG 分享信息", "dimension": "ai"},
+            {"ok": has_structured_data, "weight": 7, "positive": "页面已带结构化数据。", "negative": "建议补充 Organization / FAQ / Article 等结构化数据。", "key": "schema", "label": "结构化数据", "dimension": "ai"},
+            {"ok": has_faq_signal, "weight": 6, "positive": "页面已有 FAQ / 问答信号。", "negative": "建议补 FAQ 区块，增强 AI 抽取与引用能力。", "key": "faq", "label": "FAQ 信号", "dimension": "ai"},
+            {"ok": has_topic_depth, "weight": 6, "positive": "内容长度与主题覆盖基础尚可。", "negative": "内容深度偏弱，建议补主题页与可复用内容资产。", "key": "content-depth", "label": "内容深度", "dimension": "content"},
+            {"ok": has_content_assets, "weight": 7, "positive": "已具备 FAQ、案例或洞察等内容资产信号。", "negative": "建议补案例、FAQ、洞察或专题页，形成更完整的内容资产体系。", "key": "content-assets", "label": "内容资产信号", "dimension": "content"},
+            {"ok": contact_signal, "weight": 6, "positive": "联系方式与咨询入口较清晰。", "negative": "建议补电话、邮箱或联系入口，增强转化承接。", "key": "contact", "label": "联系方式", "dimension": "convert"},
+            {"ok": has_cta_signal, "weight": 5, "positive": "页面已有较明确的行动引导与转化入口。", "negative": "建议补强 CTA、表单或咨询动作，让高意向用户更容易继续沟通。", "key": "cta", "label": "CTA / 转化动作", "dimension": "convert"},
+            {"ok": has_company_signal, "weight": 4, "positive": "公司信息较完整，基础可信度较好。", "negative": "建议补公司信息、地址、电话、邮箱等基础信任信息。", "key": "company", "label": "公司信息完整度", "dimension": "trust"},
+            {"ok": has_trust_signal, "weight": 3, "positive": "页面已有备案、资质或客户背书等信任信号。", "negative": "建议补资质、备案、客户背书或媒体报道，增强品牌可信度。", "key": "trust", "label": "资质 / 背书信号", "dimension": "trust"},
+        ]
+    }
+
+
+def get_score_level(score):
+    if score >= 85:
+        return "基础不错，适合进一步做深 GEO 与内容增长。"
+    if score >= 65:
+        return "已有一定基础，但结构、FAQ 或承接能力还有明显优化空间。"
+    return "当前 GEO 基础偏弱，建议尽快补齐抓取、结构与承接能力。"
+
+
+def summarize_geo_result(result):
+    dimensions = sorted(
+        result.get("dimensions") or [],
+        key=lambda item: item.get("score", 0),
+        reverse=True,
+    )
+    if not dimensions:
+        return []
+
+    overview = " / ".join(
+        "{} {}分".format(item.get("title") or "未命名维度", item.get("score", 0))
+        for item in dimensions
+    )
+    strongest = dimensions[0]
+    weakest = dimensions[-1]
+
+    return [
+        "六维概览：{}".format(overview),
+        "当前强项：{}（{}）".format(strongest.get("title") or "未命名维度", strongest.get("score", 0)),
+        "当前短板：{}（{}）".format(weakest.get("title") or "未命名维度", weakest.get("score", 0)),
+    ]
+
+
+def format_entry_page(page):
+    value = (page or "").strip()
+    if not value:
+        return PUBLIC_SITE_URL
+    if value.startswith("http://") or value.startswith("https://"):
+        return value
+    if not value.startswith("/"):
+        value = "/" + value
+    return "{}{}".format(PUBLIC_SITE_URL, value)
+
+
+def format_beijing_time(value):
+    text = (value or "").strip()
+    if not text:
+        return ""
+    try:
+        normalized = text.replace("Z", "+00:00")
+        parsed = datetime.fromisoformat(normalized)
+        if parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=timezone.utc)
+        beijing = parsed.astimezone(timezone(timedelta(hours=8)))
+        return "{}（北京时间）".format(beijing.strftime("%Y-%m-%d %H:%M:%S"))
+    except Exception:
+        return text
+
+
+def score_website(website_url):
+    normalized_url = normalize_website_url(website_url)
+    req = urllib_request.Request(
+        normalized_url,
+        headers={
+            "User-Agent": "JGMAO GEO Score Bot/1.0",
+            "Accept": "text/html,application/xhtml+xml",
+        },
+    )
+    try:
+        with urllib_request.urlopen(req, timeout=15) as response:
+            status = getattr(response, "status", 200)
+            if status < 200 or status >= 300:
+                raise RuntimeError("官网暂时无法访问（{}），请确认网址是否可正常打开。".format(status))
+            final_url = response.geturl() or normalized_url
+            html = response.read().decode("utf-8", errors="ignore")
+    except HTTPError as error:
+        raise RuntimeError("官网暂时无法访问（{}），请确认网址是否可正常打开。".format(error.code))
+    except Exception as error:
+        raise RuntimeError(str(error) or "官网暂时无法访问，请稍后重试。")
+
+    parsed = urlparse(final_url)
+    base_url = "{}://{}".format(parsed.scheme, parsed.netloc)
+    robots_ok = check_remote_file(urljoin(base_url, "/robots.txt"))
+    sitemap_ok = check_remote_file(urljoin(base_url, "/sitemap.xml"))
+    analysis = analyze_homepage(html, final_url)
+    metrics = list(analysis["metrics"])
+    metrics.append(
+        {"ok": robots_ok, "weight": 8, "positive": "站点已提供 robots.txt。", "negative": "建议补 robots.txt，明确抓取边界。", "key": "robots", "label": "robots.txt", "dimension": "crawl"}
+    )
+    metrics.append(
+        {"ok": sitemap_ok, "weight": 8, "positive": "站点已提供 sitemap.xml。", "negative": "建议补 sitemap.xml，帮助搜索与 AI 系统理解站点结构。", "key": "sitemap", "label": "sitemap.xml", "dimension": "crawl"}
+    )
+    return build_detailed_score(metrics, final_url)
+
+
 def run_public_model(message):
     payload = json.dumps(
         {
@@ -273,6 +578,89 @@ def run_public_model(message):
     return {"reply": reply, "raw": parsed}
 
 
+def fetch_url_json(url, timeout=10):
+    req = urllib_request.Request(url, headers={"User-Agent": "JGMAO/1.0"})
+    try:
+        with urllib_request.urlopen(req, timeout=timeout) as response:
+            body = response.read().decode("utf-8")
+    except HTTPError as error:
+        body = error.read().decode("utf-8", errors="ignore")
+        raise RuntimeError(body or error.reason)
+
+    try:
+        return json.loads(body)
+    except Exception as error:
+        raise RuntimeError("微信接口返回无法解析。") from error
+
+
+def get_wechat_access_token():
+    now = int(time.time())
+    if WECHAT_ACCESS_TOKEN_CACHE["value"] and WECHAT_ACCESS_TOKEN_CACHE["expires_at"] > now + 60:
+        return WECHAT_ACCESS_TOKEN_CACHE["value"]
+
+    if not WECHAT_APP_ID or not WECHAT_APP_SECRET:
+        raise RuntimeError("尚未配置微信公众号 appId / appSecret。")
+
+    data = fetch_url_json(
+        "https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid={}&secret={}".format(
+            quote(WECHAT_APP_ID, safe=""),
+            quote(WECHAT_APP_SECRET, safe=""),
+        )
+    )
+
+    if not data.get("access_token"):
+        raise RuntimeError("微信公众号 access_token 获取失败：{}".format(data.get("errmsg") or "unknown error"))
+
+    expires_in = int(data.get("expires_in") or 7200)
+    WECHAT_ACCESS_TOKEN_CACHE["value"] = data["access_token"]
+    WECHAT_ACCESS_TOKEN_CACHE["expires_at"] = now + max(0, expires_in - 120)
+    return WECHAT_ACCESS_TOKEN_CACHE["value"]
+
+
+def get_wechat_jsapi_ticket():
+    now = int(time.time())
+    if WECHAT_JSAPI_TICKET_CACHE["value"] and WECHAT_JSAPI_TICKET_CACHE["expires_at"] > now + 60:
+        return WECHAT_JSAPI_TICKET_CACHE["value"]
+
+    access_token = get_wechat_access_token()
+    data = fetch_url_json(
+        "https://api.weixin.qq.com/cgi-bin/ticket/getticket?access_token={}&type=jsapi".format(
+            quote(access_token, safe="")
+        )
+    )
+
+    if data.get("errcode") != 0 or not data.get("ticket"):
+        raise RuntimeError("微信公众号 jsapi_ticket 获取失败：{}".format(data.get("errmsg") or "unknown error"))
+
+    expires_in = int(data.get("expires_in") or 7200)
+    WECHAT_JSAPI_TICKET_CACHE["value"] = data["ticket"]
+    WECHAT_JSAPI_TICKET_CACHE["expires_at"] = now + max(0, expires_in - 120)
+    return WECHAT_JSAPI_TICKET_CACHE["value"]
+
+
+def build_wechat_share_config(url):
+    if not url:
+        raise RuntimeError("缺少当前页面 URL。")
+
+    jsapi_ticket = get_wechat_jsapi_ticket()
+    timestamp = str(int(time.time()))
+    nonce_str = "".join(random.choice(string.ascii_letters + string.digits) for _ in range(16))
+    signature_base = "jsapi_ticket={}&noncestr={}&timestamp={}&url={}".format(
+        jsapi_ticket,
+        nonce_str,
+        timestamp,
+        url,
+    )
+    signature = hashlib.sha1(signature_base.encode("utf-8")).hexdigest()
+
+    return {
+        "appId": WECHAT_APP_ID,
+        "timestamp": int(timestamp),
+        "nonceStr": nonce_str,
+        "signature": signature,
+    }
+
+
 class ThreadingHTTPServer(ThreadingMixIn, HTTPServer):
     daemon_threads = True
 
@@ -284,16 +672,34 @@ class Handler(BaseHTTPRequestHandler):
         print("[gateway] {} - {}".format(self.address_string(), format % args))
 
     def do_OPTIONS(self):
-        if self.path not in ["/chat", "/lead"]:
+        path_only = (self.path or "").split("?", 1)[0]
+        if path_only not in ["/chat", "/lead", "/geo-score", "/wechat/share-config", "/geo-report"]:
             self.send_error(404, "Not found")
             return
         self.send_response(204)
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Methods", "POST, OPTIONS")
+        if path_only == "/geo-report":
+            self.send_header("Access-Control-Allow-Methods", "GET, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
         self.end_headers()
 
+    def do_GET(self):
+        path_only = (self.path or "").split("?", 1)[0]
+        if path_only == "/geo-report":
+            self._handle_geo_report_fetch()
+            return
+        self._write_json(404, {"ok": False, "error": "Not found"})
+
     def do_POST(self):
+        if self.path == "/geo-score":
+            self._handle_geo_score_submit()
+            return
+
+        if self.path == "/wechat/share-config":
+            self._handle_wechat_share_config()
+            return
+
         if self.path == "/lead":
             self._handle_lead_submit()
             return
@@ -378,12 +784,58 @@ class Handler(BaseHTTPRequestHandler):
             raw_body = self.rfile.read(content_length) if content_length > 0 else b"{}"
             payload = json.loads(raw_body.decode("utf-8"))
 
+            lead_type = (payload.get("type") or "").strip()
             name = (payload.get("name") or "").strip()
             company = (payload.get("company") or "").strip()
             contact = (payload.get("contact") or "").strip()
             demand = (payload.get("demand") or "").strip()
             source = (payload.get("source") or "website").strip()
             page = (payload.get("page") or "").strip()
+            website_url = (payload.get("websiteUrl") or "").strip()
+
+            if lead_type == "geo-score":
+                if not website_url or not contact:
+                    self._write_json(400, {"ok": False, "error": "请至少填写官网网址和联系方式。"})
+                    return
+
+                result = score_website(website_url)
+                entry = {
+                    "type": lead_type,
+                    "name": name,
+                    "company": company,
+                    "contact": contact,
+                    "websiteUrl": website_url,
+                    "source": source,
+                    "page": page or "/geo-score/",
+                    "result": result,
+                    "createdAt": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
+                }
+                report = save_geo_report(entry)
+                self._append_lead_log(entry)
+                self._push_lead_to_feishu(
+                    {
+                        **entry,
+                        "reportUrl": report["reportUrl"],
+                        "demand": "官网 GEO 基础评分：{}/100；优先改进：{}".format(
+                            result["score"], "；".join(result["priorities"])
+                        ),
+                    }
+                )
+                self._write_json(200, {"ok": True, "result": result}, cache_control=True)
+                return
+
+            if lead_type == "geo-report-fetch":
+                token = (payload.get("token") or "").strip()
+                if not token:
+                    self._write_json(400, {"ok": False, "error": "缺少报告 token。"})
+                    return
+                try:
+                    report = read_geo_report(token)
+                except FileNotFoundError:
+                    self._write_json(404, {"ok": False, "error": "报告不存在或已过期。"}, cache_control=True)
+                    return
+                self._write_json(200, {"ok": True, "report": report}, cache_control=True)
+                return
 
             if not contact or not demand:
                 self._write_json(400, {"ok": False, "error": "请至少填写联系方式和需求简述。"})
@@ -402,6 +854,61 @@ class Handler(BaseHTTPRequestHandler):
             self._append_lead_log(entry)
             self._push_lead_to_feishu(entry)
             self._write_json(200, {"ok": True}, cache_control=True)
+        except Exception as error:
+            self._write_json(500, {"ok": False, "error": str(error) or "提交失败，请稍后再试。"})
+
+    def _handle_wechat_share_config(self):
+        try:
+            content_length = int(self.headers.get("Content-Length", "0"))
+            raw_body = self.rfile.read(content_length) if content_length > 0 else b"{}"
+            payload = json.loads(raw_body.decode("utf-8"))
+            page_url = (payload.get("url") or "").strip()
+
+            config = build_wechat_share_config(page_url)
+            self._write_json(200, {"ok": True, "config": config}, cache_control=True)
+        except Exception as error:
+            self._write_json(500, {"ok": False, "error": str(error) or "微信分享配置失败。"})
+
+    def _handle_geo_score_submit(self):
+        try:
+            content_length = int(self.headers.get("Content-Length", "0"))
+            raw_body = self.rfile.read(content_length) if content_length > 0 else b"{}"
+            payload = json.loads(raw_body.decode("utf-8"))
+            website_url = (payload.get("websiteUrl") or "").strip()
+            contact = (payload.get("contact") or "").strip()
+            company = (payload.get("company") or "").strip()
+            name = (payload.get("name") or "").strip()
+            source = (payload.get("source") or "geo-score").strip()
+            page = (payload.get("page") or "/geo-score/").strip()
+
+            if not website_url or not contact:
+                self._write_json(400, {"ok": False, "error": "请至少填写官网网址和联系方式。"})
+                return
+
+            result = score_website(website_url)
+            entry = {
+                "type": "geo-score",
+                "websiteUrl": website_url,
+                "name": name,
+                "company": company,
+                "contact": contact,
+                "source": source,
+                "page": page,
+                "result": result,
+                "createdAt": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            }
+            report = save_geo_report(entry)
+            self._append_lead_log(entry)
+            self._push_lead_to_feishu(
+                {
+                    **entry,
+                    "reportUrl": report["reportUrl"],
+                    "demand": "官网 GEO 基础评分：{}/100；优先改进：{}".format(
+                        result["score"], "；".join(result["priorities"])
+                    ),
+                }
+            )
+            self._write_json(200, {"ok": True, "result": result}, cache_control=True)
         except Exception as error:
             self._write_json(500, {"ok": False, "error": str(error) or "提交失败，请稍后再试。"})
 
@@ -446,13 +953,36 @@ class Handler(BaseHTTPRequestHandler):
 
     def _push_lead_to_feishu(self, entry):
         lines = [
-            "收到一条新的 H5 留资线索",
+            "收到一条新的官网 GEO 评分线索" if entry.get("type") == "geo-score" else "收到一条新的 H5 留资线索",
             "姓名 / 称呼：{}".format(entry.get("name") or "未填写"),
             "公司 / 品牌：{}".format(entry.get("company") or "未填写"),
+            *(
+                ["官网网址：{}".format(entry.get("websiteUrl"))]
+                if entry.get("websiteUrl")
+                else []
+            ),
             "联系方式：{}".format(entry.get("contact") or "未填写"),
             "需求简述：{}".format(entry.get("demand") or "未填写"),
-            "来源页面：{}".format(entry.get("page") or "未知"),
-            "提交时间：{}".format(entry.get("createdAt") or ""),
+            *(
+                [
+                    "基础评分：{}/100".format((entry.get("result") or {}).get("score")),
+                    "评分结论：{}".format((entry.get("result") or {}).get("level")),
+                ]
+                if entry.get("result")
+                else []
+            ),
+            *(
+                summarize_geo_result(entry.get("result") or {})
+                if entry.get("type") == "geo-score" and entry.get("result")
+                else []
+            ),
+            *(
+                ["详细报告：{}".format(entry.get("reportUrl"))]
+                if entry.get("reportUrl")
+                else []
+            ),
+            "来源页面：{}".format(format_entry_page(entry.get("page") or "")),
+            "提交时间：{}".format(format_beijing_time(entry.get("createdAt") or "")),
         ]
         message_text = "\n".join(lines)
 
@@ -563,6 +1093,25 @@ class Handler(BaseHTTPRequestHandler):
 
         if data.get("code") != 0:
             raise RuntimeError("飞书消息发送失败：{}".format(data.get("msg") or "unknown error"))
+
+    def _handle_geo_report_fetch(self):
+        parsed = urlparse(self.path or "")
+        if parsed.path != "/geo-report":
+            self._write_json(404, {"ok": False, "error": "Not found"})
+            return
+
+        token = (parse_qs(parsed.query).get("token") or [""])[0].strip()
+        if not token:
+            self._write_json(400, {"ok": False, "error": "缺少报告 token。"}, cache_control=True)
+            return
+
+        try:
+            report = read_geo_report(token)
+            self._write_json(200, {"ok": True, "report": report}, cache_control=True)
+        except FileNotFoundError:
+            self._write_json(404, {"ok": False, "error": "报告不存在或已过期。"}, cache_control=True)
+        except Exception as error:
+            self._write_json(500, {"ok": False, "error": str(error) or "报告读取失败。"}, cache_control=True)
 
 
 def main():

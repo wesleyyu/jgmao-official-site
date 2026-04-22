@@ -20,7 +20,7 @@ const iconMap = {
   "file-search": FileSearch,
 } as const;
 
-const siteUrl = "http://49.232.252.118:8800";
+const siteUrl = "https://www.jgmao.com";
 
 function t(text: Record<Locale, string>, locale: Locale) {
   return text[locale];
@@ -84,7 +84,7 @@ export function InsightsIndexPage({ locale }: InsightsPageProps) {
   const insights = getPublishedInsights();
 
   useEffect(() => {
-    setCanonical(`${siteUrl}/insights`);
+    setCanonical(`${siteUrl}/insights/`);
     setPageMeta(
       locale === "zh" ? "新闻 / 洞察 | 坚果猫 JGMAO" : "News / Insights | JGMAO",
       locale === "zh"
@@ -170,7 +170,7 @@ export function InsightsIndexPage({ locale }: InsightsPageProps) {
                       </span>
 
                       <Link
-                        href={`/insights/${article.slug}`}
+                        href={`/insights/${article.slug}/`}
                         className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/8"
                       >
                         {locale === "zh" ? "查看文章" : "Read article"}
@@ -196,7 +196,7 @@ export function InsightDetailPage({ locale }: InsightsPageProps) {
 
   useEffect(() => {
     if (!article) {
-      setCanonical(`${siteUrl}/insights`);
+      setCanonical(`${siteUrl}/insights/`);
       setPageMeta(
         locale === "zh" ? "文章未找到 | 坚果猫 JGMAO" : "Article not found | JGMAO",
         locale === "zh" ? "未找到对应的新闻 / 洞察内容。" : "The requested insight article could not be found.",
@@ -204,7 +204,7 @@ export function InsightDetailPage({ locale }: InsightsPageProps) {
       return;
     }
 
-    const articleUrl = `${siteUrl}/insights/${article.slug}`;
+    const articleUrl = `${siteUrl}/insights/${article.slug}/`;
     setCanonical(articleUrl);
     setPageMeta(t(article.seoTitle, locale), t(article.seoDescription, locale));
   }, [article, locale]);
@@ -226,7 +226,7 @@ export function InsightDetailPage({ locale }: InsightsPageProps) {
       document.head.appendChild(script);
     }
 
-    const articleUrl = `${siteUrl}/insights/${article.slug}`;
+    const articleUrl = `${siteUrl}/insights/${article.slug}/`;
     const structuredData = {
       "@context": "https://schema.org",
       "@type": "BlogPosting",
@@ -263,7 +263,7 @@ export function InsightDetailPage({ locale }: InsightsPageProps) {
     return (
       <main className="relative min-h-screen overflow-hidden bg-[#050816] text-slate-100">
         <div className="relative mx-auto flex min-h-screen w-full max-w-[960px] flex-col px-5 pb-10 pt-8 sm:px-6 lg:px-10">
-          <Link href="/insights" className="inline-flex w-fit items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-200 transition hover:bg-white/8">
+          <Link href="/insights/" className="inline-flex w-fit items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-200 transition hover:bg-white/8">
             <ArrowLeft className="h-4 w-4" />
             {locale === "zh" ? "返回新闻 / 洞察" : "Back to Insights"}
           </Link>
@@ -274,7 +274,7 @@ export function InsightDetailPage({ locale }: InsightsPageProps) {
             </p>
             <button
               type="button"
-              onClick={() => setLocation("/insights")}
+              onClick={() => setLocation("/insights/")}
               className="mt-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/8"
             >
               {locale === "zh" ? "查看全部内容" : "View all insights"}
@@ -292,7 +292,7 @@ export function InsightDetailPage({ locale }: InsightsPageProps) {
       <div className="pointer-events-none absolute inset-0 ops-grid opacity-20" />
 
       <div className="relative mx-auto flex min-h-screen w-full max-w-[1080px] flex-col px-5 pb-12 pt-8 sm:px-6 lg:px-10">
-        <Link href="/insights" className="inline-flex w-fit items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-200 transition hover:bg-white/8">
+        <Link href="/insights/" className="inline-flex w-fit items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-200 transition hover:bg-white/8">
           <ArrowLeft className="h-4 w-4" />
           {locale === "zh" ? "返回新闻 / 洞察" : "Back to Insights"}
         </Link>
@@ -336,7 +336,7 @@ export function InsightDetailPage({ locale }: InsightsPageProps) {
                   </p>
                 </div>
                 <Link
-                  href="/faq"
+                  href="/faq/"
                   className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/8"
                 >
                   {locale === "zh" ? "查看全部 FAQ" : "View all FAQ"}
@@ -348,7 +348,7 @@ export function InsightDetailPage({ locale }: InsightsPageProps) {
                 {relatedFaqs.map((faq, index) => (
                   <Link
                     key={faq.id}
-                    href={`/faq#${faq.id}`}
+                    href={`/faq/#${faq.id}`}
                     className="group rounded-[1.5rem] border border-white/10 bg-white/5 p-5 transition hover:border-white/20 hover:bg-white/7"
                   >
                     <div className="flex items-start gap-4">
