@@ -334,19 +334,19 @@ export const h5GeoShell: GeoShellConfig = {
 };
 
 export const geoScoreGeoShell: GeoShellConfig = {
-  title: "官网 GEO 评分器 | 坚果猫 JGMAO",
+  title: "企业官网 GEO 评分器",
   description:
-    "输入官网网址和联系方式，快速获取官网 GEO 基础评分，并领取详细分析建议。",
+    "输入官网网址，免费获取官网 GEO 基础评分，领取详细分析报告。",
   canonicalUrl: `${siteUrl}/geo-score/`,
-  ogImage: `${siteUrl}/h5-share-cover.jpg`,
+  ogImage: `${siteUrl}/geo-score-share-cover.png`,
   structuredData: [
     {
       "@context": "https://schema.org",
       "@type": "WebPage",
-      name: "官网 GEO 评分器 | 坚果猫 JGMAO",
+      name: "企业官网 GEO 评分器",
       url: `${siteUrl}/geo-score/`,
       description:
-        "输入官网网址和联系方式，快速获取官网 GEO 基础评分，并领取详细分析建议。",
+        "输入官网网址，免费获取官网 GEO 基础评分，领取详细分析报告。",
       inLanguage: "zh-CN",
     },
     {
@@ -364,7 +364,7 @@ export const geoScoreGeoShell: GeoShellConfig = {
     },
   ],
   hiddenSeoHtml: stripIndent(`
-    <h1>官网 GEO 评分器</h1>
+    <h1>企业官网 GEO 评分器</h1>
     <p>
       输入官网网址和联系方式，快速获取官网在抓取、结构、FAQ、内容深度与承接路径方面的基础 GEO 评分，并领取详细分析建议。
     </p>
@@ -374,11 +374,56 @@ export const geoScoreGeoShell: GeoShellConfig = {
   `),
 };
 
+export const geoUpgradeGeoShell: GeoShellConfig = {
+  title: "企业官网 GEO 升级方案 | 坚果猫 JGMAO",
+  description:
+    "更深入的 GEO 升级方案，覆盖页面级分析、具体改造清单与优先级路线图，帮助企业把官网升级为更可见、更可信、更可转化的增长入口。",
+  canonicalUrl: `${siteUrl}/geo-upgrade/`,
+  ogImage: `${siteUrl}/geo-score-share-cover.png`,
+  structuredData: [
+    {
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      name: "企业官网 GEO 升级方案 | 坚果猫 JGMAO",
+      url: `${siteUrl}/geo-upgrade/`,
+      description:
+        "更深入的 GEO 升级方案，覆盖页面级分析、具体改造清单与优先级路线图，帮助企业把官网升级为更可见、更可信、更可转化的增长入口。",
+      inLanguage: "zh-CN",
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "Service",
+      name: "企业官网 GEO 升级方案",
+      provider: {
+        "@type": "Organization",
+        name: "坚果猫 JGMAO",
+        url: siteUrl,
+      },
+      serviceType: "企业官网 GEO 升级与路线图规划",
+      description:
+        "覆盖页面级分析、具体改造清单与优先级路线图，帮助企业把官网升级为更可见、更可信、更可转化的增长入口。",
+    },
+  ],
+  hiddenSeoHtml: stripIndent(`
+    <h1>企业官网 GEO 升级方案</h1>
+    <p>
+      这是一页面向企业官网负责人与增长团队的 GEO 升级承接页，帮助进一步判断页面级分析、具体改造清单与优先级路线图的推进方向。
+    </p>
+    <p>
+      当详细版报告已经帮助看清问题后，这一页继续回答：首页、FAQ、案例页、洞察页、联系页与关键专题页应该如何优先分析，以及 FAQ、专题页、结构化数据、信任信号与承接路径如何进一步补齐。
+    </p>
+    <p>
+      网站系统会员可免费获得专业版诊断报告，并继续获得定期复测、优化前后对比、新页面 GEO 检查以及 FAQ、案例、洞察等内容资产的更新建议。
+    </p>
+  `),
+};
+
 export const geoShellByRoute = {
   "/": homeGeoShell,
   "/ai-growth/": aiGrowthGeoShell,
   "/h5/": h5GeoShell,
   "/geo-score/": geoScoreGeoShell,
+  "/geo-upgrade/": geoUpgradeGeoShell,
 };
 
 export { siteUrl };

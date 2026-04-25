@@ -11,9 +11,9 @@ import {
   siteOrigin,
 } from "@/lib/share";
 
-const pageTitle = "官网 GEO 评分器｜坚果猫 JGMAO";
-const pageDescription = "输入官网网址和联系方式，快速获取官网 GEO 基础评分，并领取详细分析报告。";
-const pageImage = `${siteOrigin}/h5-share-cover.jpg`;
+const pageTitle = "企业官网 GEO 评分器";
+const pageDescription = "输入官网网址，免费获取官网 GEO 基础评分，领取详细分析报告。";
+const pageImage = `${siteOrigin}/geo-score-share-cover.png`;
 
 declare global {
   interface Window {
@@ -102,8 +102,8 @@ type ScoreResult = {
 
 const valuePoints = [
   "快速看清官网在 AI 可见性上的基础表现",
-  "识别 FAQ、结构化数据、站点抓取等关键短板",
-  "添加企微后，继续领取更完整的分析结果与优化方向",
+  "了解官网在抓取、主题结构与承接路径上的基础状态",
+  "添加企微后，可继续查看 6 维完整诊断、风险等级与优先改进方向",
 ];
 
 export default function GeoScorePage() {
@@ -113,6 +113,7 @@ export default function GeoScorePage() {
     company: "",
     name: "",
   });
+  const [scoreCountLabel, setScoreCountLabel] = useState("100+");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitMessage, setSubmitMessage] = useState("");
   const [submitError, setSubmitError] = useState("");
@@ -212,6 +213,34 @@ export default function GeoScorePage() {
     };
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    async function fetchStats() {
+      try {
+        const response = await fetch("/api/lead/submit", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ type: "geo-score-stats" }),
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok || payload?.ok === false) {
+          return;
+        }
+        if (!cancelled && typeof payload?.displayCount === "string" && payload.displayCount.trim()) {
+          setScoreCountLabel(payload.displayCount.trim());
+        }
+      } catch {
+        // noop
+      }
+    }
+
+    void fetchStats();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   async function handleSubmit() {
     const websiteUrl = form.websiteUrl.trim();
     const contact = form.contact.trim();
@@ -249,7 +278,7 @@ export default function GeoScorePage() {
       }
 
       setScoreResult(payload.result as ScoreResult);
-      setSubmitMessage("基础评分已生成，详细分析报告已同步给顾问团队，我们会尽快与你联系。");
+      setSubmitMessage("基础评分已生成，添加企微后可继续查看更完整的诊断结果与优先改进方向。");
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : "提交失败，请稍后再试。");
     } finally {
@@ -276,8 +305,7 @@ export default function GeoScorePage() {
           <div className="flex items-center gap-3 opacity-90">
             <img src={logoImage} alt="坚果猫 JGMAO" className="h-10 w-10 rounded-2xl border border-white/10 object-cover" />
             <div>
-              <p className="text-[11px] tracking-[0.22em] text-slate-400">官网 GEO 评分器</p>
-              <p className="mt-1 text-sm font-medium text-white">坚果猫 JGMAO</p>
+              <p className="text-sm font-medium text-white">坚果猫 JGMAO</p>
             </div>
           </div>
 
@@ -287,12 +315,10 @@ export default function GeoScorePage() {
             transition={{ duration: 0.45 }}
             className="mt-6 text-[2rem] font-semibold leading-[1.08] tracking-tight text-white"
           >
-            输入官网网址
-            <br />
-            快速获取基础 GEO 评分
+            企业官网 GEO 评分器
           </motion.h1>
           <p className="mt-4 text-sm leading-7 text-slate-200">
-            先快速查看官网的基础 GEO 表现，添加企微后可继续领取更完整的分析结果。
+            输入官网网址，免费获取基础 GEO 评分；添加企微后，可继续领取更完整的分析结果。
           </p>
 
           <div className="mt-5 flex flex-wrap gap-2">
@@ -357,6 +383,9 @@ export default function GeoScorePage() {
             {isSubmitting ? "正在生成评分..." : "立即获取基础 GEO 评分"}
             <Sparkles className="h-4 w-4" />
           </button>
+          <p className="mt-3 text-center text-xs leading-6 text-slate-400">
+            已为 {scoreCountLabel} 个官网完成评分
+          </p>
         </section>
 
         {scoreResult ? (
@@ -402,7 +431,7 @@ export default function GeoScorePage() {
 
         <section className="mt-5 rounded-[2rem] border border-white/10 bg-slate-950/55 p-5 backdrop-blur-xl">
           <p className="text-xs uppercase tracking-[0.22em] text-slate-400">后续对接</p>
-          <h2 className="mt-3 text-2xl font-semibold text-white">添加企微，领取详细分析报告</h2>
+          <h2 className="mt-3 text-2xl font-semibold text-white">添加企微，免费领取详细分析报告</h2>
           <div className="mt-5 rounded-[1.6rem] border border-white/10 bg-white/5 p-4 text-center">
             <p className="text-sm font-medium text-white">扫码添加企微客服</p>
             <p className="mt-2 text-xs leading-6 text-slate-400">获取更完整的分析结果与一对一沟通</p>

@@ -8,6 +8,7 @@ export const homeCanonicalPath = "/";
 export const h5CanonicalPath = "/h5/";
 export const aiGrowthCanonicalPath = "/ai-growth/";
 export const geoScoreCanonicalPath = "/geo-score/";
+export const geoUpgradeCanonicalPath = "/geo-upgrade/";
 
 function withVersionQuery(url: string, version: string) {
   if (!version) {
@@ -23,5 +24,6 @@ export const homeCanonicalUrl = `${siteUrl}${homeCanonicalPath}`;
 export const h5CanonicalUrl = `${siteUrl}${h5CanonicalPath}`;
 export const aiGrowthCanonicalUrl = `${siteUrl}${aiGrowthCanonicalPath}`;
 export const geoScoreCanonicalUrl = `${siteUrl}${geoScoreCanonicalPath}`;
+export const geoUpgradeCanonicalUrl = `${siteUrl}${geoUpgradeCanonicalPath}`;
 export const h5WechatShareUrl = withVersionQuery(aiGrowthCanonicalUrl, h5ShareVersion);
 export const geoScoreWechatShareUrl = withVersionQuery(geoScoreCanonicalUrl, geoScoreShareVersion);

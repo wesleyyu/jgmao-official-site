@@ -5,7 +5,7 @@ import path from "node:path";
 import { Readable } from "node:stream";
 import { fileURLToPath } from "node:url";
 import { appendFile } from "node:fs/promises";
-import { randomUUID } from "node:crypto";
+import { createHash } from "node:crypto";
 
 import httpProxy from "http-proxy";
 
@@ -43,6 +43,43 @@ const mimeTypes = new Map([
   [".woff", "font/woff"],
   [".woff2", "font/woff2"],
   [".txt", "text/plain; charset=utf-8"],
+]);
+
+const themeStopTerms = new Set([
+  "首页",
+  "官网",
+  "我们",
+  "关于",
+  "联系",
+  "欢迎",
+  "更多",
+  "了解",
+  "服务",
+  "产品",
+  "方案",
+  "案例",
+  "新闻",
+  "博客",
+  "文章",
+  "详情",
+  "home",
+  "about",
+  "contact",
+  "service",
+  "services",
+  "product",
+  "products",
+  "solution",
+  "solutions",
+  "case",
+  "cases",
+  "blog",
+  "news",
+  "article",
+  "articles",
+  "details",
+  "learn",
+  "more",
 ]);
 
 const proxy = httpProxy.createProxyServer({
@@ -89,6 +126,126 @@ function rewriteOpenClawPath(urlPath) {
   }
 
   return urlPath;
+}
+
+function extractThemeTerms(...texts) {
+  const source = texts.filter(Boolean).join(" ");
+  if (!source) return [];
+  const matches = source.match(/[\u4e00-\u9fff]{2,8}|[A-Za-z][A-Za-z0-9&+/\-]{3,}/g) || [];
+  const terms = [];
+  for (const match of matches) {
+    const term = String(match || "").trim().toLowerCase();
+    if (!term || themeStopTerms.has(term) || terms.includes(term)) continue;
+    terms.push(term);
+  }
+  return terms.slice(0, 12);
+}
+
+function countQuestionSignals(text) {
+  const source = String(text || "").slice(0, 6000);
+  const patterns = [
+    /问[:：]/gi,
+    /Q[:：]/gi,
+    /[？?]/g,
+    /什么是/gi,
+    /如何/gi,
+    /为什么/gi,
+    /是否/gi,
+    /\bhow\b/gi,
+    /\bwhat\b/gi,
+    /\bwhy\b/gi,
+    /\bwhen\b/gi,
+    /\bwhere\b/gi,
+    /\bcan\b/gi,
+  ];
+  return patterns.reduce((total, pattern) => total + ((source.match(pattern) || []).length), 0);
+}
+
+async function fetchHtml(url, timeoutMs = 10000) {
+  if (!url || typeof url !== "string") return { finalUrl: "", html: "" };
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        "user-agent": "JGMAO GEO Score Bot/1.0",
+        accept: "text/html,application/xhtml+xml",
+      },
+      redirect: "follow",
+      signal: controller.signal,
+    });
+    if (!response.ok) throw new Error("fetch failed");
+    return {
+      finalUrl: response.url || url,
+      html: await response.text(),
+    };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function extractCandidatePageUrls(homeHtml, finalUrl) {
+  const parsed = new URL(finalUrl);
+  const origin = parsed.origin;
+  const hostname = parsed.hostname.toLowerCase();
+  const candidates = [];
+  const matches = Array.from(homeHtml.matchAll(/<a[^>]+href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi));
+
+  for (const [, href = "", anchorHtml = ""] of matches) {
+    let fullUrl = "";
+    try {
+      fullUrl = new URL(String(href).trim(), finalUrl).toString();
+    } catch {
+      continue;
+    }
+    let target;
+    try {
+      target = new URL(fullUrl);
+    } catch {
+      continue;
+    }
+    if (!["http:", "https:"].includes(target.protocol)) continue;
+    if (target.hostname.toLowerCase() !== hostname) continue;
+    if (target.hash) fullUrl = fullUrl.split("#", 1)[0];
+    if (/\.(jpg|jpeg|png|gif|svg|webp|pdf|docx?|xlsx?|pptx?|zip)$/i.test(target.pathname || "")) continue;
+    const anchorText = stripHtml(anchorHtml || "");
+    const hint = `${target.pathname || ""} ${anchorText}`.toLowerCase();
+    if (/(faq|常见问题|问答|case|案例|portfolio|work|insight|blog|news|article|洞察|报道|contact|联系我们)/i.test(hint)) {
+      if (!candidates.includes(fullUrl)) candidates.push(fullUrl);
+    }
+  }
+
+  for (const item of ["/faq", "/faq/", "/cases", "/cases/", "/case", "/case/", "/blog", "/blog/", "/insights", "/insights/", "/news", "/news/"]) {
+    const fullUrl = new URL(item, origin).toString();
+    if (!candidates.includes(fullUrl)) candidates.push(fullUrl);
+  }
+
+  return candidates.slice(0, 8);
+}
+
+async function collectSiteSamples(homeHtml, finalUrl) {
+  const samples = [];
+  for (const candidate of extractCandidatePageUrls(homeHtml, finalUrl)) {
+    if (samples.length >= 4) break;
+    try {
+      const { finalUrl: sampleFinalUrl, html: sampleHtml } = await fetchHtml(candidate, 8000);
+      const sampleText = stripHtml(sampleHtml);
+      const signalText = `${sampleFinalUrl} ${sampleHtml.slice(0, 3000)} ${sampleText.slice(0, 3000)}`;
+      samples.push({
+        url: sampleFinalUrl,
+        text: sampleText,
+        signalText,
+        faq: /(FAQPage|常见问题|常见问答|\bfaq\b|frequently asked questions)/i.test(signalText),
+        contentAsset: /(案例|客户案例|洞察|白皮书|专题|blog|blogs|insights|portfolio|case stud(?:y|ies)|resources|knowledge|article|articles)/i.test(signalText),
+        contact: /(400-\d{4}-\d{3}|@\w|联系电话|商务邮箱|联系我们|电话咨询|电话|邮箱|e-?mail|contact us|get in touch|call us|office)/i.test(signalText),
+        cta: /(预约|咨询|提交需求|立即联系|联系我们|电话咨询|扫码|表单|demo|book|schedule|quote|contact us|get in touch|enquiry|enquire|start now)/i.test(signalText),
+      });
+    } catch {
+      continue;
+    }
+  }
+  return samples;
 }
 
 function readJsonBody(req) {
@@ -164,12 +321,90 @@ async function appendLeadLog(entry) {
 }
 
 async function saveGeoReport(entry) {
-  const token = randomUUID().replaceAll("-", "");
+  const token = buildReportToken(entry.websiteUrl || entry.result?.checkedUrl || "");
+  const filePath = path.join(geoReportDir, `${token}.json`);
+  let previous = {};
+
+  try {
+    previous = JSON.parse(await readFile(filePath, "utf8"));
+  } catch {
+    previous = {};
+  }
+
+  const currentResult = entry.result || {};
+  const reportExists = await stat(filePath).then(() => true).catch(() => false);
+  const currentSnapshot = {
+    createdAt: entry.createdAt,
+    score: currentResult.score || 0,
+    level: currentResult.level || "",
+    checkedUrl: currentResult.checkedUrl || entry.websiteUrl || "",
+    dimensions: (currentResult.dimensions || []).map((item) => ({
+      key: item.key,
+      title: item.title,
+      score: item.score || 0,
+        })),
+  };
+
+  const resultFingerprint = createHash("sha1")
+    .update(
+      JSON.stringify(
+        {
+          score: currentSnapshot.score,
+          level: currentSnapshot.level,
+          checkedUrl: currentSnapshot.checkedUrl,
+          dimensions: currentSnapshot.dimensions,
+        },
+        null,
+        0,
+      ),
+      "utf8",
+    )
+    .digest("hex");
+  const previousFingerprint = previous.resultFingerprint || "";
+  const previousUpdatedAt = previous.updatedAt || previous.createdAt || previous.firstCreatedAt || "";
+  const currentTime = new Date(entry.createdAt).getTime();
+  const previousTime = new Date(previousUpdatedAt).getTime();
+  const sameWithin24Hours =
+    reportExists
+    && previousFingerprint
+    && previousFingerprint === resultFingerprint
+    && !Number.isNaN(currentTime)
+    && !Number.isNaN(previousTime)
+    && currentTime - previousTime <= 24 * 60 * 60 * 1000;
+
+  if (sameWithin24Hours) {
+    const refreshedReport = {
+      ...previous,
+      updatedAt: entry.createdAt,
+      reportUrl: previous.reportUrl || `${publicSiteUrl}/geo-report/${token}/`,
+      input: {
+        ...(previous.input || {}),
+        name: entry.name || "",
+        company: entry.company || "",
+        contact: entry.contact || "",
+        websiteUrl: entry.websiteUrl || "",
+        source: entry.source || "",
+        page: entry.page || "",
+      },
+      reportStatus: "unchanged",
+      unchangedWithin24h: true,
+    };
+    await mkdir(geoReportDir, { recursive: true });
+    await writeFile(filePath, JSON.stringify(refreshedReport, null, 2), "utf8");
+    return refreshedReport;
+  }
+
+  const previousHistory = Array.isArray(previous.history) ? previous.history : [];
+  const filteredHistory = previousHistory.filter((item) => item?.createdAt !== currentSnapshot.createdAt);
+  const history = [...filteredHistory, currentSnapshot].slice(-20);
   const report = {
     token,
     type: "geo-score",
     createdAt: entry.createdAt,
+    firstCreatedAt: previous.firstCreatedAt || entry.createdAt,
+    updatedAt: entry.createdAt,
     reportUrl: `${publicSiteUrl}/geo-report/${token}/`,
+    siteKey: buildReportSiteKey(entry.websiteUrl || currentResult.checkedUrl || ""),
     input: {
       name: entry.name || "",
       company: entry.company || "",
@@ -178,17 +413,148 @@ async function saveGeoReport(entry) {
       source: entry.source || "",
       page: entry.page || "",
     },
-    result: entry.result,
+    result: currentResult,
+    history,
+    resultFingerprint,
   };
 
   await mkdir(geoReportDir, { recursive: true });
-  await writeFile(path.join(geoReportDir, `${token}.json`), JSON.stringify(report, null, 2), "utf8");
-  return report;
+  await writeFile(filePath, JSON.stringify(report, null, 2), "utf8");
+  return {
+    ...report,
+    reportStatus: reportExists ? "updated" : "new",
+    unchangedWithin24h: false,
+  };
 }
 
 async function readGeoReport(token) {
   const filePath = path.join(geoReportDir, `${token}.json`);
   return JSON.parse(await readFile(filePath, "utf8"));
+}
+
+function reportDomainFromUrl(value) {
+  if (!value) return "";
+  try {
+    return new URL(value).hostname;
+  } catch {
+    return String(value || "");
+  }
+}
+
+function geoReportTitleText(report) {
+  const company = report?.input?.company?.trim();
+  if (company) return `${company}官网 GEO 详细诊断报告`;
+  const domain = reportDomainFromUrl(report?.result?.checkedUrl || report?.input?.websiteUrl);
+  if (domain) return `${domain} GEO 详细诊断报告`;
+  return "企业官网 GEO 详细诊断报告";
+}
+
+function buildGeoReportShareHtml(report, token) {
+  const title = geoReportTitleText(report);
+  const description = "查看官网在抓取、主题结构、AI 可见性、内容资产与承接转化等维度的详细诊断结果。";
+  const shareUrl = `${publicSiteUrl}/api/lead/submit?share=geo-report&token=${encodeURIComponent(token)}`;
+  const reportUrl = `${publicSiteUrl}/geo-report/${token}/`;
+  const imageUrl = `${publicSiteUrl}/geo-score-share-cover.png`;
+  const escapedTitle = title.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const escapedDescription = description.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const escapedShareUrl = shareUrl.replace(/&/g, "&amp;");
+  const escapedImageUrl = imageUrl.replace(/&/g, "&amp;");
+  const escapedReportUrl = reportUrl.replace(/&/g, "&amp;");
+
+  return `<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>${escapedTitle}</title>
+    <meta name="description" content="${escapedDescription}" />
+    <meta name="robots" content="noindex,nofollow,noarchive" />
+    <link rel="canonical" href="${escapedShareUrl}" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="${escapedTitle}" />
+    <meta property="og:description" content="${escapedDescription}" />
+    <meta property="og:image" content="${escapedImageUrl}" />
+    <meta property="og:url" content="${escapedShareUrl}" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="${escapedTitle}" />
+    <meta name="twitter:description" content="${escapedDescription}" />
+    <meta name="twitter:image" content="${escapedImageUrl}" />
+    <style>
+      :root { color-scheme: dark; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background: radial-gradient(circle at top, #0f2d57 0%, #071224 42%, #040812 100%);
+        color: #f8fafc;
+        font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Helvetica Neue", sans-serif;
+      }
+      .card {
+        width: min(92vw, 460px);
+        padding: 28px 24px;
+        border-radius: 24px;
+        border: 1px solid rgba(125, 211, 252, 0.18);
+        background: rgba(8, 15, 31, 0.86);
+        box-shadow: 0 24px 90px rgba(2, 6, 23, 0.48);
+      }
+      .label {
+        display: inline-flex;
+        padding: 6px 12px;
+        border-radius: 999px;
+        background: rgba(56, 189, 248, 0.14);
+        color: #bae6fd;
+        font-size: 13px;
+        letter-spacing: 0.02em;
+      }
+      h1 { margin: 16px 0 10px; font-size: 28px; line-height: 1.18; }
+      p { margin: 0; color: rgba(226, 232, 240, 0.88); line-height: 1.7; font-size: 15px; }
+      a {
+        display: inline-flex;
+        margin-top: 22px;
+        padding: 12px 18px;
+        border-radius: 999px;
+        background: linear-gradient(135deg, #38bdf8, #2563eb);
+        color: white;
+        text-decoration: none;
+        font-weight: 600;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="card">
+      <span class="label">企业官网 GEO 详细诊断报告</span>
+      <h1>${escapedTitle}</h1>
+      <p>${escapedDescription}</p>
+      <a href="${escapedReportUrl}">正在打开详细报告</a>
+    </main>
+    <script>
+      window.setTimeout(function () {
+        window.location.replace(${JSON.stringify(reportUrl)});
+      }, 120);
+    </script>
+  </body>
+</html>`;
+}
+
+async function countGeoScoreEntries() {
+  try {
+    const content = await readFile(leadLogFile, "utf8");
+    return content
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .reduce((total, line) => {
+        try {
+          const entry = JSON.parse(line);
+          return entry?.type === "geo-score" ? total + 1 : total;
+        } catch {
+          return total;
+        }
+      }, 0);
+  } catch {
+    return 0;
+  }
 }
 
 function normalizeWebsiteUrl(value) {
@@ -208,6 +574,24 @@ function normalizeWebsiteUrl(value) {
   } catch {
     throw new Error("官网网址格式不正确，请检查后再试。");
   }
+}
+
+function buildReportSiteKey(value) {
+  const normalized = normalizeWebsiteUrl(value);
+  const parsed = new URL(normalized);
+  let hostname = (parsed.hostname || "").toLowerCase();
+  if (hostname.startsWith("www.")) {
+    hostname = hostname.slice(4);
+  }
+  const port = parsed.port ? Number(parsed.port) : 0;
+  if (port && port !== 80 && port !== 443) {
+    hostname = `${hostname}:${port}`;
+  }
+  return hostname || normalized.toLowerCase();
+}
+
+function buildReportToken(value) {
+  return createHash("sha1").update(buildReportSiteKey(value), "utf8").digest("hex").slice(0, 24);
 }
 
 function stripHtml(html) {
@@ -328,25 +712,36 @@ async function checkRemoteFile(url) {
   }
 }
 
-function analyzeHomepage(html, finalUrl) {
+function analyzeHomepage(html, finalUrl, sampledPages = []) {
   const title = extractTagContent(html, /<title[^>]*>([\s\S]*?)<\/title>/i);
   const metaDescription = extractTagContent(html, /<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/i)
     || extractTagContent(html, /<meta[^>]+content=["']([^"']+)["'][^>]+name=["']description["']/i);
   const canonical = extractTagContent(html, /<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["']/i)
     || extractTagContent(html, /<link[^>]+href=["']([^"']+)["'][^>]+rel=["']canonical["']/i);
   const h1 = extractTagContent(html, /<h1[^>]*>([\s\S]*?)<\/h1>/i);
-  const hasStructuredData = /application\/ld\+json/i.test(html);
-  const hasFaqSignal = /FAQPage|常见问题|faq/i.test(html);
   const hasOgTitle = /property=["']og:title["']/i.test(html);
   const hasOgDescription = /property=["']og:description["']/i.test(html);
-  const contactSignal = /(400-\d{4}-\d{3}|@\w|联系电话|商务邮箱|联系我们|电话咨询)/i.test(html);
-  const hasThemeFocus = /(GEO|AI增长|增长飞轮|智能获客|AI 可见性|官网 GEO)/i.test([title, metaDescription, h1, contentText.slice(0, 800)].join(" "));
-  const hasContentAssets = /(案例|新闻|洞察|blog|insights|专题|白皮书|报告|FAQ|常见问题)/i.test(html);
-  const hasCtaSignal = /(预约|咨询|提交需求|立即联系|联系我们|电话咨询|扫码|表单|demo)/i.test(html);
-  const hasCompanySignal = /(有限公司|公司地址|北京市|商务邮箱|联系电话|service@|400-\d{4}-\d{3})/i.test(html);
-  const hasTrustSignal = /(高新技术企业|新华社|备案|许可证|PICC|奥迪|沃尔沃|壳牌|美孚|中国平安|人民日报)/i.test(html);
+  const contactSignal = /(400-\d{4}-\d{3}|@\w|联系电话|商务邮箱|联系我们|电话咨询|电话|邮箱|e-?mail|contact us|get in touch|call us|office)/i.test(html);
+  const hasContentAssets = /(案例|客户案例|新闻|洞察|blog|blogs|insights|专题|白皮书|报告|FAQ|常见问题|portfolio|case stud(?:y|ies)|resources|knowledge|article|articles)/i.test(html)
+    || sampledPages.some((item) => item?.contentAsset);
+  const hasCtaSignal = /(预约|咨询|提交需求|立即联系|联系我们|电话咨询|扫码|表单|demo|book|schedule|quote|contact us|get in touch|enquiry|enquire|start now)/i.test(html);
+  const hasCompanySignal = /(有限公司|公司地址|地址[:：]|北京市|商务邮箱|联系电话|电话|邮箱|e-?mail|service@|400-\d{4}-\d{3}|copyright|all rights reserved|about us|关于我们|studio|office|company)/i.test(html);
+  const hasTrustSignal = /(高新技术企业|新华社|备案|ICP备|icp备|公网安备|许可证|license|certification|iso|认证|资质|奖项|award|awards|PICC|奥迪|沃尔沃|壳牌|美孚|中国平安|人民日报|客户案例|设计案例|合作客户|服务客户|合作伙伴|媒体报道|trusted by|featured in)/i.test(html);
   const contentText = stripHtml(html);
-  const hasTopicDepth = contentText.length >= 1200;
+  const hasRelevantStructuredData = /"@type"\s*:\s*"(Organization|Corporation|LocalBusiness|WebSite|FAQPage|Article|NewsArticle|BlogPosting|BreadcrumbList)"/i.test(html);
+  const faqHeadingSignal = /(FAQPage|常见问题|常见问答|\bfaq\b|frequently asked questions)/i.test(html);
+  const questionSignalCount = countQuestionSignals(contentText);
+  const themeTerms = extractThemeTerms(title, h1);
+  const themeContext = [title, metaDescription, h1, contentText.slice(0, 1600)].join(" ").toLowerCase();
+  const hasThemeFocus = Boolean(themeTerms.length && themeTerms.some((term) => {
+    const matches = themeContext.match(new RegExp(term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g"));
+    return (matches || []).length >= 2;
+  }));
+  const contactSignalWithSamples = contactSignal || sampledPages.some((item) => item?.contact);
+  const hasCtaSignalWithSamples = hasCtaSignal || sampledPages.some((item) => item?.cta);
+  const hasTopicDepth = contentText.length >= 1200
+    || sampledPages.reduce((total, item) => total + Math.min(String(item?.text || "").trim().length, 2000), 0) >= 1200;
+  const hasFaqSignal = /FAQPage/i.test(html) || (faqHeadingSignal && questionSignalCount >= 2) || sampledPages.some((item) => item?.faq);
 
   const metrics = [
     { ok: finalUrl.startsWith("https://"), weight: 8, positive: "已启用 HTTPS，基础可信度较好。", negative: "建议优先确保官网全站使用 HTTPS。", key: "https", label: "HTTPS", dimension: "crawl" },
@@ -356,12 +751,12 @@ function analyzeHomepage(html, finalUrl) {
     { ok: hasThemeFocus, weight: 6, positive: "首页主题关键词较集中，页面语义比较明确。", negative: "首页主题关键词分散，建议收紧主题表达与页面语义。", key: "theme-focus", label: "主题聚焦度", dimension: "theme" },
     { ok: Boolean(canonical), weight: 7, positive: "已配置 canonical 规范地址。", negative: "建议补 canonical，减少重复地址干扰。", key: "canonical", label: "Canonical", dimension: "crawl" },
     { ok: hasOgTitle && hasOgDescription, weight: 5, positive: "社交分享标题与描述较完整。", negative: "建议补全 og:title / og:description。", key: "og", label: "OG 分享信息", dimension: "ai" },
-    { ok: hasStructuredData, weight: 7, positive: "页面已带结构化数据。", negative: "建议补充 Organization / FAQ / Article 等结构化数据。", key: "schema", label: "结构化数据", dimension: "ai" },
-    { ok: hasFaqSignal, weight: 6, positive: "页面已有 FAQ / 问答信号。", negative: "建议补 FAQ 区块，增强 AI 抽取与引用能力。", key: "faq", label: "FAQ 信号", dimension: "ai" },
+    { ok: hasRelevantStructuredData, weight: 7, positive: "页面已带与官网语义相关的结构化数据。", negative: "建议补充 Organization / FAQ / Article 等相关结构化数据。", key: "schema", label: "相关结构化数据", dimension: "ai" },
+    { ok: hasFaqSignal, weight: 6, positive: "页面已有较清晰的 FAQ / 问答信号。", negative: "建议补更清晰的 FAQ / 问答结构，增强 AI 抽取与引用能力。", key: "faq", label: "FAQ / 问答信号", dimension: "ai" },
     { ok: hasTopicDepth, weight: 6, positive: "内容长度与主题覆盖基础尚可。", negative: "内容深度偏弱，建议补主题页与可复用内容资产。", key: "content-depth", label: "内容深度", dimension: "content" },
     { ok: hasContentAssets, weight: 7, positive: "已具备 FAQ、案例或洞察等内容资产信号。", negative: "建议补案例、FAQ、洞察或专题页，形成更完整的内容资产体系。", key: "content-assets", label: "内容资产信号", dimension: "content" },
-    { ok: contactSignal, weight: 6, positive: "联系方式与咨询入口较清晰。", negative: "建议补电话、邮箱或联系入口，增强转化承接。", key: "contact", label: "联系方式", dimension: "convert" },
-    { ok: hasCtaSignal, weight: 5, positive: "页面已有较明确的行动引导与转化入口。", negative: "建议补强 CTA、表单或咨询动作，让高意向用户更容易继续沟通。", key: "cta", label: "CTA / 转化动作", dimension: "convert" },
+    { ok: contactSignalWithSamples, weight: 6, positive: "联系方式与咨询入口较清晰。", negative: "建议补电话、邮箱或联系入口，增强转化承接。", key: "contact", label: "联系方式", dimension: "convert" },
+    { ok: hasCtaSignalWithSamples, weight: 5, positive: "页面已有较明确的行动引导与转化入口。", negative: "建议补强 CTA、表单或咨询动作，让高意向用户更容易继续沟通。", key: "cta", label: "CTA / 转化动作", dimension: "convert" },
     { ok: hasCompanySignal, weight: 4, positive: "公司信息较完整，基础可信度较好。", negative: "建议补公司信息、地址、电话、邮箱等基础信任信息。", key: "company", label: "公司信息完整度", dimension: "trust" },
     { ok: hasTrustSignal, weight: 3, positive: "页面已有备案、资质或客户背书等信任信号。", negative: "建议补资质、备案、客户背书或媒体报道，增强品牌可信度。", key: "trust", label: "资质 / 背书信号", dimension: "trust" },
   ];
@@ -392,24 +787,12 @@ function summarizeGeoResult(result) {
 
 async function scoreWebsite(websiteUrl) {
   const normalizedUrl = normalizeWebsiteUrl(websiteUrl);
-  const homepageResponse = await fetch(normalizedUrl, {
-    headers: {
-      "user-agent": "JGMAO GEO Score Bot/1.0",
-      accept: "text/html,application/xhtml+xml",
-    },
-    redirect: "follow",
-  });
-
-  if (!homepageResponse.ok) {
-    throw new Error(`官网暂时无法访问（${homepageResponse.status}），请确认网址是否可正常打开。`);
-  }
-
-  const finalUrl = homepageResponse.url || normalizedUrl;
-  const html = await homepageResponse.text();
+  const { finalUrl, html } = await fetchHtml(normalizedUrl, 15000);
   const baseUrl = new URL(finalUrl);
   const robotsOk = await checkRemoteFile(new URL("/robots.txt", baseUrl).toString());
   const sitemapOk = await checkRemoteFile(new URL("/sitemap.xml", baseUrl).toString());
-  const analysis = analyzeHomepage(html, finalUrl);
+  const sampledPages = await collectSiteSamples(html, finalUrl);
+  const analysis = analyzeHomepage(html, finalUrl, sampledPages);
   const metrics = [
     ...analysis.metrics,
     {
@@ -464,7 +847,13 @@ async function pushLeadToFeishu(entry) {
   };
 
   const lines = [
-    entry?.type === "geo-score" ? "收到一条新的官网 GEO 评分线索" : "收到一条新的 H5 留资线索",
+    entry?.type === "geo-score"
+      ? entry?.reportStatus === "new"
+        ? "收到一条新的官网 GEO 评分线索"
+        : entry?.reportStatus === "unchanged"
+          ? "同一官网评分结果无变化，当前报告仍为最新"
+          : "同一官网已更新 GEO 评分报告"
+      : "收到一条新的 H5 留资线索",
     `姓名 / 称呼：${entry.name || "未填写"}`,
     `公司 / 品牌：${entry.company || "未填写"}`,
     ...(entry.websiteUrl ? [`官网网址：${entry.websiteUrl}`] : []),
@@ -558,6 +947,17 @@ async function handleLeadSubmit(req, res) {
     const page = typeof payload?.page === "string" ? payload.page.trim() : "";
     const websiteUrl = typeof payload?.websiteUrl === "string" ? payload.websiteUrl.trim() : "";
 
+    if (type === "geo-score-stats") {
+      const count = await countGeoScoreEntries();
+      const displayCount = count > 100 ? String(count) : "100+";
+      res.writeHead(200, {
+        "content-type": "application/json; charset=utf-8",
+        "cache-control": "no-store",
+      });
+      res.end(JSON.stringify({ ok: true, count, displayCount }));
+      return true;
+    }
+
     if (type === "geo-score") {
       if (!websiteUrl || !contact) {
         res.writeHead(400, { "content-type": "application/json; charset=utf-8" });
@@ -583,6 +983,7 @@ async function handleLeadSubmit(req, res) {
       await pushLeadToFeishu({
         ...entry,
         reportUrl: report.reportUrl,
+        reportStatus: report.reportStatus,
         demand: `官网 GEO 基础评分：${result.score}/100；优先改进：${result.priorities.join("；")}`,
       });
 
@@ -590,7 +991,15 @@ async function handleLeadSubmit(req, res) {
         "content-type": "application/json; charset=utf-8",
         "cache-control": "no-store",
       });
-      res.end(JSON.stringify({ ok: true, result }));
+      res.end(
+        JSON.stringify({
+          ok: true,
+          result,
+          reportUrl: report.reportUrl,
+          reportStatus: report.reportStatus,
+          unchangedWithin24h: Boolean(report.unchangedWithin24h),
+        }),
+      );
       return true;
     }
 
@@ -683,6 +1092,7 @@ async function handleGeoScoreSubmit(req, res) {
     await pushLeadToFeishu({
       ...entry,
       reportUrl: report.reportUrl,
+      reportStatus: report.reportStatus,
       demand: `官网 GEO 基础评分：${result.score}/100；优先改进：${result.priorities.join("；")}`,
       page: page || "/geo-score/",
     });
@@ -691,7 +1101,15 @@ async function handleGeoScoreSubmit(req, res) {
       "content-type": "application/json; charset=utf-8",
       "cache-control": "no-store",
     });
-    res.end(JSON.stringify({ ok: true, result }));
+    res.end(
+      JSON.stringify({
+        ok: true,
+        result,
+        reportUrl: report.reportUrl,
+        reportStatus: report.reportStatus,
+        unchangedWithin24h: Boolean(report.unchangedWithin24h),
+      }),
+    );
     return true;
   } catch (error) {
     res.writeHead(500, { "content-type": "application/json; charset=utf-8" });
@@ -765,6 +1183,7 @@ async function handleGeoReportRequest(req, res, urlPath) {
     return false;
   }
   const token = currentUrl.searchParams.get("token")?.trim() || "";
+  const shareMode = currentUrl.searchParams.get("share") === "1";
   if (!token) {
     res.writeHead(400, { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" });
     res.end(JSON.stringify({ ok: false, error: "缺少报告 token。" }));
@@ -773,6 +1192,17 @@ async function handleGeoReportRequest(req, res, urlPath) {
 
   try {
     const report = await readGeoReport(token);
+    if (shareMode) {
+      const html = buildGeoReportShareHtml(report, token);
+      res.writeHead(200, {
+        "content-type": "text/html; charset=utf-8",
+        "cache-control": "no-store, no-cache, must-revalidate",
+        pragma: "no-cache",
+        expires: "0",
+      });
+      res.end(html);
+      return true;
+    }
     res.writeHead(200, {
       "content-type": "application/json; charset=utf-8",
       "cache-control": "no-store",
@@ -782,6 +1212,37 @@ async function handleGeoReportRequest(req, res, urlPath) {
   } catch {
     res.writeHead(404, { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" });
     res.end(JSON.stringify({ ok: false, error: "报告不存在或已过期。" }));
+    return true;
+  }
+}
+
+async function handleLeadShareRequest(req, res, urlPath) {
+  const currentUrl = new URL(urlPath, "http://127.0.0.1");
+  if (currentUrl.pathname !== "/api/lead/submit" || currentUrl.searchParams.get("share") !== "geo-report") {
+    return false;
+  }
+
+  const token = currentUrl.searchParams.get("token")?.trim() || "";
+  if (!token) {
+    res.writeHead(400, { "content-type": "text/plain; charset=utf-8", "cache-control": "no-store" });
+    res.end("缺少报告 token。");
+    return true;
+  }
+
+  try {
+    const report = await readGeoReport(token);
+    const html = buildGeoReportShareHtml(report, token);
+    res.writeHead(200, {
+      "content-type": "text/html; charset=utf-8",
+      "cache-control": "no-store, no-cache, must-revalidate",
+      pragma: "no-cache",
+      expires: "0",
+    });
+    res.end(html);
+    return true;
+  } catch {
+    res.writeHead(404, { "content-type": "text/plain; charset=utf-8", "cache-control": "no-store" });
+    res.end("报告不存在或已过期。");
     return true;
   }
 }
@@ -825,6 +1286,13 @@ const server = http.createServer(async (req, res) => {
   if (req.method === "POST" && urlPath === "/api/lead/submit") {
     await handleLeadSubmit(req, res);
     return;
+  }
+
+  if (req.method === "GET" && urlPath.startsWith("/api/lead/submit")) {
+    const handled = await handleLeadShareRequest(req, res, urlPath);
+    if (handled) {
+      return;
+    }
   }
 
   if (req.method === "POST" && urlPath === "/api/geo-score/submit") {

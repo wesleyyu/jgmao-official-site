@@ -8,6 +8,7 @@ import {
   aiGrowthGeoShell,
   applyGeoShellToHtml,
   geoScoreGeoShell,
+  geoUpgradeGeoShell,
   h5GeoShell,
   siteUrl,
   type GeoShellConfig,
@@ -291,6 +292,15 @@ async function main() {
     {
       routePath: "/geo-score/",
       geoShell: geoScoreGeoShell,
+      contentHtml: "",
+    },
+    template,
+  );
+
+  await writeRoute(
+    {
+      routePath: "/geo-upgrade/",
+      geoShell: geoUpgradeGeoShell,
       contentHtml: "",
     },
     template,

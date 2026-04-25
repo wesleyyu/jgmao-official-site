@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import { FaqIndexPage } from "@/pages/Faq";
 import GeoReportPage from "@/pages/GeoReport";
 import GeoScorePage from "@/pages/GeoScore";
+import GeoUpgradePage from "@/pages/GeoUpgrade";
 import H5LandingPage from "@/pages/H5";
 import Home from "@/pages/Home";
 import { InsightDetailPage, InsightsIndexPage } from "@/pages/Insights";
@@ -53,6 +54,12 @@ function App() {
             </Route>
             <Route path="/geo-score/">
               <GeoScorePage />
+            </Route>
+            <Route path="/geo-upgrade">
+              <GeoUpgradePage />
+            </Route>
+            <Route path="/geo-upgrade/">
+              <GeoUpgradePage />
             </Route>
             <Route path="/geo-report/:token">
               <GeoReportPage />
