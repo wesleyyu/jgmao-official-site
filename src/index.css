@@ -190,6 +190,100 @@
     animation: flow-dash 1s linear infinite;
   }
 
+  .trust-evidence-card {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .trust-chain {
+    position: relative;
+  }
+
+  .trust-chain::before,
+  .trust-chain::after {
+    content: "";
+    position: absolute;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .trust-chain::before {
+    left: 1.35rem;
+    top: 2.75rem;
+    bottom: 2.75rem;
+    width: 1px;
+    background: linear-gradient(180deg, rgba(103, 232, 249, 0.28), rgba(253, 230, 138, 0.16), rgba(52, 211, 153, 0.22));
+  }
+
+  .trust-chain::after {
+    left: calc(1.35rem - 3px);
+    top: 2.75rem;
+    width: 7px;
+    height: 7px;
+    border-radius: 999px;
+    background: rgba(103, 232, 249, 0.95);
+    box-shadow: 0 0 18px rgba(103, 232, 249, 0.72);
+    animation: trust-chain-dot-y 4.8s ease-in-out infinite;
+  }
+
+  .trust-evidence-card::before,
+  .trust-evidence-card::after {
+    content: "";
+    position: absolute;
+    pointer-events: none;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 1.45rem;
+    background: rgba(255, 255, 255, 0.035);
+  }
+
+  .trust-evidence-card::before {
+    inset: 14px 18px auto 18px;
+    height: 42px;
+    transform: translateY(-24px) scale(0.92);
+  }
+
+  .trust-evidence-card::after {
+    inset: 18px 28px auto 28px;
+    height: 34px;
+    transform: translateY(-36px) scale(0.86);
+    opacity: 0.68;
+  }
+
+  .trust-node {
+    animation: trust-node-breathe 3.4s ease-in-out infinite;
+    animation-delay: var(--trust-delay, 0s);
+  }
+
+  .trust-node::after {
+    content: "";
+    position: absolute;
+    inset: -5px;
+    border-radius: 1.05rem;
+    pointer-events: none;
+    border: 1px solid rgba(103, 232, 249, 0.12);
+    opacity: 0;
+    animation: trust-node-ring 3.4s ease-in-out infinite;
+    animation-delay: var(--trust-delay, 0s);
+  }
+
+  @media (min-width: 1024px) {
+    .trust-chain::before {
+      left: 2.75rem;
+      right: 2.75rem;
+      top: 2.75rem;
+      bottom: auto;
+      width: auto;
+      height: 1px;
+      background: linear-gradient(90deg, rgba(103, 232, 249, 0.28), rgba(253, 230, 138, 0.16), rgba(52, 211, 153, 0.22));
+    }
+
+    .trust-chain::after {
+      left: 2.75rem;
+      top: calc(2.75rem - 3px);
+      animation-name: trust-chain-dot-x;
+    }
+  }
+
   .flywheel-ring {
     animation: flywheel-spin 26s linear infinite;
   }
@@ -321,6 +415,81 @@
 
     to {
       stroke-dashoffset: -24;
+    }
+  }
+
+  @keyframes trust-node-breathe {
+    0%,
+    100% {
+      box-shadow: 0 0 0 rgba(103, 232, 249, 0);
+      transform: translateY(0);
+    }
+
+    42% {
+      box-shadow: 0 0 26px rgba(103, 232, 249, 0.28);
+      transform: translateY(-2px);
+    }
+  }
+
+  @keyframes trust-chain-dot-x {
+    0%,
+    8% {
+      left: 2.75rem;
+      opacity: 0;
+    }
+
+    18% {
+      opacity: 1;
+    }
+
+    52% {
+      opacity: 0.95;
+    }
+
+    92%,
+    100% {
+      left: calc(100% - 2.75rem);
+      opacity: 0;
+    }
+  }
+
+  @keyframes trust-chain-dot-y {
+    0%,
+    8% {
+      top: 2.75rem;
+      opacity: 0;
+    }
+
+    18% {
+      opacity: 1;
+    }
+
+    52% {
+      opacity: 0.95;
+    }
+
+    92%,
+    100% {
+      top: calc(100% - 2.75rem);
+      opacity: 0;
+    }
+  }
+
+  @keyframes trust-node-ring {
+    0%,
+    100% {
+      transform: scale(0.92);
+      opacity: 0;
+    }
+
+    42% {
+      transform: scale(1.16);
+      opacity: 0.8;
+    }
+
+    72% {
+      transform: scale(1.28);
+      opacity: 0;
     }
   }
 

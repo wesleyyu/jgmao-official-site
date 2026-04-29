@@ -9,13 +9,16 @@ import hashlib
 import random
 import string
 import secrets
+import base64
+import struct
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 from socketserver import ThreadingMixIn
 from datetime import datetime, timezone, timedelta
+from xml.etree import ElementTree
 from urllib.error import HTTPError
 from urllib import request as urllib_request
-from urllib.parse import parse_qs, quote, urljoin, urlparse
+from urllib.parse import parse_qs, quote, urlencode, urljoin, urlparse
 
 
 HOST = os.environ.get("HOST", "127.0.0.1")
@@ -40,8 +43,27 @@ WECHAT_APP_SECRET = os.environ.get("WECHAT_APP_SECRET", "").strip()
 LEAD_LOG_FILE = os.environ.get("LEAD_LOG_FILE", "/tmp/jgmao-leads.ndjson")
 PUBLIC_SITE_URL = os.environ.get("PUBLIC_SITE_URL", "https://www.jgmao.com").rstrip("/")
 GEO_REPORT_DIR = os.environ.get("GEO_REPORT_DIR", "/tmp/jgmao-geo-reports")
+GEO_ORDER_DIR = os.environ.get("GEO_ORDER_DIR", "/tmp/jgmao-geo-orders")
+WECOM_SUPPORT_LINK = (os.environ.get("WECOM_SUPPORT_LINK", "https://work.weixin.qq.com/u/vc111a7db585fe5798?v=5.0.7.68221&bb=2a039738e3") or "").strip()
+WECOM_CORP_ID = os.environ.get("WECOM_CORP_ID", "").strip()
+WECOM_AGENT_ID = os.environ.get("WECOM_AGENT_ID", "").strip()
+WECOM_AGENT_SECRET = os.environ.get("WECOM_AGENT_SECRET", "").strip()
+WECOM_AGENT_USER_ID = os.environ.get("WECOM_AGENT_USER_ID", "").strip()
+WECOM_CONTACT_SECRET = os.environ.get("WECOM_CONTACT_SECRET", "").strip()
+WECOM_CALLBACK_TOKEN = os.environ.get("WECOM_CALLBACK_TOKEN", "").strip()
+WECOM_CALLBACK_AES_KEY = os.environ.get("WECOM_CALLBACK_AES_KEY", "").strip()
+WECHAT_PAY_APP_ID = os.environ.get("WECHAT_PAY_APP_ID", WECHAT_APP_ID).strip()
+WECHAT_PAY_MCH_ID = os.environ.get("WECHAT_PAY_MCH_ID", "").strip()
+WECHAT_PAY_API_V2_KEY = os.environ.get("WECHAT_PAY_API_V2_KEY", "").strip()
+WECHAT_PAY_APP_SECRET = os.environ.get("WECHAT_PAY_APP_SECRET", WECHAT_APP_SECRET).strip()
+WECHAT_PAY_NOTIFY_URL = os.environ.get("WECHAT_PAY_NOTIFY_URL", "").strip()
+WECHAT_PAY_OAUTH_BASE_URL = os.environ.get("WECHAT_PAY_OAUTH_BASE_URL", "").strip().rstrip("/")
+WECHAT_PAY_OAUTH_CALLBACK_PATH = (os.environ.get("WECHAT_PAY_OAUTH_CALLBACK_PATH", "/pay/wechat/callback/") or "/pay/wechat/callback/").strip()
+WECHAT_PAY_SOLUTION_PRICE_FEN = int(os.environ.get("WECHAT_PAY_SOLUTION_PRICE_FEN", "9900"))
+WECHAT_PAY_STANDARD_PRICE_FEN = int(os.environ.get("WECHAT_PAY_STANDARD_PRICE_FEN", "129900"))
 WECHAT_ACCESS_TOKEN_CACHE = {"value": "", "expires_at": 0}
 WECHAT_JSAPI_TICKET_CACHE = {"value": "", "expires_at": 0}
+WECOM_ACCESS_TOKEN_CACHE = {"value": "", "expires_at": 0}
 
 SENSITIVE_PATTERNS = [
     re.compile(pattern, re.I)
@@ -538,6 +560,291 @@ def build_detailed_score(metrics, final_url):
     }
 
 
+def build_geo_report_invite_state(token, previous_invite=None, updated_at=""):
+    previous_invite = previous_invite or {}
+    accepted_site_keys = [
+        item
+        for item in (previous_invite.get("acceptedSiteKeys") or [])
+        if isinstance(item, str) and item.strip()
+    ]
+    required_count = 2
+    completed_count = len(accepted_site_keys)
+    unlocked = bool(previous_invite.get("unlocked")) or completed_count >= required_count
+    return {
+        "requiredCount": required_count,
+        "completedCount": completed_count,
+        "unlocked": unlocked,
+        "inviteToken": token,
+        "inviteUrl": "{}/geo-score/?invite={}".format(PUBLIC_SITE_URL, quote(token, safe="")),
+        "acceptedSiteKeys": accepted_site_keys,
+        "updatedAt": updated_at or previous_invite.get("updatedAt") or "",
+    }
+
+
+def build_geo_report_wecom_state(token, previous_state=None, updated_at=""):
+    previous_state = previous_state or {}
+    claim_token = (previous_state.get("claimToken") or "").strip() or secrets.token_hex(12)
+    status = (previous_state.get("status") or "").strip() or "pending"
+    delivered_at = (previous_state.get("deliveredAt") or "").strip()
+    if delivered_at:
+        status = "delivered"
+    relationship_status = (previous_state.get("relationshipStatus") or "").strip() or "pending"
+    if relationship_status == "removed":
+        status = "removed"
+    return {
+        "claimToken": claim_token,
+        "status": status,
+        "deliveredAt": delivered_at,
+        "supportUrl": (previous_state.get("supportUrl") or "").strip() or WECOM_SUPPORT_LINK,
+        "configId": (previous_state.get("configId") or "").strip(),
+        "sourceType": (previous_state.get("sourceType") or "static").strip(),
+        "welcomeSentAt": (previous_state.get("welcomeSentAt") or "").strip(),
+        "lastWelcomeCode": (previous_state.get("lastWelcomeCode") or "").strip(),
+        "lastError": (previous_state.get("lastError") or "").strip(),
+        "externalUserId": (previous_state.get("externalUserId") or "").strip(),
+        "followUserId": (previous_state.get("followUserId") or "").strip(),
+        "relationshipStatus": relationship_status,
+        "unlockedAt": (previous_state.get("unlockedAt") or "").strip(),
+        "lastVerifiedAt": (previous_state.get("lastVerifiedAt") or "").strip(),
+        "updatedAt": updated_at or previous_state.get("updatedAt") or "",
+    }
+
+
+def apply_geo_report_invite(invite_token, current_report, created_at):
+    token = (invite_token or "").strip()
+    if not token:
+        return None
+
+    if token == (current_report.get("token") or ""):
+        return {"status": "self", "invite": None}
+
+    try:
+        inviter_report = read_geo_report(token)
+    except Exception:
+        return {"status": "missing", "invite": None}
+
+    inviter_input = inviter_report.get("input") or {}
+    inviter_result = inviter_report.get("result") or {}
+    current_input = current_report.get("input") or {}
+    current_result = current_report.get("result") or {}
+    inviter_site_key = inviter_report.get("siteKey") or build_report_site_key(
+        inviter_input.get("websiteUrl") or inviter_result.get("checkedUrl") or ""
+    )
+    current_site_key = current_report.get("siteKey") or build_report_site_key(
+        current_input.get("websiteUrl") or current_result.get("checkedUrl") or ""
+    )
+
+    if not current_site_key:
+        return {"status": "invalid", "invite": None}
+
+    if inviter_site_key and inviter_site_key == current_site_key:
+        return {"status": "self", "invite": None}
+
+    inviter_contact = (inviter_input.get("contact") or "").strip().lower()
+    current_contact = (current_input.get("contact") or "").strip().lower()
+    if inviter_contact and current_contact and inviter_contact == current_contact:
+        return {"status": "self", "invite": None}
+
+    invite_state = build_geo_report_invite_state(token, inviter_report.get("invite") or {}, created_at)
+    accepted_site_keys = invite_state.get("acceptedSiteKeys") or []
+    if current_site_key in accepted_site_keys:
+        return {"status": "duplicate", "invite": invite_state}
+
+    accepted_site_keys.append(current_site_key)
+    invite_state["acceptedSiteKeys"] = accepted_site_keys
+    invite_state["completedCount"] = len(accepted_site_keys)
+    invite_state["unlocked"] = invite_state["completedCount"] >= invite_state["requiredCount"]
+    invite_state["updatedAt"] = created_at
+    inviter_report["invite"] = invite_state
+    inviter_report["updatedAt"] = created_at
+
+    file_path = Path(GEO_REPORT_DIR) / "{}.json".format(token)
+    file_path.write_text(json.dumps(inviter_report, ensure_ascii=False, indent=2), encoding="utf-8")
+    return {"status": "counted", "invite": invite_state}
+
+
+def deliver_geo_report_wecom_claim(claim_token, delivered_at="", external_user_id="", follow_user_id=""):
+    token = (claim_token or "").strip()
+    if not token:
+        raise ValueError("缺少企微领取 token。")
+
+    report_dir = Path(GEO_REPORT_DIR)
+    if not report_dir.exists():
+        raise FileNotFoundError(token)
+
+    for file_path in report_dir.glob("*.json"):
+        try:
+            report = json.loads(file_path.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        wecom_state = report.get("wecomClaim") or {}
+        if (wecom_state.get("claimToken") or "").strip() != token:
+            continue
+
+        delivered_time = delivered_at or datetime.now(timezone.utc).astimezone().isoformat()
+        next_state = {
+            **build_geo_report_wecom_state(report.get("token") or "", wecom_state, delivered_time),
+            "status": "delivered",
+            "deliveredAt": delivered_time,
+            "relationshipStatus": "active",
+            "unlockedAt": delivered_time,
+            "lastVerifiedAt": delivered_time,
+            "updatedAt": delivered_time,
+        }
+        if (external_user_id or "").strip():
+            next_state["externalUserId"] = external_user_id.strip()
+        if (follow_user_id or "").strip():
+            next_state["followUserId"] = follow_user_id.strip()
+        report["wecomClaim"] = next_state
+        report["updatedAt"] = delivered_time
+        file_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+        return report
+
+    raise FileNotFoundError(token)
+
+
+def update_geo_report_wecom_relationship(external_user_id="", follow_user_id="", relationship_status="removed"):
+    external_id = (external_user_id or "").strip()
+    user_id = (follow_user_id or "").strip()
+    next_status = (relationship_status or "").strip() or "removed"
+    if not external_id:
+        raise ValueError("缺少 external_user_id。")
+
+    report_dir = Path(GEO_REPORT_DIR)
+    if not report_dir.exists():
+        raise FileNotFoundError(external_id)
+
+    now_text = datetime.now(timezone.utc).astimezone().isoformat()
+    for file_path in report_dir.glob("*.json"):
+        try:
+            report = json.loads(file_path.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        wecom_state = report.get("wecomClaim") or {}
+        if (wecom_state.get("externalUserId") or "").strip() != external_id:
+            continue
+        if user_id and (wecom_state.get("followUserId") or "").strip() != user_id:
+            continue
+        next_state = {
+            **build_geo_report_wecom_state(report.get("token") or "", wecom_state, now_text),
+            "relationshipStatus": next_status,
+            "lastVerifiedAt": now_text,
+            "updatedAt": now_text,
+        }
+        if next_status == "removed":
+            next_state["status"] = "removed"
+        elif (next_state.get("deliveredAt") or "").strip():
+            next_state["status"] = "delivered"
+        report["wecomClaim"] = next_state
+        report["updatedAt"] = now_text
+        file_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+        return report
+
+    raise FileNotFoundError(external_id)
+
+
+def verify_geo_report_wecom_relationship(report, refresh_after_hours=6):
+    report = report or {}
+    wecom_state = report.get("wecomClaim") or {}
+    external_user_id = (wecom_state.get("externalUserId") or "").strip()
+    follow_user_id = (wecom_state.get("followUserId") or "").strip()
+    relationship_status = (wecom_state.get("relationshipStatus") or "").strip() or "pending"
+    delivered_at = (wecom_state.get("deliveredAt") or "").strip()
+    if not external_user_id or not follow_user_id or not delivered_at:
+        return report
+    if relationship_status == "removed":
+        return report
+
+    last_verified_at = (wecom_state.get("lastVerifiedAt") or "").strip()
+    if last_verified_at:
+        try:
+            verified_time = parse_datetime_value(last_verified_at)
+            now_time = datetime.now(timezone.utc).astimezone()
+            if (now_time - verified_time) <= timedelta(hours=refresh_after_hours):
+                return report
+        except Exception:
+            pass
+
+    try:
+        response = get_wecom_json(
+            "/cgi-bin/externalcontact/get",
+            {"external_userid": external_user_id},
+        )
+        follow_users = response.get("follow_user") or []
+        if not isinstance(follow_users, list):
+            follow_users = [follow_users] if follow_users else []
+        is_active = any(
+            isinstance(item, dict)
+            and (item.get("userid") or "").strip() == follow_user_id
+            for item in follow_users
+        )
+        next_status = "active" if is_active else "removed"
+    except Exception as error:
+        next_status = relationship_status
+        wecom_state["lastError"] = str(error)
+        report["wecomClaim"] = wecom_state
+        return report
+
+    refreshed_at = datetime.now(timezone.utc).astimezone().isoformat()
+    report["wecomClaim"] = {
+        **build_geo_report_wecom_state(report.get("token") or "", wecom_state, refreshed_at),
+        "relationshipStatus": next_status,
+        "lastVerifiedAt": refreshed_at,
+        "updatedAt": refreshed_at,
+        "status": "removed" if next_status == "removed" else "delivered",
+    }
+    report["updatedAt"] = refreshed_at
+    report_path = Path(GEO_REPORT_DIR) / "{}.json".format(report.get("token") or "")
+    report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+    return report
+
+
+def build_geo_report_access_state(report):
+    report = report or {}
+    wecom_state = report.get("wecomClaim") or {}
+    relationship_status = (wecom_state.get("relationshipStatus") or "").strip() or "pending"
+    delivered_at = (wecom_state.get("deliveredAt") or "").strip()
+    is_unlocked = bool(delivered_at) and relationship_status != "removed"
+    if is_unlocked:
+        return {
+            "locked": False,
+            "message": "",
+        }
+    if relationship_status == "removed":
+        return {
+            "locked": True,
+            "message": "你已不在当前企微客户关系中，请重新添加企微后继续查看详细报告。",
+        }
+    return {
+        "locked": True,
+        "message": "添加企微后可继续查看详细报告。",
+    }
+
+
+def build_geo_report_locked_payload(report):
+    report = report or {}
+    result = report.get("result") or {}
+    return {
+        "token": report.get("token") or "",
+        "createdAt": report.get("createdAt") or "",
+        "firstCreatedAt": report.get("firstCreatedAt") or "",
+        "updatedAt": report.get("updatedAt") or "",
+        "reportUrl": report.get("reportUrl") or "",
+        "siteKey": report.get("siteKey") or "",
+        "reportStatus": report.get("reportStatus") or "",
+        "unchangedWithin24h": bool(report.get("unchangedWithin24h")),
+        "input": report.get("input") or {},
+        "result": {
+            "score": result.get("score", 0),
+            "level": result.get("level") or "",
+            "strengths": result.get("strengths") or [],
+            "priorities": result.get("priorities") or [],
+            "checkedUrl": result.get("checkedUrl") or "",
+        },
+        "wecomClaim": report.get("wecomClaim") or {},
+    }
+
+
 def save_geo_report(entry):
     token = build_report_token(entry.get("websiteUrl") or entry.get("result", {}).get("checkedUrl") or "")
     report_dir = Path(GEO_REPORT_DIR)
@@ -608,6 +915,17 @@ def save_geo_report(entry):
             "reportStatus": "unchanged",
             "unchangedWithin24h": True,
         }
+        refreshed_report["invite"] = build_geo_report_invite_state(
+            token,
+            previous.get("invite") or {},
+            entry["createdAt"],
+        )
+        refreshed_report["wecomClaim"] = build_geo_report_wecom_state(
+            token,
+            previous.get("wecomClaim") or {},
+            entry["createdAt"],
+        )
+        ensure_geo_report_wecom_contact_way(refreshed_report)
         report_dir.mkdir(parents=True, exist_ok=True)
         file_path.write_text(json.dumps(refreshed_report, ensure_ascii=False, indent=2), encoding="utf-8")
         return refreshed_report
@@ -640,6 +958,17 @@ def save_geo_report(entry):
         "history": history,
         "resultFingerprint": result_fingerprint,
     }
+    report["invite"] = build_geo_report_invite_state(
+        token,
+        previous.get("invite") or {},
+        entry["createdAt"],
+    )
+    report["wecomClaim"] = build_geo_report_wecom_state(
+        token,
+        previous.get("wecomClaim") or {},
+        entry["createdAt"],
+    )
+    ensure_geo_report_wecom_contact_way(report)
 
     file_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
     return {
@@ -654,6 +983,829 @@ def read_geo_report(token):
     if not file_path.exists():
         raise FileNotFoundError(token)
     return json.loads(file_path.read_text(encoding="utf-8"))
+
+
+def build_wecom_callback_status():
+    return {
+        "corpIdReady": bool(WECOM_CORP_ID),
+        "agentReady": bool(WECOM_AGENT_ID and WECOM_AGENT_SECRET and WECOM_AGENT_USER_ID),
+        "contactReady": bool(WECOM_CORP_ID and WECOM_AGENT_SECRET and WECOM_AGENT_USER_ID),
+        "callbackCryptoReady": bool(WECOM_CALLBACK_TOKEN and WECOM_CALLBACK_AES_KEY),
+    }
+
+
+def get_wecom_access_token():
+    now = int(time.time())
+    cached_value = (WECOM_ACCESS_TOKEN_CACHE.get("value") or "").strip()
+    cached_expiry = int(WECOM_ACCESS_TOKEN_CACHE.get("expires_at") or 0)
+    if cached_value and cached_expiry - 120 > now:
+        return cached_value
+
+    if not (WECOM_CORP_ID and WECOM_AGENT_SECRET):
+        raise RuntimeError("企微自建应用参数未配置完整。")
+
+    token_url = "https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid={}&corpsecret={}".format(
+        quote(WECOM_CORP_ID, safe=""),
+        quote(WECOM_AGENT_SECRET, safe=""),
+    )
+    final_url, response_text = fetch_html(token_url, timeout=10)
+    payload = json.loads(response_text or "{}")
+    access_token = (payload.get("access_token") or "").strip()
+    if not access_token:
+        raise RuntimeError(payload.get("errmsg") or "企微 access_token 获取失败。")
+    expires_in = int(payload.get("expires_in") or 7200)
+    WECOM_ACCESS_TOKEN_CACHE["value"] = access_token
+    WECOM_ACCESS_TOKEN_CACHE["expires_at"] = now + expires_in
+    return access_token
+
+
+def post_wecom_json(api_path, payload):
+    token = get_wecom_access_token()
+    request_url = "https://qyapi.weixin.qq.com{}?access_token={}".format(api_path, quote(token, safe=""))
+    data = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+    req = urllib_request.Request(
+        request_url,
+        data=data,
+        headers={
+            "Content-Type": "application/json; charset=utf-8",
+            "User-Agent": "JGMAO GEO Score Bot/1.0",
+        },
+        method="POST",
+    )
+    with urllib_request.urlopen(req, timeout=10) as response:
+        body = response.read().decode("utf-8", errors="ignore")
+    parsed = json.loads(body or "{}")
+    if int(parsed.get("errcode") or 0) != 0:
+        raise RuntimeError(parsed.get("errmsg") or "企微接口调用失败。")
+    return parsed
+
+
+def get_wecom_json(api_path, params=None):
+    token = get_wecom_access_token()
+    query = {"access_token": token}
+    if params:
+        for key, value in params.items():
+            if value is None:
+                continue
+            query[str(key)] = str(value)
+    request_url = "https://qyapi.weixin.qq.com{}?{}".format(
+        api_path,
+        urlencode(query),
+    )
+    final_url, response_text = fetch_html(request_url, timeout=10)
+    parsed = json.loads(response_text or "{}")
+    if int(parsed.get("errcode") or 0) != 0:
+        raise RuntimeError(parsed.get("errmsg") or "企微接口调用失败。")
+    return parsed
+
+
+def resolve_geo_report_wecom_claim_token(external_user_id="", user_id=""):
+    external_id = (external_user_id or "").strip()
+    follow_user_id = (user_id or "").strip()
+    if not external_id:
+        return ""
+    response = get_wecom_json(
+        "/cgi-bin/externalcontact/get",
+        {"external_userid": external_id},
+    )
+    follow_users = response.get("follow_user") or []
+    if isinstance(follow_users, dict):
+        follow_users = [follow_users]
+    if not isinstance(follow_users, list):
+        return ""
+
+    fallback_state = ""
+    for follow in follow_users:
+        if not isinstance(follow, dict):
+            continue
+        state_value = (follow.get("state") or "").strip()
+        if not state_value:
+            continue
+        if follow_user_id and (follow.get("userid") or "").strip() == follow_user_id:
+            return state_value
+        if not fallback_state:
+            fallback_state = state_value
+    return fallback_state
+
+
+def find_recent_geo_report_claim(max_age_minutes=60):
+    report_dir = Path(GEO_REPORT_DIR)
+    if not report_dir.exists():
+        return ""
+    now = datetime.now(timezone.utc).astimezone()
+    candidates = []
+    for file_path in report_dir.glob("*.json"):
+        try:
+            report = json.loads(file_path.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        wecom_state = report.get("wecomClaim") or {}
+        claim_token = (wecom_state.get("claimToken") or "").strip()
+        if not claim_token:
+            continue
+        if (wecom_state.get("sourceType") or "").strip() != "dynamic":
+            continue
+        updated_at = (
+            report.get("updatedAt")
+            or wecom_state.get("updatedAt")
+            or report.get("createdAt")
+            or report.get("firstCreatedAt")
+            or ""
+        )
+        try:
+            updated_time = parse_datetime_value(updated_at)
+        except Exception:
+            continue
+        age_minutes = (now - updated_time.astimezone()).total_seconds() / 60
+        if age_minutes < 0 or age_minutes > max_age_minutes:
+            continue
+        candidates.append((updated_time, claim_token))
+    candidates.sort(key=lambda item: item[0], reverse=True)
+    return candidates[0][1] if candidates else ""
+
+
+def ensure_geo_report_wecom_contact_way(report):
+    if not build_wecom_callback_status()["contactReady"]:
+        return report.get("wecomClaim") or {}
+
+    claim = build_geo_report_wecom_state(report.get("token") or "", report.get("wecomClaim") or {}, report.get("updatedAt") or "")
+    existing_url = (claim.get("supportUrl") or "").strip()
+    report_url = (report.get("reportUrl") or "").strip()
+    existing_config_id = (claim.get("configId") or "").strip()
+    if existing_config_id and existing_url and existing_url != WECOM_SUPPORT_LINK:
+        if report_url:
+            try:
+                post_wecom_json(
+                    "/cgi-bin/externalcontact/update_contact_way",
+                    {
+                        "config_id": existing_config_id,
+                        "conclusions": {
+                            "text": {
+                                "content": "你好，已为你准备好本次官网 GEO 详细报告：{}".format(report_url),
+                            }
+                        },
+                    },
+                )
+                claim["lastError"] = ""
+            except Exception as error:
+                claim["lastError"] = str(error)
+        report["wecomClaim"] = claim
+        return claim
+
+    payload = {
+        "type": 1,
+        "scene": 2,
+        "style": 1,
+        "skip_verify": True,
+        "state": claim.get("claimToken") or "",
+        "remark": "geo:{}".format((report.get("token") or "")[:16]),
+        "user": [WECOM_AGENT_USER_ID],
+    }
+    if report_url:
+        payload["conclusions"] = {
+            "text": {
+                "content": "你好，已为你准备好本次官网 GEO 详细报告：{}".format(report_url),
+            }
+        }
+    try:
+        response = post_wecom_json("/cgi-bin/externalcontact/add_contact_way", payload)
+        claim["supportUrl"] = (response.get("qr_code") or "").strip() or existing_url or WECOM_SUPPORT_LINK
+        claim["configId"] = (response.get("config_id") or "").strip()
+        claim["sourceType"] = "dynamic"
+        claim["lastError"] = ""
+    except Exception as error:
+        claim["supportUrl"] = existing_url or WECOM_SUPPORT_LINK
+        claim["sourceType"] = "static"
+        claim["lastError"] = str(error)
+    claim["updatedAt"] = report.get("updatedAt") or claim.get("updatedAt") or ""
+    report["wecomClaim"] = claim
+    return claim
+
+
+def find_geo_report_by_claim_token(claim_token):
+    token = (claim_token or "").strip()
+    if not token:
+        raise FileNotFoundError(token)
+    report_dir = Path(GEO_REPORT_DIR)
+    if not report_dir.exists():
+        raise FileNotFoundError(token)
+    for file_path in report_dir.glob("*.json"):
+        try:
+            report = json.loads(file_path.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        wecom_state = report.get("wecomClaim") or {}
+        if (wecom_state.get("claimToken") or "").strip() == token:
+            return report, file_path
+    raise FileNotFoundError(token)
+
+
+def send_wecom_welcome_message(welcome_code, report):
+    code = (welcome_code or "").strip()
+    if not code:
+        return False
+    report_url = (report.get("reportUrl") or "").strip()
+    if not report_url:
+        return False
+    payload = {
+        "welcome_code": code,
+        "text": {
+            "content": "你好，已为你准备好本次官网 GEO 详细报告：{}".format(report_url),
+        },
+    }
+    post_wecom_json("/cgi-bin/externalcontact/send_welcome_msg", payload)
+    return True
+
+
+def build_geo_report_wecom_sent_feishu_message(report):
+    report = report or {}
+    report_input = report.get("input") or {}
+    report_result = report.get("result") or {}
+    lines = [
+        "详细报告已通过企业微信发送",
+        "公司 / 品牌：{}".format(report_input.get("company") or "未填写"),
+        "姓名 / 称呼：{}".format(report_input.get("name") or "未填写"),
+        "联系方式：{}".format(report_input.get("contact") or "未填写"),
+        *(
+            ["官网网址：{}".format(report_input.get("websiteUrl"))]
+            if report_input.get("websiteUrl")
+            else []
+        ),
+        *(
+            [
+                "基础评分：{}/100".format(report_result.get("score")),
+                "评分结论：{}".format(report_result.get("level")),
+            ]
+            if report_result
+            else []
+        ),
+        "发送方式：企业微信自动发送",
+        *(
+            ["详细报告：{}".format(report.get("reportUrl"))]
+            if report.get("reportUrl")
+            else []
+        ),
+        "发送时间：{}".format(format_beijing_time(datetime.now(timezone.utc).astimezone().isoformat())),
+    ]
+    return "\n".join(lines)
+
+
+def push_geo_report_wecom_sent_to_feishu(report):
+    message_text = build_geo_report_wecom_sent_feishu_message(report)
+
+    if FEISHU_WEBHOOK_URL:
+        payload = json.dumps(
+            {
+                "msg_type": "text",
+                "content": {
+                    "text": message_text,
+                },
+            },
+            ensure_ascii=False,
+        ).encode("utf-8")
+
+        req = urllib_request.Request(
+            FEISHU_WEBHOOK_URL,
+            data=payload,
+            headers={"Content-Type": "application/json; charset=utf-8"},
+            method="POST",
+        )
+
+        with urllib_request.urlopen(req, timeout=10) as response:
+            status = getattr(response, "status", 200)
+            if status < 200 or status >= 300:
+                raise RuntimeError("飞书推送失败（{}）".format(status))
+        return
+
+    if FEISHU_APP_ID and FEISHU_APP_SECRET:
+        payload = json.dumps(
+            {
+                "app_id": FEISHU_APP_ID,
+                "app_secret": FEISHU_APP_SECRET,
+            },
+            ensure_ascii=False,
+        ).encode("utf-8")
+
+        req = urllib_request.Request(
+            "https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal",
+            data=payload,
+            headers={"Content-Type": "application/json; charset=utf-8"},
+            method="POST",
+        )
+
+        try:
+            with urllib_request.urlopen(req, timeout=10) as response:
+                body = response.read().decode("utf-8")
+        except HTTPError as error:
+            body = error.read().decode("utf-8", errors="ignore")
+            raise RuntimeError("飞书 tenant_access_token 获取失败：{}".format(body or error.reason))
+
+        data = json.loads(body or "{}")
+        tenant_access_token = data.get("tenant_access_token") or ""
+        if data.get("code") != 0 or not tenant_access_token:
+            raise RuntimeError("飞书 tenant_access_token 获取失败：{}".format(data.get("msg") or "unknown error"))
+
+        if FEISHU_TARGET_CHAT_ID:
+            receive_id_type = "chat_id"
+            receive_id = FEISHU_TARGET_CHAT_ID
+        elif FEISHU_TARGET_USER_OPEN_ID:
+            receive_id_type = "open_id"
+            receive_id = FEISHU_TARGET_USER_OPEN_ID
+        else:
+            raise RuntimeError("尚未配置飞书接收目标（chat_id 或 user open_id）。")
+
+        send_payload = json.dumps(
+            {
+                "receive_id": receive_id,
+                "msg_type": "text",
+                "content": json.dumps({"text": message_text}, ensure_ascii=False),
+            },
+            ensure_ascii=False,
+        ).encode("utf-8")
+
+        send_req = urllib_request.Request(
+            "https://open.feishu.cn/open-apis/im/v1/messages?receive_id_type={}".format(receive_id_type),
+            data=send_payload,
+            headers={
+                "Content-Type": "application/json; charset=utf-8",
+                "Authorization": "Bearer {}".format(tenant_access_token),
+            },
+            method="POST",
+        )
+
+        try:
+            with urllib_request.urlopen(send_req, timeout=10) as response:
+                send_body = response.read().decode("utf-8")
+        except HTTPError as error:
+            send_body = error.read().decode("utf-8", errors="ignore")
+            raise RuntimeError("飞书消息发送失败：{}".format(send_body or error.reason))
+
+        send_data = json.loads(send_body or "{}")
+        if send_data.get("code") != 0:
+            raise RuntimeError("飞书消息发送失败：{}".format(send_data.get("msg") or "unknown error"))
+        return
+
+    raise RuntimeError("尚未配置飞书 webhook 或飞书应用凭证。")
+
+
+def build_geo_plan_url_for_order(order):
+    order_no = quote(order.get("orderNo") or "", safe="")
+    report_token = (order.get("reportToken") or "").strip()
+    if report_token:
+        return "{}/geo-plan/{}/?paid=1&orderNo={}".format(PUBLIC_SITE_URL, quote(report_token, safe=""), order_no)
+    return "{}/geo-plan/?paid=1&orderNo={}".format(PUBLIC_SITE_URL, order_no)
+
+
+def find_paid_geo_plan_order(plan_key="solution", report_token=""):
+    token = (report_token or "").strip()
+    if not token:
+        return None
+    order_dir = Path(GEO_ORDER_DIR)
+    if not order_dir.exists():
+        return None
+    matches = []
+    for file_path in order_dir.glob("*.json"):
+        try:
+            order = json.loads(file_path.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        if (order.get("planKey") or "") != plan_key:
+            continue
+        if (order.get("reportToken") or "").strip() != token:
+            continue
+        if order.get("paymentStatus") != "paid":
+            continue
+        matches.append(order)
+    if not matches:
+        return None
+    matches.sort(key=lambda item: item.get("paidAt") or item.get("updatedAt") or item.get("createdAt") or "", reverse=True)
+    order = matches[0]
+    order["planUrl"] = build_geo_plan_url_for_order(order)
+    return order
+
+
+def attach_geo_report_plan_access(report):
+    if not report:
+        return report
+    paid_order = find_paid_geo_plan_order("solution", report.get("token") or "")
+    if not paid_order:
+        return report
+    report["paidPlanUrl"] = paid_order.get("planUrl") or build_geo_plan_url_for_order(paid_order)
+    report["paidPlanOrder"] = {
+        "orderNo": paid_order.get("orderNo") or "",
+        "planTitle": paid_order.get("planTitle") or "",
+        "amountLabel": paid_order.get("amountLabel") or "",
+        "paidAt": paid_order.get("paidAt") or "",
+    }
+    return report
+
+
+def pkcs7_unpad(data):
+    if not data:
+        raise RuntimeError("企微回调解密失败：空数据。")
+    pad = data[-1]
+    if pad < 1 or pad > 32:
+        raise RuntimeError("企微回调解密失败：填充长度无效。")
+    if data[-pad:] != bytes([pad]) * pad:
+        raise RuntimeError("企微回调解密失败：填充校验失败。")
+    return data[:-pad]
+
+
+def verify_wecom_signature(msg_signature, timestamp, nonce, encrypted):
+    expected = hashlib.sha1("".join(sorted([WECOM_CALLBACK_TOKEN, timestamp or "", nonce or "", encrypted or ""])).encode("utf-8")).hexdigest()
+    return expected == (msg_signature or "")
+
+
+def decrypt_wecom_ciphertext(encrypted):
+    if not WECOM_CALLBACK_AES_KEY:
+        raise RuntimeError("企微回调未配置 EncodingAESKey。")
+    aes_key = base64.b64decode(WECOM_CALLBACK_AES_KEY + "=")
+    iv = aes_key[:16]
+    cipher_bytes = base64.b64decode((encrypted or "").encode("utf-8"))
+    process = subprocess.run(
+        [
+            "openssl",
+            "enc",
+            "-d",
+            "-aes-256-cbc",
+            "-K",
+            aes_key.hex(),
+            "-iv",
+            iv.hex(),
+            "-nopad",
+            "-nosalt",
+        ],
+        input=cipher_bytes,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+    if process.returncode != 0:
+        stderr = (process.stderr or b"").decode("utf-8", errors="ignore").strip() or "openssl error"
+        raise RuntimeError("企微回调解密失败：{}".format(stderr))
+    plain = pkcs7_unpad(process.stdout)
+    if len(plain) < 20:
+        raise RuntimeError("企微回调解密失败：明文长度异常。")
+    content = plain[16:]
+    msg_len = struct.unpack("!I", content[:4])[0]
+    message = content[4 : 4 + msg_len]
+    receive_id = content[4 + msg_len :].decode("utf-8", errors="ignore")
+    if WECOM_CORP_ID and receive_id and receive_id != WECOM_CORP_ID:
+        raise RuntimeError("企微回调校验失败：企业 ID 不匹配。")
+    return message.decode("utf-8", errors="ignore")
+
+
+PLAN_ORDER_META = {
+    "solution": {
+        "title": "官网 GEO 优化方案",
+        "priceFen": WECHAT_PAY_SOLUTION_PRICE_FEN,
+    },
+    "standard": {
+        "title": "坚果猫AI增长引擎标准版",
+        "priceFen": WECHAT_PAY_STANDARD_PRICE_FEN,
+    },
+}
+
+
+def format_price_label(amount_fen, plan_key):
+    amount = float(amount_fen) / 100.0
+    if amount.is_integer():
+        amount_text = str(int(amount))
+    else:
+        amount_text = "{:.2f}".format(amount)
+    suffix = "/次" if plan_key == "solution" else "/月"
+    return "{}元{}".format(amount_text, suffix)
+
+
+def build_geo_order_no(plan_key):
+    prefix = "JG{}".format("S" if plan_key == "solution" else "P")
+    return "{}{}{}".format(prefix, datetime.now().strftime("%Y%m%d%H%M%S"), secrets.token_hex(3).upper())
+
+
+def is_wechat_pay_ready():
+    return all(
+        [
+            WECHAT_PAY_APP_ID,
+            WECHAT_PAY_MCH_ID,
+            WECHAT_PAY_API_V2_KEY,
+            WECHAT_PAY_NOTIFY_URL,
+        ]
+    )
+
+
+def create_geo_plan_order(plan_key, report_token="", source="geo-upgrade", page="/geo-upgrade/"):
+    if plan_key not in PLAN_ORDER_META:
+        raise ValueError("暂不支持的方案类型。")
+
+    paid_order = find_paid_geo_plan_order(plan_key, report_token)
+    if paid_order:
+        paid_order["paymentMessage"] = "本次官网 GEO 优化方案已支付，可直接查看交付页。"
+        paid_order["planUrl"] = build_geo_plan_url_for_order(paid_order)
+        return paid_order
+
+    report = None
+    if report_token:
+        try:
+            report = read_geo_report(report_token)
+        except Exception:
+            report = None
+
+    meta = PLAN_ORDER_META[plan_key]
+    created_at = datetime.now(timezone.utc).astimezone().isoformat()
+    buyer = (report or {}).get("input") or {}
+    checked_url = ((report or {}).get("result") or {}).get("checkedUrl") or buyer.get("websiteUrl") or ""
+    payment_ready = is_wechat_pay_ready()
+    order = {
+        "orderNo": build_geo_order_no(plan_key),
+        "planKey": plan_key,
+        "planTitle": meta["title"],
+        "amountFen": meta["priceFen"],
+        "amountLabel": format_price_label(meta["priceFen"], plan_key),
+        "status": "created",
+        "paymentStatus": "ready" if payment_ready else "not_configured",
+        "paymentMessage": (
+            "订单已创建，微信支付已准备就绪，可继续完成支付。"
+            if payment_ready
+            else "订单已创建，当前微信支付商户参数尚未接入，先保留订单信息，支付打通后可直接使用。"
+        ),
+        "source": source or "geo-upgrade",
+        "page": page or "/geo-upgrade/",
+        "reportToken": report_token or "",
+        "reportUrl": (report or {}).get("reportUrl") or "",
+        "websiteUrl": buyer.get("websiteUrl") or checked_url,
+        "company": buyer.get("company") or "",
+        "contact": buyer.get("contact") or "",
+        "createdAt": created_at,
+        "updatedAt": created_at,
+    }
+
+    order_dir = Path(GEO_ORDER_DIR)
+    order_dir.mkdir(parents=True, exist_ok=True)
+    (order_dir / "{}.json".format(order["orderNo"])).write_text(json.dumps(order, ensure_ascii=False, indent=2), encoding="utf-8")
+    return order
+
+
+def read_geo_order(order_no):
+    file_path = Path(GEO_ORDER_DIR) / "{}.json".format(order_no)
+    if not file_path.exists():
+        raise FileNotFoundError(order_no)
+    return json.loads(file_path.read_text(encoding="utf-8"))
+
+
+def write_geo_order(order):
+    order_dir = Path(GEO_ORDER_DIR)
+    order_dir.mkdir(parents=True, exist_ok=True)
+    (order_dir / "{}.json".format(order["orderNo"])).write_text(json.dumps(order, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def mark_geo_order_payment_error(order, error, openid=""):
+    message = str(error) or "支付初始化失败。"
+    order["paymentStatus"] = "error"
+    order["paymentMessage"] = message
+    order["lastPaymentError"] = message
+    if openid:
+        order["openid"] = openid
+    order["updatedAt"] = datetime.now(timezone.utc).astimezone().isoformat()
+    try:
+        write_geo_order(order)
+    except Exception:
+        pass
+    print("[wechat-pay] order={} payment_error={}".format(order.get("orderNo", ""), message), flush=True)
+
+
+def build_wechat_pay_sign(params):
+    keys = sorted(
+        key
+        for key, value in params.items()
+        if key != "sign" and value is not None and str(value) != ""
+    )
+    signature_base = "&".join(["{}={}".format(key, params[key]) for key in keys]) + "&key={}".format(WECHAT_PAY_API_V2_KEY)
+    return hashlib.md5(signature_base.encode("utf-8")).hexdigest().upper()
+
+
+def build_wechat_pay_xml(params):
+    entries = []
+    for key, value in params.items():
+        if value is None or str(value) == "":
+            continue
+        entries.append("<{0}><![CDATA[{1}]]></{0}>".format(key, value))
+    return "<xml>{}</xml>".format("".join(entries))
+
+
+def parse_wechat_xml(xml_text):
+    root = ElementTree.fromstring(xml_text)
+    return {child.tag: child.text or "" for child in root}
+
+
+def is_wechat_browser(user_agent):
+    return "micromessenger" in (user_agent or "").lower()
+
+
+def request_origin(handler):
+    forwarded_proto = (handler.headers.get("X-Forwarded-Proto") or "").split(",")[0].strip()
+    host = handler.headers.get("Host") or "127.0.0.1:18788"
+    public_parsed = urlparse(PUBLIC_SITE_URL)
+    proto = forwarded_proto or ("https" if getattr(handler.connection, "cipher", None) else "http")
+    if not forwarded_proto and public_parsed.netloc and host == public_parsed.netloc:
+        proto = public_parsed.scheme or proto
+    return "{}://{}".format(proto, host)
+
+
+def sanitize_pay_return_url(value, fallback, handler):
+    fallback_url = fallback or "{}/geo-upgrade/?paid=1".format(request_origin(handler))
+    if not value:
+        return fallback_url
+    try:
+        parsed = urlparse(urljoin(request_origin(handler), value))
+        if parsed.scheme not in ["http", "https"]:
+            return fallback_url
+        return parsed.geturl()
+    except Exception:
+        return fallback_url
+
+
+def fetch_wechat_oauth_openid(code):
+    data = fetch_url_json(
+        "https://api.weixin.qq.com/sns/oauth2/access_token?appid={}&secret={}&code={}&grant_type=authorization_code".format(
+            quote(WECHAT_PAY_APP_ID, safe=""),
+            quote(WECHAT_PAY_APP_SECRET, safe=""),
+            quote(code, safe=""),
+        )
+    )
+    if not data.get("openid"):
+        raise RuntimeError("微信授权换取 openid 失败：{}".format(data.get("errmsg") or "unknown error"))
+    return data["openid"]
+
+
+def prepare_wechat_jsapi_payment(order_no, return_url, code, handler):
+    if not order_no:
+        raise RuntimeError("缺少订单编号。")
+    if not code:
+        raise RuntimeError("缺少微信授权 code。")
+    if not is_wechat_pay_ready():
+        raise RuntimeError("微信支付商户参数尚未配置完成。")
+
+    order = read_geo_order(order_no)
+    openid = fetch_wechat_oauth_openid(code)
+    pay_params = create_wechat_jsapi_params(order, openid, handler)
+    order["openid"] = openid
+    order["prepayId"] = pay_params.get("prepayId") or ""
+    order["updatedAt"] = datetime.now(timezone.utc).astimezone().isoformat()
+    write_geo_order(order)
+    return order, pay_params, return_url
+
+
+def create_wechat_jsapi_params(order, openid, handler):
+    nonce_str = "".join(random.choice(string.ascii_letters + string.digits) for _ in range(16))
+    raw_ip = (handler.headers.get("X-Forwarded-For") or handler.client_address[0] or "127.0.0.1").split(",")[0].strip()
+    spbill_create_ip = "127.0.0.1" if ":" in raw_ip else (raw_ip or "127.0.0.1")
+    params = {
+        "appid": WECHAT_PAY_APP_ID,
+        "mch_id": WECHAT_PAY_MCH_ID,
+        "nonce_str": nonce_str,
+        "body": order["planTitle"],
+        "out_trade_no": order["orderNo"],
+        "total_fee": str(order["amountFen"]),
+        "spbill_create_ip": spbill_create_ip,
+        "notify_url": WECHAT_PAY_NOTIFY_URL,
+        "trade_type": "JSAPI",
+        "openid": openid,
+    }
+    params["sign"] = build_wechat_pay_sign(params)
+    payload = build_wechat_pay_xml(params).encode("utf-8")
+    req = urllib_request.Request(
+        "https://api.mch.weixin.qq.com/pay/unifiedorder",
+        data=payload,
+        headers={"Content-Type": "text/xml; charset=utf-8"},
+        method="POST",
+    )
+    try:
+        with urllib_request.urlopen(req, timeout=10) as response:
+            body = response.read().decode("utf-8")
+    except HTTPError as error:
+        body = error.read().decode("utf-8", errors="ignore")
+        raise RuntimeError(body or error.reason)
+
+    data = parse_wechat_xml(body)
+    if data.get("return_code") != "SUCCESS" or data.get("result_code") != "SUCCESS" or not data.get("prepay_id"):
+        details = data.get("err_code_des") or data.get("err_code") or data.get("return_msg") or "微信统一下单失败。"
+        raise RuntimeError("微信统一下单失败：{}".format(details))
+
+    pay_nonce_str = "".join(random.choice(string.ascii_letters + string.digits) for _ in range(16))
+    time_stamp = str(int(time.time()))
+    pay_params = {
+        "appId": WECHAT_PAY_APP_ID,
+        "timeStamp": time_stamp,
+        "nonceStr": pay_nonce_str,
+        "package": "prepay_id={}".format(data["prepay_id"]),
+        "signType": "MD5",
+    }
+    pay_params["paySign"] = build_wechat_pay_sign(pay_params)
+    pay_params["prepayId"] = data["prepay_id"]
+    return pay_params
+
+
+def build_wechat_jsapi_pay_html(order, pay_params, success_url, error_message=""):
+    def escape(value):
+        return html.escape(value or "", quote=True)
+
+    pay_ready = all(
+        [
+            pay_params.get("appId"),
+            pay_params.get("timeStamp"),
+            pay_params.get("nonceStr"),
+            pay_params.get("package"),
+            pay_params.get("paySign"),
+        ]
+    )
+    button_html = (
+        '<button class="btn" onclick="invokePay()">立即完成支付</button>'
+        if pay_ready
+        else '<button class="btn" type="button" disabled style="opacity:.45;cursor:not-allowed">暂时无法拉起支付</button>'
+    )
+    helper_text = (
+        "如果支付没有自动弹出，可点击上方按钮再次发起。"
+        if pay_ready
+        else "支付初始化未完成，请根据下方提示检查配置后再试。"
+    )
+
+    return """<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>微信支付获取</title>
+    <style>
+      body{{margin:0;background:#071224;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;display:flex;min-height:100vh;align-items:center;justify-content:center;padding:24px}}
+      .card{{max-width:420px;width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:28px;padding:28px;box-shadow:0 24px 80px rgba(2,8,23,.45)}}
+      .tag{{font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:#8be9fd}}
+      h1{{margin:14px 0 0;font-size:28px}}
+      p{{line-height:1.8;color:#d6deeb}}
+      .meta{{margin-top:18px;padding:14px 16px;border-radius:18px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08)}}
+      .btn{{margin-top:20px;width:100%;border:none;border-radius:999px;background:#2dd4bf;color:#04111d;padding:14px 16px;font-size:15px;font-weight:700}}
+      .muted{{margin-top:12px;font-size:13px;color:#94a3b8}}
+      .error{{margin-top:14px;color:#fecaca}}
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="tag">微信支付获取</div>
+      <h1>{title}</h1>
+      <div class="meta">订单编号：{order_no}<br/>支付金额：{amount}</div>
+      <p>即将拉起微信支付。支付完成后，将自动返回方案页面继续查看结果。</p>
+      {button_html}
+      <div class="muted">{helper_text}</div>
+      {error_block}
+    </div>
+    <script>
+      function onPayResult(res){{
+        if(res && res.err_msg === 'get_brand_wcpay_request:ok'){{
+          window.location.href = {success_url_js};
+          return;
+        }}
+        var old = document.querySelector('.error');
+        if (old) old.remove();
+        var div = document.createElement('div');
+        div.className = 'error';
+        div.textContent = '支付未完成：' + ((res && res.err_msg) || 'unknown');
+        document.querySelector('.card').appendChild(div);
+      }}
+      function invokePay(){{
+        if(!{pay_ready}){{
+          return;
+        }}
+        if(!window.WeixinJSBridge){{
+          document.addEventListener('WeixinJSBridgeReady', invokePay, {{ once: true }});
+          return;
+        }}
+        window.WeixinJSBridge.invoke('getBrandWCPayRequest', {{
+          appId: '{app_id}',
+          timeStamp: '{time_stamp}',
+          nonceStr: '{nonce_str}',
+          package: '{package}',
+          signType: '{sign_type}',
+          paySign: '{pay_sign}'
+        }}, onPayResult);
+      }}
+      invokePay();
+    </script>
+  </body>
+</html>""".format(
+        title=escape(order.get("planTitle")),
+        order_no=escape(order.get("orderNo")),
+        amount=escape(order.get("amountLabel")),
+        success_url_js=json.dumps(success_url or "", ensure_ascii=False),
+        button_html=button_html,
+        helper_text=escape(helper_text),
+        pay_ready="true" if pay_ready else "false",
+        app_id=escape(pay_params.get("appId")),
+        time_stamp=escape(pay_params.get("timeStamp")),
+        nonce_str=escape(pay_params.get("nonceStr")),
+        package=escape(pay_params.get("package")),
+        sign_type=escape(pay_params.get("signType")),
+        pay_sign=escape(pay_params.get("paySign")),
+        error_block='<div class="error">{}</div>'.format(escape(error_message)) if error_message else "",
+    )
 
 
 def report_domain_from_url(value):
@@ -675,6 +1827,18 @@ def geo_report_title_text(report):
     if domain:
         return "{} GEO 详细诊断报告".format(domain)
     return "企业官网 GEO 详细诊断报告"
+
+
+def geo_plan_title_text(report):
+    input_data = report.get("input") or {}
+    result = report.get("result") or {}
+    company = (input_data.get("company") or "").strip()
+    if company:
+        return "{}官网 GEO 优化方案".format(company)
+    domain = report_domain_from_url(result.get("checkedUrl") or input_data.get("websiteUrl") or "")
+    if domain:
+        return "{} GEO 优化方案".format(domain)
+    return "企业官网 GEO 优化方案"
 
 
 def build_geo_report_share_html(report, token):
@@ -769,6 +1933,101 @@ def build_geo_report_share_html(report, token):
         image_url=image_url_html,
         report_url=report_url_html,
         report_url_json=json.dumps(report_url, ensure_ascii=False),
+    )
+
+
+def build_geo_plan_share_html(report, token):
+    title = geo_plan_title_text(report)
+    description = "查看官网在首页主题、FAQ 体系、专题页、结构化数据与承接路径等方面的具体优化方案。"
+    share_url = "{}/geo-plan-share/{}/".format(PUBLIC_SITE_URL, quote(token, safe=""))
+    plan_url = "{}/geo-plan/{}/".format(PUBLIC_SITE_URL, token)
+    image_url = "{}/geo-score-share-cover.png".format(PUBLIC_SITE_URL)
+    title_html = html.escape(title, quote=True)
+    description_html = html.escape(description, quote=True)
+    share_url_html = html.escape(share_url, quote=True)
+    image_url_html = html.escape(image_url, quote=True)
+    plan_url_html = html.escape(plan_url, quote=True)
+
+    return """<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content="{description}" />
+    <meta name="robots" content="noindex,nofollow,noarchive" />
+    <link rel="canonical" href="{share_url}" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="{title}" />
+    <meta property="og:description" content="{description}" />
+    <meta property="og:image" content="{image_url}" />
+    <meta property="og:url" content="{share_url}" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="{title}" />
+    <meta name="twitter:description" content="{description}" />
+    <meta name="twitter:image" content="{image_url}" />
+    <style>
+      :root {{ color-scheme: dark; }}
+      body {{
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background: radial-gradient(circle at top, #0f2d57 0%, #071224 42%, #040812 100%);
+        color: #f8fafc;
+        font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Helvetica Neue", sans-serif;
+      }}
+      .card {{
+        width: min(92vw, 460px);
+        padding: 28px 24px;
+        border-radius: 24px;
+        border: 1px solid rgba(125, 211, 252, 0.18);
+        background: rgba(8, 15, 31, 0.86);
+        box-shadow: 0 24px 90px rgba(2, 6, 23, 0.48);
+      }}
+      .label {{
+        display: inline-flex;
+        padding: 6px 12px;
+        border-radius: 999px;
+        background: rgba(56, 189, 248, 0.14);
+        color: #bae6fd;
+        font-size: 13px;
+        letter-spacing: 0.02em;
+      }}
+      h1 {{ margin: 16px 0 10px; font-size: 28px; line-height: 1.18; }}
+      p {{ margin: 0; color: rgba(226, 232, 240, 0.88); line-height: 1.7; font-size: 15px; }}
+      a {{
+        display: inline-flex;
+        margin-top: 22px;
+        padding: 12px 18px;
+        border-radius: 999px;
+        background: linear-gradient(135deg, #38bdf8, #2563eb);
+        color: white;
+        text-decoration: none;
+        font-weight: 600;
+      }}
+    </style>
+  </head>
+  <body>
+    <main class="card">
+      <span class="label">企业官网 GEO 优化方案</span>
+      <h1>{title}</h1>
+      <p>{description}</p>
+      <a href="{plan_url}">正在打开优化方案</a>
+    </main>
+    <script>
+      window.setTimeout(function () {{
+        window.location.replace({plan_url_json});
+      }}, 120);
+    </script>
+  </body>
+</html>""".format(
+        title=title_html,
+        description=description_html,
+        share_url=share_url_html,
+        image_url=image_url_html,
+        plan_url=plan_url_html,
+        plan_url_json=json.dumps(plan_url, ensure_ascii=False),
     )
 
 
@@ -1125,12 +2384,12 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_OPTIONS(self):
         path_only = (self.path or "").split("?", 1)[0]
-        if path_only not in ["/chat", "/lead", "/geo-score", "/wechat/share-config", "/geo-report"]:
+        if path_only not in ["/chat", "/lead", "/geo-score", "/wechat/share-config", "/geo-report", "/wechat/pay/start", "/wechat/pay/callback", "/pay/wechat/callback", "/pay/wechat/callback/", "/auth/callback", "/api/wechat/pay/notify", "/wechat/pay/notify", "/pay/notify", "/wecom/contact/callback"]:
             self.send_error(404, "Not found")
             return
         self.send_response(204)
         self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Methods", "POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
         if path_only == "/geo-report":
             self.send_header("Access-Control-Allow-Methods", "GET, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
@@ -1139,27 +2398,63 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         path_only = (self.path or "").split("?", 1)[0]
         if path_only == "/lead":
+            params = parse_qs(urlparse(self.path).query or "")
+            payment_mode = (params.get("payment") or [""])[0].strip().lower()
+            if payment_mode == "start":
+                self._handle_wechat_pay_start()
+                return
+            if payment_mode == "prepare":
+                self._handle_wechat_pay_prepare()
+                return
+            if payment_mode == "callback":
+                self._handle_wechat_pay_callback()
+                return
             self._handle_lead_share_page()
             return
         if path_only == "/geo-report":
             self._handle_geo_report_fetch()
             return
+        if path_only == "/wechat/pay/start":
+            self._handle_wechat_pay_start()
+            return
+        if path_only == "/wechat/pay/prepare":
+            self._handle_wechat_pay_prepare()
+            return
+        if path_only in ["/wechat/pay/callback", "/pay/wechat/callback", "/pay/wechat/callback/"]:
+            self._handle_wechat_pay_callback()
+            return
+        if path_only == "/auth/callback":
+            self._handle_wechat_pay_callback()
+            return
+        if path_only == "/wecom/contact/callback":
+            self._handle_wecom_contact_callback()
+            return
+        if path_only.startswith("/geo-plan-share/"):
+            self._handle_geo_plan_share_page()
+            return
         self._write_json(404, {"ok": False, "error": "Not found"})
 
     def do_POST(self):
-        if self.path == "/geo-score":
+        path_only = (self.path or "").split("?", 1)[0]
+        if path_only in ["/api/wechat/pay/notify", "/wechat/pay/notify", "/pay/notify"]:
+            self._handle_wechat_pay_notify()
+            return
+        if path_only == "/geo-score":
             self._handle_geo_score_submit()
             return
 
-        if self.path == "/wechat/share-config":
+        if path_only == "/wechat/share-config":
             self._handle_wechat_share_config()
             return
 
-        if self.path == "/lead":
+        if path_only == "/lead":
             self._handle_lead_submit()
             return
+        if path_only == "/wecom/contact/callback":
+            self._handle_wecom_contact_callback()
+            return
 
-        if self.path != "/chat":
+        if path_only != "/chat":
             self._write_json(404, {"ok": False, "error": "Not found"})
             return
 
@@ -1247,6 +2542,7 @@ class Handler(BaseHTTPRequestHandler):
             source = (payload.get("source") or "website").strip()
             page = (payload.get("page") or "").strip()
             website_url = (payload.get("websiteUrl") or "").strip()
+            invite_token = (payload.get("inviteToken") or "").strip()
 
             if lead_type == "geo-score-stats":
                 count = count_geo_score_entries()
@@ -1266,12 +2562,14 @@ class Handler(BaseHTTPRequestHandler):
                     "company": company,
                     "contact": contact,
                     "websiteUrl": website_url,
+                    "inviteToken": invite_token,
                     "source": source,
                     "page": page or "/geo-score/",
                     "result": result,
                     "createdAt": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
                 }
                 report = save_geo_report(entry)
+                invite_result = apply_geo_report_invite(invite_token, report, entry["createdAt"])
                 self._append_lead_log(entry)
                 self._push_lead_to_feishu(
                     {
@@ -1288,9 +2586,13 @@ class Handler(BaseHTTPRequestHandler):
                     {
                         "ok": True,
                         "result": result,
+                        "reportToken": report.get("token"),
                         "reportUrl": report["reportUrl"],
                         "reportStatus": report.get("reportStatus"),
                         "unchangedWithin24h": bool(report.get("unchangedWithin24h")),
+                        "wecomClaim": report.get("wecomClaim") or {},
+                        "invite": report.get("invite") or {},
+                        "inviteResult": invite_result or {},
                     },
                     cache_control=True,
                 )
@@ -1303,10 +2605,54 @@ class Handler(BaseHTTPRequestHandler):
                     return
                 try:
                     report = read_geo_report(token)
+                    report = verify_geo_report_wecom_relationship(report)
                 except FileNotFoundError:
                     self._write_json(404, {"ok": False, "error": "报告不存在或已过期。"}, cache_control=True)
                     return
-                self._write_json(200, {"ok": True, "report": report}, cache_control=True)
+                access_state = build_geo_report_access_state(report)
+                if not access_state["locked"]:
+                    report = attach_geo_report_plan_access(report)
+                self._write_json(
+                    200,
+                    {
+                        "ok": True,
+                        "report": build_geo_report_locked_payload(report) if access_state["locked"] else report,
+                        "accessLocked": access_state["locked"],
+                        "accessMessage": access_state["message"],
+                    },
+                    cache_control=True,
+                )
+                return
+
+            if lead_type == "geo-report-wecom-deliver":
+                claim_token = (payload.get("claimToken") or "").strip()
+                if not claim_token:
+                    self._write_json(400, {"ok": False, "error": "缺少企微领取 token。"})
+                    return
+                try:
+                    report = deliver_geo_report_wecom_claim(claim_token)
+                except FileNotFoundError:
+                    self._write_json(404, {"ok": False, "error": "未找到对应的报告领取记录。"}, cache_control=True)
+                    return
+                self._write_json(
+                    200,
+                    {
+                        "ok": True,
+                        "reportToken": report.get("token") or "",
+                        "reportUrl": report.get("reportUrl") or "",
+                        "wecomClaim": report.get("wecomClaim") or {},
+                    },
+                    cache_control=True,
+                )
+                return
+
+            if lead_type == "geo-plan-order-create":
+                plan_key = (payload.get("planKey") or "solution").strip()
+                report_token = (payload.get("reportToken") or "").strip()
+                source = (payload.get("source") or "geo-upgrade").strip()
+                page = (payload.get("page") or "/geo-upgrade/").strip()
+                order = create_geo_plan_order(plan_key, report_token=report_token, source=source, page=page)
+                self._write_json(200, {"ok": True, "order": order}, cache_control=True)
                 return
 
             if not contact or not demand:
@@ -1340,6 +2686,190 @@ class Handler(BaseHTTPRequestHandler):
             self._write_json(200, {"ok": True, "config": config}, cache_control=True)
         except Exception as error:
             self._write_json(500, {"ok": False, "error": str(error) or "微信分享配置失败。"})
+
+    def _handle_wechat_pay_start(self):
+        params = parse_qs(urlparse(self.path).query or "")
+        order_no = (params.get("orderNo") or [""])[0].strip()
+        return_url = sanitize_pay_return_url(
+            (params.get("returnUrl") or [""])[0].strip(),
+            "{}/geo-upgrade/?paid=1".format(request_origin(self)),
+            self,
+        )
+        code = (params.get("code") or [""])[0].strip()
+
+        if not order_no:
+            self.send_response(400)
+            self.send_header("Content-Type", "text/plain; charset=utf-8")
+            self.end_headers()
+            self.wfile.write("缺少订单编号。".encode("utf-8"))
+            return
+
+        try:
+            order = read_geo_order(order_no)
+        except Exception:
+            self.send_response(404)
+            self.send_header("Content-Type", "text/plain; charset=utf-8")
+            self.end_headers()
+            self.wfile.write("订单不存在。".encode("utf-8"))
+            return
+
+        if not is_wechat_pay_ready():
+            html_body = build_wechat_jsapi_pay_html(
+                order,
+                {"appId": "", "timeStamp": "", "nonceStr": "", "package": "", "signType": "MD5", "paySign": ""},
+                return_url,
+                "微信支付商户参数尚未配置完成。",
+            )
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.send_header("Cache-Control", "no-store")
+            self.end_headers()
+            self.wfile.write(html_body.encode("utf-8"))
+            return
+
+        if not is_wechat_browser(self.headers.get("User-Agent") or ""):
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.end_headers()
+            self.wfile.write(
+                """<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#071224;color:#fff;padding:24px"><h2>请在微信内打开继续支付</h2><p style="line-height:1.8;color:#d6deeb">当前这条支付链路使用微信内 JSAPI 支付，请在微信内重新打开此页面后继续。</p></body></html>""".encode("utf-8")
+            )
+            return
+
+        if not code:
+            oauth_base_url = WECHAT_PAY_OAUTH_BASE_URL or request_origin(self)
+            callback_path = WECHAT_PAY_OAUTH_CALLBACK_PATH if WECHAT_PAY_OAUTH_CALLBACK_PATH.startswith("/") else "/{}".format(WECHAT_PAY_OAUTH_CALLBACK_PATH)
+            separator = "&" if "?" in callback_path else "?"
+            callback_url = "{}{}{}orderNo={}&returnUrl={}".format(
+                oauth_base_url,
+                callback_path,
+                separator,
+                quote(order_no, safe=""),
+                quote(return_url, safe=""),
+            )
+            oauth_url = "https://open.weixin.qq.com/connect/oauth2/authorize?appid={}&redirect_uri={}&response_type=code&scope=snsapi_base&state={}#wechat_redirect".format(
+                quote(WECHAT_PAY_APP_ID, safe=""),
+                quote(callback_url, safe=""),
+                quote(order_no, safe=""),
+            )
+            self.send_response(302)
+            self.send_header("Location", oauth_url)
+            self.send_header("Cache-Control", "no-store")
+            self.end_headers()
+            return
+
+        try:
+            openid = ""
+            openid = fetch_wechat_oauth_openid(code)
+            pay_params = create_wechat_jsapi_params(order, openid, self)
+            order["openid"] = openid
+            order["prepayId"] = pay_params.get("prepayId") or ""
+            order["updatedAt"] = datetime.now(timezone.utc).astimezone().isoformat()
+            write_geo_order(order)
+            html_body = build_wechat_jsapi_pay_html(order, pay_params, return_url)
+        except Exception as error:
+            mark_geo_order_payment_error(order, error, openid if "openid" in locals() else "")
+            html_body = build_wechat_jsapi_pay_html(
+                order,
+                {"appId": "", "timeStamp": "", "nonceStr": "", "package": "", "signType": "MD5", "paySign": ""},
+                return_url,
+                str(error) or "支付初始化失败。",
+            )
+
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Cache-Control", "no-store")
+        self.end_headers()
+        self.wfile.write(html_body.encode("utf-8"))
+
+    def _handle_wechat_pay_prepare(self):
+        params = parse_qs(urlparse(self.path).query or "")
+        order_no = (params.get("orderNo") or [""])[0].strip()
+        return_url = sanitize_pay_return_url(
+            (params.get("returnUrl") or [""])[0].strip(),
+            "{}/geo-upgrade/?paid=1".format(request_origin(self)),
+            self,
+        )
+        code = (params.get("code") or [""])[0].strip()
+
+        try:
+            order, pay_params, next_url = prepare_wechat_jsapi_payment(order_no, return_url, code, self)
+            self._write_json(
+                200,
+                {
+                    "ok": True,
+                    "order": order,
+                    "payParams": pay_params,
+                    "returnUrl": next_url,
+                },
+                cache_control=True,
+            )
+        except FileNotFoundError:
+            self._write_json(404, {"ok": False, "error": "订单不存在。"}, cache_control=True)
+        except Exception as error:
+            self._write_json(400, {"ok": False, "error": str(error) or "支付初始化失败。"}, cache_control=True)
+
+    def _handle_wechat_pay_callback(self):
+        self._handle_wechat_pay_start()
+
+    def _handle_wechat_pay_notify(self):
+        try:
+            content_length = int(self.headers.get("Content-Length", "0"))
+            raw_body = self.rfile.read(content_length) if content_length > 0 else b""
+            xml_text = raw_body.decode("utf-8", errors="ignore")
+            payload = parse_wechat_xml(xml_text) if xml_text else {}
+
+            received_sign = payload.get("sign", "")
+            verify_payload = {key: value for key, value in payload.items() if key != "sign"}
+            expected_sign = build_wechat_pay_sign(verify_payload) if received_sign else ""
+            if not payload or not received_sign or expected_sign != received_sign:
+                raise RuntimeError("微信支付通知验签失败。")
+            if payload.get("return_code") != "SUCCESS" or payload.get("result_code") != "SUCCESS":
+                raise RuntimeError(payload.get("return_msg") or payload.get("err_code_des") or "微信支付未成功。")
+
+            order_no = (payload.get("out_trade_no") or "").strip()
+            if not order_no:
+                raise RuntimeError("微信支付通知缺少订单号。")
+
+            order = read_geo_order(order_no)
+            already_notified = bool(order.get("feishuPaymentNotifiedAt"))
+            order["status"] = "paid"
+            order["paymentStatus"] = "paid"
+            order["paymentMessage"] = "微信支付已完成。"
+            order["transactionId"] = payload.get("transaction_id") or ""
+            order["paidAt"] = datetime.now(timezone.utc).astimezone().isoformat()
+            order["updatedAt"] = order["paidAt"]
+            order["notifyPayload"] = payload
+            write_geo_order(order)
+
+            if not already_notified:
+                try:
+                    self._push_wechat_pay_success_to_feishu(order)
+                    order["feishuPaymentNotifiedAt"] = datetime.now(timezone.utc).astimezone().isoformat()
+                    order["updatedAt"] = order["feishuPaymentNotifiedAt"]
+                    order.pop("feishuPaymentNotifyError", None)
+                    write_geo_order(order)
+                except Exception as feishu_error:
+                    order["feishuPaymentNotifyError"] = str(feishu_error)
+                    order["updatedAt"] = datetime.now(timezone.utc).astimezone().isoformat()
+                    write_geo_order(order)
+                    print("[wechat-pay] order={} feishu_notify_error={}".format(order_no, feishu_error), flush=True)
+
+            response_xml = build_wechat_pay_xml(
+                {"return_code": "SUCCESS", "return_msg": "OK"}
+            )
+            self.send_response(200)
+            self.send_header("Content-Type", "text/xml; charset=utf-8")
+            self.end_headers()
+            self.wfile.write(response_xml.encode("utf-8"))
+        except Exception as error:
+            response_xml = build_wechat_pay_xml(
+                {"return_code": "FAIL", "return_msg": str(error) or "FAIL"}
+            )
+            self.send_response(200)
+            self.send_header("Content-Type", "text/xml; charset=utf-8")
+            self.end_headers()
+            self.wfile.write(response_xml.encode("utf-8"))
 
     def _handle_geo_score_submit(self):
         try:
@@ -1510,6 +3040,61 @@ class Handler(BaseHTTPRequestHandler):
 
         raise RuntimeError("尚未配置飞书 webhook 或飞书应用凭证。")
 
+    def _push_wechat_pay_success_to_feishu(self, order):
+        plan_url = build_geo_plan_url_for_order(order)
+        lines = [
+            "微信支付已完成，优化方案可查看",
+            "订单编号：{}".format(order.get("orderNo") or "未记录"),
+            "购买内容：{}".format(order.get("planTitle") or "官网 GEO 优化方案"),
+            "支付金额：{}".format(order.get("amountLabel") or "未记录"),
+            "公司 / 品牌：{}".format(order.get("company") or "未填写"),
+            *(
+                ["官网网址：{}".format(order.get("websiteUrl"))]
+                if order.get("websiteUrl")
+                else []
+            ),
+            "联系方式：{}".format(order.get("contact") or "未填写"),
+            *(
+                ["微信交易号：{}".format(order.get("transactionId"))]
+                if order.get("transactionId")
+                else []
+            ),
+            "优化方案：{}".format(plan_url),
+            "支付时间：{}".format(format_beijing_time(order.get("paidAt") or order.get("updatedAt") or "")),
+        ]
+        message_text = "\n".join(lines)
+
+        if FEISHU_WEBHOOK_URL:
+            payload = json.dumps(
+                {
+                    "msg_type": "text",
+                    "content": {
+                        "text": message_text,
+                    },
+                },
+                ensure_ascii=False,
+            ).encode("utf-8")
+
+            req = urllib_request.Request(
+                FEISHU_WEBHOOK_URL,
+                data=payload,
+                headers={"Content-Type": "application/json; charset=utf-8"},
+                method="POST",
+            )
+
+            with urllib_request.urlopen(req, timeout=10) as response:
+                status = getattr(response, "status", 200)
+                if status < 200 or status >= 300:
+                    raise RuntimeError("飞书推送失败（{}）".format(status))
+            return
+
+        if FEISHU_APP_ID and FEISHU_APP_SECRET:
+            tenant_access_token = self._fetch_feishu_tenant_access_token()
+            self._send_feishu_app_message(tenant_access_token, message_text)
+            return
+
+        raise RuntimeError("尚未配置飞书 webhook 或飞书应用凭证。")
+
     def _fetch_feishu_tenant_access_token(self):
         payload = json.dumps(
             {
@@ -1631,7 +3216,7 @@ class Handler(BaseHTTPRequestHandler):
         share_type = (parse_qs(parsed.query).get("share") or [""])[0].strip()
         token = (parse_qs(parsed.query).get("token") or [""])[0].strip()
 
-        if share_type != "geo-report":
+        if share_type not in ["geo-report", "geo-plan"]:
             self._write_json(404, {"ok": False, "error": "Not found"})
             return
 
@@ -1641,7 +3226,7 @@ class Handler(BaseHTTPRequestHandler):
 
         try:
             report = read_geo_report(token)
-            html = build_geo_report_share_html(report, token)
+            html = build_geo_report_share_html(report, token) if share_type == "geo-report" else build_geo_plan_share_html(report, token)
             self.send_response(200)
             self.send_header("Content-Type", "text/html; charset=utf-8")
             self.send_header("Cache-Control", "no-store, no-cache, must-revalidate")
@@ -1653,6 +3238,183 @@ class Handler(BaseHTTPRequestHandler):
             self.send_error(404, "报告不存在或已过期。")
         except Exception:
             self.send_error(500, "报告分享页生成失败。")
+
+    def _handle_geo_plan_share_page(self):
+        parsed = urlparse(self.path or "")
+        path_only = parsed.path or ""
+        if not path_only.startswith("/geo-plan-share/"):
+            self._write_json(404, {"ok": False, "error": "Not found"})
+            return
+
+        token = path_only[len("/geo-plan-share/") :].strip("/")
+        if not token:
+            self.send_error(400, "缺少报告 token。")
+            return
+
+        try:
+            report = read_geo_report(token)
+            html = build_geo_plan_share_html(report, token)
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.send_header("Cache-Control", "no-store, no-cache, must-revalidate")
+            self.send_header("Pragma", "no-cache")
+            self.send_header("Expires", "0")
+            self.end_headers()
+            self.wfile.write(html.encode("utf-8"))
+        except FileNotFoundError:
+            self.send_error(404, "报告不存在或已过期。")
+        except Exception:
+            self.send_error(500, "报告分享页生成失败。")
+
+    def _handle_wecom_contact_callback(self):
+        status = build_wecom_callback_status()
+        if self.command == "GET":
+            parsed = urlparse(self.path or "")
+            query = parse_qs(parsed.query)
+            echostr = (query.get("echostr") or [""])[0]
+            msg_signature = (query.get("msg_signature") or [""])[0]
+            timestamp = (query.get("timestamp") or [""])[0]
+            nonce = (query.get("nonce") or [""])[0]
+            if status["callbackCryptoReady"] and echostr:
+                try:
+                    if not verify_wecom_signature(msg_signature, timestamp, nonce, echostr):
+                        raise RuntimeError("企微回调校验失败：msg_signature 不匹配。")
+                    plain_echo = decrypt_wecom_ciphertext(echostr)
+                    self.send_response(200)
+                    self.send_header("Content-Type", "text/plain; charset=utf-8")
+                    self.send_header("Cache-Control", "no-store")
+                    self.end_headers()
+                    self.wfile.write(plain_echo.encode("utf-8"))
+                    return
+                except Exception as error:
+                    self._write_json(
+                        500,
+                        {
+                            "ok": False,
+                            "error": str(error),
+                            "status": status,
+                        },
+                        cache_control=True,
+                    )
+                    return
+
+            self._write_json(
+                500,
+                {
+                    "ok": False,
+                    "error": "企微回调地址已接通，但尚未配置回调 Token / EncodingAESKey，当前无法完成企微后台校验。",
+                    "status": status,
+                },
+                cache_control=True,
+            )
+            return
+
+        if self.command == "POST":
+            content_length = int(self.headers.get("Content-Length", "0"))
+            raw_body = self.rfile.read(content_length) if content_length > 0 else b""
+            if not status["callbackCryptoReady"]:
+                self._write_json(
+                    500,
+                    {
+                        "ok": False,
+                        "error": "企微回调地址已接通，但尚未配置回调 Token / EncodingAESKey，当前无法验证并处理企微事件。",
+                        "status": status,
+                    },
+                    cache_control=True,
+                )
+                return
+            try:
+                parsed = urlparse(self.path or "")
+                query = parse_qs(parsed.query)
+                msg_signature = (query.get("msg_signature") or [""])[0]
+                timestamp = (query.get("timestamp") or [""])[0]
+                nonce = (query.get("nonce") or [""])[0]
+                xml_root = ElementTree.fromstring(raw_body.decode("utf-8", errors="ignore") or "<xml/>")
+                encrypted = (xml_root.findtext("Encrypt") or "").strip()
+                if not encrypted:
+                    raise RuntimeError("企微回调缺少 Encrypt 字段。")
+                if not verify_wecom_signature(msg_signature, timestamp, nonce, encrypted):
+                    raise RuntimeError("企微回调校验失败：msg_signature 不匹配。")
+                decrypted_xml = decrypt_wecom_ciphertext(encrypted)
+                event_root = ElementTree.fromstring(decrypted_xml or "<xml/>")
+                event_name = (event_root.findtext("Event") or "").strip()
+                change_type = (event_root.findtext("ChangeType") or "").strip()
+                state_value = (event_root.findtext("State") or "").strip()
+                user_id = (event_root.findtext("UserID") or "").strip()
+                external_user_id = (event_root.findtext("ExternalUserID") or "").strip()
+                welcome_code = (event_root.findtext("WelcomeCode") or "").strip()
+                if change_type == "del_follow_user" and external_user_id and user_id:
+                    try:
+                        update_geo_report_wecom_relationship(external_user_id, user_id, "removed")
+                    except Exception:
+                        pass
+                if change_type == "add_external_contact":
+                    claim_token = state_value
+                    if not claim_token and external_user_id:
+                        try:
+                            claim_token = resolve_geo_report_wecom_claim_token(external_user_id, user_id)
+                        except Exception:
+                            claim_token = ""
+                    if not claim_token:
+                        claim_token = find_recent_geo_report_claim()
+                    if not claim_token:
+                        self.send_response(200)
+                        self.send_header("Content-Type", "text/plain; charset=utf-8")
+                        self.send_header("Cache-Control", "no-store")
+                        self.end_headers()
+                        self.wfile.write("success".encode("utf-8"))
+                        return
+                    try:
+                        report = deliver_geo_report_wecom_claim(claim_token, external_user_id=external_user_id, follow_user_id=user_id)
+                        wecom_state = report.get("wecomClaim") or {}
+                        if welcome_code:
+                            try:
+                                previous_welcome_code = (wecom_state.get("lastWelcomeCode") or "").strip()
+                                should_send = previous_welcome_code != welcome_code
+                                if should_send:
+                                    send_wecom_welcome_message(welcome_code, report)
+                                send_time = datetime.now(timezone.utc).astimezone().isoformat()
+                                wecom_state["welcomeSentAt"] = send_time
+                                wecom_state["lastWelcomeCode"] = welcome_code
+                                wecom_state["lastError"] = ""
+                                report["wecomClaim"] = wecom_state
+                                report["updatedAt"] = send_time
+                                report_path = Path(GEO_REPORT_DIR) / "{}.json".format(report.get("token") or "")
+                                report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+                                if should_send:
+                                    try:
+                                        push_geo_report_wecom_sent_to_feishu(report)
+                                    except Exception as feishu_error:
+                                        wecom_state["lastError"] = str(feishu_error)
+                                        report["wecomClaim"] = wecom_state
+                                        report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+                            except Exception as welcome_error:
+                                wecom_state["lastError"] = str(welcome_error)
+                                report["wecomClaim"] = wecom_state
+                                report_path = Path(GEO_REPORT_DIR) / "{}.json".format(report.get("token") or "")
+                                report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+                    except Exception:
+                        pass
+                self.send_response(200)
+                self.send_header("Content-Type", "text/plain; charset=utf-8")
+                self.send_header("Cache-Control", "no-store")
+                self.end_headers()
+                self.wfile.write("success".encode("utf-8"))
+                return
+            except Exception as error:
+                self._write_json(
+                    500,
+                    {
+                        "ok": False,
+                        "error": str(error),
+                        "status": status,
+                    },
+                    cache_control=True,
+                )
+                return
+            return
+
+        self.send_error(405, "Method Not Allowed")
 
 
 def main():

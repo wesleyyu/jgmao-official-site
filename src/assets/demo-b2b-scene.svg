@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 520" role="img" aria-labelledby="title desc">
+  <title id="title">B2B scene image</title>
+  <desc id="desc">Industry solution architecture, downloadable resources, and lead form modules.</desc>
+  <defs><linearGradient id="bg" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#edf4ff"/><stop offset=".58" stop-color="#dbe8ff"/><stop offset="1" stop-color="#b9d1f4"/></linearGradient></defs>
+  <rect width="900" height="520" rx="40" fill="url(#bg)"/>
+  <g transform="translate(98 82)">
+    <rect width="704" height="340" rx="38" fill="#fff" opacity=".9"/>
+    <rect x="44" y="52" width="238" height="228" rx="30" fill="#14233f"/>
+    <rect x="78" y="88" width="108" height="14" rx="7" fill="#dbe8ff"/>
+    <rect x="78" y="128" width="156" height="11" rx="5.5" fill="#fff" opacity=".36"/>
+    <rect x="78" y="158" width="120" height="11" rx="5.5" fill="#fff" opacity=".25"/>
+    <rect x="330" y="52" width="138" height="228" rx="30" fill="#dbe8ff"/>
+    <rect x="360" y="90" width="78" height="102" rx="22" fill="#3765a3"/>
+    <rect x="360" y="212" width="78" height="14" rx="7" fill="#14233f" opacity=".35"/>
+    <rect x="520" y="52" width="136" height="228" rx="30" fill="#edf4ff"/>
+    <rect x="552" y="92" width="72" height="12" rx="6" fill="#3765a3" opacity=".7"/>
+    <rect x="552" y="126" width="72" height="12" rx="6" fill="#3765a3" opacity=".5"/>
+    <rect x="552" y="184" width="72" height="36" rx="18" fill="#14233f"/>
+  </g>
+</svg>

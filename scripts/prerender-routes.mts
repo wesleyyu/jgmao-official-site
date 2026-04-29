@@ -6,6 +6,7 @@ import { faqItems } from "../src/content/faqs.ts";
 import { insightArticles } from "../src/content/insights.ts";
 import {
   aiGrowthGeoShell,
+  aiGrowthNewGeoShell,
   applyGeoShellToHtml,
   geoScoreGeoShell,
   geoUpgradeGeoShell,
@@ -284,6 +285,15 @@ async function main() {
       routePath: "/ai-growth/",
       geoShell: aiGrowthGeoShell,
       contentHtml: renderH5Landing(),
+    },
+    template,
+  );
+
+  await writeRoute(
+    {
+      routePath: "/ai-growth-new/",
+      geoShell: aiGrowthNewGeoShell,
+      contentHtml: "",
     },
     template,
   );

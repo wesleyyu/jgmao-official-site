@@ -1,9 +1,11 @@
 import { motion } from "framer-motion";
-import { ArrowLeft, BadgeCheck, ChevronDown, ChevronUp, CircleAlert, ExternalLink, Globe2, ShieldCheck } from "lucide-react";
+import { BadgeCheck, ChevronDown, ChevronUp, CircleAlert, Globe2, ShieldCheck } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "wouter";
 
+import JgmaoPageBrand from "@/components/JgmaoPageBrand";
 import { siteOrigin } from "@/lib/share";
+import wecomSupportQrImage from "@/assets/wecom-support-qr.png";
 
 const defaultReportTitle = "企业官网 GEO 详细诊断报告";
 const defaultReportDescription = "查看官网在抓取、主题结构、AI 可见性、内容资产与承接转化等维度的详细诊断结果。";
@@ -81,6 +83,21 @@ type GeoReport = {
       score: number;
     }>;
   }>;
+  wecomClaim?: {
+    claimToken?: string;
+    status?: string;
+    deliveredAt?: string;
+    supportUrl?: string;
+    sourceType?: string;
+    relationshipStatus?: string;
+  };
+  paidPlanUrl?: string;
+  paidPlanOrder?: {
+    orderNo?: string;
+    planTitle?: string;
+    amountLabel?: string;
+    paidAt?: string;
+  };
 };
 
 type DiagnosticDirection = {
@@ -100,11 +117,11 @@ const dimensionLabelMap: Record<string, string> = {
 };
 
 const dimensionAdviceMap: Record<string, string> = {
-  crawl: "优先补齐 HTTPS、canonical、robots.txt 与 sitemap.xml，确保官网地址规范、抓取稳定、可被搜索与 AI 系统持续发现。",
+  crawl: "优先补齐 HTTPS、规范地址（canonical）、抓取规则文件（robots.txt）与站点地图（sitemap.xml），确保官网地址规范、抓取稳定、可被搜索与 AI 系统持续发现。",
   theme: "集中首页主题表达，补齐 H1、标题、描述和更清晰的页面语义，让 AI 与用户都能更快理解官网重点。",
   ai: "继续完善 FAQ、结构化数据与分享语义，增强内容被 AI 理解、抽取、引用与推荐的稳定性。",
   content: "继续补齐 FAQ、案例、专题页与洞察栏目，让内容形成可复用、可沉淀、可持续扩展的资产体系。",
-  convert: "强化电话、企微、表单与 CTA 等高意向承接入口，让官网不只被看见，也能有效承接咨询动作。",
+  convert: "强化电话、企微、表单与行动入口（CTA）等高意向承接入口，让官网不只被看见，也能有效承接咨询动作。",
   trust: "继续补齐公司信息、备案资质、客户背书与媒体报道等信任信号，增强官网的可信度与商务说服力。",
 };
 
@@ -138,7 +155,7 @@ const dimensionImpactMap: Record<string, { label: string; summary: string }> = {
 const diagnosticDirectionMap: Record<string, Omit<DiagnosticDirection, "key">> = {
   crawl: {
     title: "先补抓取与索引基础",
-    summary: "先把 canonical、robots.txt、sitemap.xml 和地址规范做稳，避免官网被重复地址和抓取稳定性拖低整体表现。",
+    summary: "先把规范地址（canonical）、抓取规则文件（robots.txt）、站点地图（sitemap.xml）和地址规范做稳，避免官网被重复地址和抓取稳定性拖低整体表现。",
     nextFocus: "优先确认地址规范、抓取边界和索引基础是否完整。",
   },
   theme: {
@@ -149,7 +166,7 @@ const diagnosticDirectionMap: Record<string, Omit<DiagnosticDirection, "key">> =
   ai: {
     title: "先补 AI 可见性信号",
     summary: "优先完善 FAQ、结构化数据与 AI 引用信号，提升官网在 AI 搜索与推荐场景中的可见性。",
-    nextFocus: "优先检查 FAQ、Schema 和可引用表达是否足够完整。",
+    nextFocus: "优先检查 FAQ、结构化数据（Schema）和可引用表达是否足够完整。",
   },
   content: {
     title: "先补内容资产与 FAQ 体系",
@@ -158,7 +175,7 @@ const diagnosticDirectionMap: Record<string, Omit<DiagnosticDirection, "key">> =
   },
   convert: {
     title: "先优化承接路径与转化入口",
-    summary: "强化 CTA、企微、电话与表单承接，让官网从被看见走向有效转化。",
+    summary: "强化行动入口（CTA）、企微、电话与表单承接，让官网从被看见走向有效转化。",
     nextFocus: "优先检查高意向咨询动作是否足够清晰、顺手。",
   },
   trust: {
@@ -334,6 +351,8 @@ export default function GeoReportPage() {
   const [report, setReport] = useState<GeoReport | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const [accessLocked, setAccessLocked] = useState(false);
+  const [accessMessage, setAccessMessage] = useState("");
   const [expandedDimensions, setExpandedDimensions] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
@@ -452,6 +471,7 @@ export default function GeoReportPage() {
 
   useEffect(() => {
     let cancelled = false;
+    let isFetching = false;
 
     async function fetchReport() {
       if (!token) {
@@ -459,6 +479,12 @@ export default function GeoReportPage() {
         setIsLoading(false);
         return;
       }
+
+      if (isFetching) {
+        return;
+      }
+
+      isFetching = true;
 
       setIsLoading(true);
       setError("");
@@ -474,23 +500,43 @@ export default function GeoReportPage() {
           throw new Error(payload?.error || "报告不存在或已过期。");
         }
         if (!cancelled) {
+          setAccessLocked(Boolean(payload?.accessLocked));
+          setAccessMessage(String(payload?.accessMessage || ""));
           setReport(payload.report as GeoReport);
         }
       } catch (fetchError) {
         if (!cancelled) {
           setError(fetchError instanceof Error ? fetchError.message : "报告读取失败。");
+          setAccessLocked(false);
+          setAccessMessage("");
           setReport(null);
         }
       } finally {
+        isFetching = false;
         if (!cancelled) {
           setIsLoading(false);
         }
       }
     }
 
+    function refreshIfVisible() {
+      if (document.visibilityState === "visible") {
+        void fetchReport();
+      }
+    }
+
     void fetchReport();
+    window.addEventListener("focus", refreshIfVisible);
+    document.addEventListener("visibilitychange", refreshIfVisible);
+    const timer = window.setInterval(() => {
+      refreshIfVisible();
+    }, 60000);
+
     return () => {
       cancelled = true;
+      window.clearInterval(timer);
+      window.removeEventListener("focus", refreshIfVisible);
+      document.removeEventListener("visibilitychange", refreshIfVisible);
     };
   }, [token]);
 
@@ -634,22 +680,8 @@ export default function GeoReportPage() {
       <div className="pointer-events-none absolute inset-0 ops-grid opacity-20" />
 
       <div className="relative mx-auto flex min-h-screen w-full max-w-[1120px] flex-col px-5 pb-28 pt-8 sm:px-6 lg:px-10">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <Link href="/geo-score/" className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-200 transition hover:bg-white/8">
-            <ArrowLeft className="h-4 w-4" />
-            返回评分器
-          </Link>
-          {report?.result?.checkedUrl ? (
-            <a
-              href={report.result.checkedUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-4 py-2 text-sm text-cyan-100 transition hover:bg-cyan-300/15"
-            >
-              查看官网
-              <ExternalLink className="h-4 w-4" />
-            </a>
-          ) : null}
+        <div className="flex justify-start">
+          <JgmaoPageBrand />
         </div>
 
         <section className="mt-8 grid gap-6 lg:grid-cols-[0.86fr_1.14fr]">
@@ -672,7 +704,28 @@ export default function GeoReportPage() {
               </div>
             ) : null}
 
-            {report ? (
+            {report && accessLocked ? (
+              <div className="mt-6 flex min-h-[50vh] flex-col items-center justify-center rounded-[1.9rem] border border-amber-300/20 bg-[linear-gradient(180deg,rgba(251,191,36,0.12),rgba(15,23,42,0.72))] px-6 py-8 text-center shadow-[0_18px_50px_rgba(245,158,11,0.12)]">
+                <div className="inline-flex rounded-full border border-amber-300/20 bg-amber-300/10 px-3 py-1 text-xs font-medium tracking-[0.18em] text-amber-100/85">
+                  详细报告已锁定
+                </div>
+                <h2 className="mt-5 text-2xl font-semibold text-white sm:text-[2rem]">重新添加企微解锁报告</h2>
+                <p className="mt-3 max-w-[32rem] text-sm leading-7 text-amber-50/95">
+                  {accessMessage || "你已不在当前企微客户关系中，请重新添加企微后继续查看详细报告。"}
+                </p>
+                <div className="mt-6 rounded-[1.6rem] border border-white/10 bg-white/6 px-5 py-5 backdrop-blur-xl">
+                  <p className="text-sm font-medium text-white">扫码添加企微客服</p>
+                  <p className="mt-2 text-xs leading-6 text-slate-300">添加完成后，报告会自动恢复查看权限。</p>
+                  <img
+                    src={report.wecomClaim?.supportUrl || wecomSupportQrImage}
+                    alt="坚果猫企微客服二维码"
+                    className="mx-auto mt-4 h-44 w-44 rounded-2xl border border-white/10 bg-white p-2"
+                  />
+                </div>
+              </div>
+            ) : null}
+
+            {report && !accessLocked ? (
               <div className="mt-6 space-y-4">
                 <div className="rounded-[1.5rem] border border-white/10 bg-white/5 p-5">
                   <p className="text-xs uppercase tracking-[0.22em] text-slate-400">基础评分</p>
@@ -741,7 +794,7 @@ export default function GeoReportPage() {
           </article>
 
           <div className="space-y-5">
-            {report ? (
+            {report && !accessLocked ? (
               <>
                 <motion.article
                   initial={{ opacity: 0, y: 14 }}
@@ -1140,16 +1193,16 @@ export default function GeoReportPage() {
           </div>
         </section>
 
-        {report ? (
+        {report && !accessLocked ? (
           <div className="pointer-events-none fixed inset-x-0 bottom-0 z-30 px-4 pb-4 sm:px-6">
             <div className="mx-auto max-w-[1120px]">
               <div className="pointer-events-auto rounded-[1.4rem] border border-cyan-300/20 bg-slate-950/88 p-3 shadow-[0_-18px_60px_rgba(0,0,0,0.35)] backdrop-blur-xl">
-                <a
-                  href="/geo-upgrade/"
-                  className="flex w-full items-center justify-center rounded-full bg-cyan-300 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200"
-                >
-                  继续了解更深入的 GEO 升级方案
-                </a>
+	                <a
+	                  href={report.paidPlanUrl || `/geo-upgrade/?report=${encodeURIComponent(report.token)}&plan=solution#solution-plan`}
+	                  className="flex w-full items-center justify-center rounded-full bg-cyan-300 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200"
+	                >
+	                  {report.paidPlanUrl ? "查看已购官网 GEO 优化方案" : "查看本次官网 GEO 优化方案"}
+	                </a>
               </div>
             </div>
           </div>

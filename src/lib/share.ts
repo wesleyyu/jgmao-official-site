@@ -3,6 +3,7 @@ const siteUrl = "https://www.jgmao.com";
 // Bump this value when you need a fresh WeChat share URL to bypass cached cards.
 export const h5ShareVersion = "20260422-1";
 export const geoScoreShareVersion = "20260422-1";
+export const geoPlanShareVersion = "20260426-1";
 
 export const homeCanonicalPath = "/";
 export const h5CanonicalPath = "/h5/";

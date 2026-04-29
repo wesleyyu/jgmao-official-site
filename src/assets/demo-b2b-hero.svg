@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 620" role="img" aria-labelledby="title desc">
+  <title id="title">B2B website hero image</title>
+  <desc id="desc">Enterprise solution dashboard with industry modules, client cards, and lead conversion path.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#edf4ff"/><stop offset=".56" stop-color="#dbe8ff"/><stop offset="1" stop-color="#adc9f1"/></linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="26" stdDeviation="24" flood-color="#14233f" flood-opacity=".22"/></filter>
+  </defs>
+  <rect width="900" height="620" rx="44" fill="url(#bg)"/>
+  <circle cx="742" cy="122" r="112" fill="#fff" opacity=".42"/>
+  <g filter="url(#shadow)">
+    <rect x="104" y="108" width="692" height="382" rx="42" fill="#fff" opacity=".88"/>
+    <rect x="154" y="156" width="310" height="246" rx="34" fill="#14233f"/>
+    <rect x="190" y="198" width="124" height="16" rx="8" fill="#dbe8ff"/>
+    <rect x="190" y="236" width="198" height="13" rx="6.5" fill="#fff" opacity=".36"/>
+    <rect x="190" y="268" width="152" height="13" rx="6.5" fill="#fff" opacity=".26"/>
+    <g transform="translate(524 152)">
+      <rect x="0" y="0" width="220" height="116" rx="30" fill="#dbe8ff"/>
+      <rect x="0" y="142" width="98" height="104" rx="26" fill="#3765a3"/>
+      <rect x="122" y="142" width="98" height="104" rx="26" fill="#bcd4ff"/>
+      <circle cx="110" cy="58" r="34" fill="#3765a3"/>
+      <path d="M72 60h76M110 22v76" stroke="#fff" stroke-width="10" stroke-linecap="round" opacity=".72"/>
+    </g>
+    <rect x="184" y="424" width="532" height="34" rx="17" fill="#3765a3" opacity=".2"/>
+  </g>
+</svg>

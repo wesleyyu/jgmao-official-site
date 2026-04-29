@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 620" role="img" aria-labelledby="title desc">
+  <title id="title">Education training hero image</title>
+  <desc id="desc">A modern training classroom with teacher, students, course cards, and learning progress visuals.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#fff5e9"/>
+      <stop offset=".55" stop-color="#ffe2bd"/>
+      <stop offset="1" stop-color="#ffd19a"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="28" stdDeviation="24" flood-color="#704317" flood-opacity=".2"/>
+    </filter>
+  </defs>
+  <rect width="900" height="620" rx="44" fill="url(#bg)"/>
+  <circle cx="728" cy="128" r="120" fill="#fff" opacity=".42"/>
+  <circle cx="130" cy="506" r="148" fill="#a45c1e" opacity=".12"/>
+  <g filter="url(#shadow)">
+    <rect x="105" y="92" width="690" height="390" rx="42" fill="#fffdf8" opacity=".9"/>
+    <rect x="152" y="134" width="334" height="210" rx="30" fill="#432b18"/>
+    <rect x="186" y="172" width="128" height="16" rx="8" fill="#ffe2bd"/>
+    <rect x="186" y="210" width="238" height="14" rx="7" fill="#fff" opacity=".38"/>
+    <rect x="186" y="244" width="190" height="14" rx="7" fill="#fff" opacity=".28"/>
+    <rect x="186" y="288" width="110" height="34" rx="17" fill="#ffe2bd"/>
+    <g transform="translate(536 146)">
+      <circle cx="94" cy="54" r="48" fill="#a45c1e"/>
+      <rect x="44" y="98" width="100" height="142" rx="34" fill="#fff4e8"/>
+      <rect x="66" y="124" width="56" height="12" rx="6" fill="#a45c1e"/>
+      <rect x="0" y="184" width="78" height="70" rx="26" fill="#ffd19a"/>
+      <circle cx="39" cy="170" r="32" fill="#bf7b35"/>
+      <rect x="132" y="184" width="78" height="70" rx="26" fill="#ffd19a"/>
+      <circle cx="171" cy="170" r="32" fill="#bf7b35"/>
+    </g>
+    <rect x="206" y="382" width="118" height="64" rx="22" fill="#ffe2bd"/>
+    <rect x="354" y="382" width="118" height="64" rx="22" fill="#fff1df"/>
+    <rect x="502" y="382" width="118" height="64" rx="22" fill="#ffe2bd"/>
+  </g>
+</svg>

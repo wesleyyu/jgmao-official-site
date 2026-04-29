@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 520" role="img" aria-labelledby="title desc">
+  <title id="title">Local service scene image</title>
+  <desc id="desc">Storefront service items, customer reviews, map marker, and appointment card.</desc>
+  <defs><linearGradient id="bg" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#f6f1df"/><stop offset=".6" stop-color="#e3edd9"/><stop offset="1" stop-color="#c9ddb5"/></linearGradient></defs>
+  <rect width="900" height="520" rx="40" fill="url(#bg)"/>
+  <g transform="translate(98 82)">
+    <rect width="704" height="340" rx="38" fill="#fffdf4" opacity=".9"/>
+    <rect x="44" y="52" width="238" height="228" rx="30" fill="#274137"/>
+    <rect x="78" y="88" width="108" height="14" rx="7" fill="#e3edd9"/>
+    <rect x="78" y="128" width="156" height="11" rx="5.5" fill="#fff" opacity=".35"/>
+    <rect x="78" y="158" width="120" height="11" rx="5.5" fill="#fff" opacity=".25"/>
+    <rect x="330" y="52" width="138" height="228" rx="30" fill="#e3edd9"/>
+    <circle cx="399" cy="124" r="42" fill="#5f7f43"/>
+    <path d="M399 94c25 28 25 58 0 90-25-32-25-62 0-90Z" fill="#fffdf4" opacity=".75"/>
+    <rect x="520" y="52" width="136" height="228" rx="30" fill="#fff7de"/>
+    <circle cx="588" cy="116" r="36" fill="#f0c76c"/>
+    <rect x="552" y="180" width="72" height="12" rx="6" fill="#274137" opacity=".5"/>
+  </g>
+</svg>

@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 520" role="img" aria-labelledby="title desc">
+  <title id="title">Education course scene image</title>
+  <desc id="desc">Course system, teacher card, student result chart, and trial appointment module.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#fff6ec"/>
+      <stop offset=".56" stop-color="#ffe3bd"/>
+      <stop offset="1" stop-color="#f7c57e"/>
+    </linearGradient>
+  </defs>
+  <rect width="900" height="520" rx="40" fill="url(#bg)"/>
+  <circle cx="120" cy="90" r="88" fill="#fff" opacity=".45"/>
+  <g transform="translate(100 82)">
+    <rect width="700" height="340" rx="38" fill="#fffdf9" opacity=".9"/>
+    <rect x="44" y="46" width="236" height="232" rx="30" fill="#432b18"/>
+    <rect x="76" y="82" width="110" height="14" rx="7" fill="#ffe2bd"/>
+    <rect x="76" y="122" width="158" height="12" rx="6" fill="#fff" opacity=".36"/>
+    <rect x="76" y="152" width="128" height="12" rx="6" fill="#fff" opacity=".26"/>
+    <rect x="76" y="204" width="92" height="34" rx="17" fill="#ffe2bd"/>
+    <rect x="328" y="46" width="136" height="232" rx="30" fill="#fff0df"/>
+    <circle cx="396" cy="112" r="42" fill="#a45c1e"/>
+    <rect x="360" y="176" width="72" height="12" rx="6" fill="#432b18" opacity=".55"/>
+    <rect x="368" y="204" width="56" height="10" rx="5" fill="#a45c1e" opacity=".5"/>
+    <rect x="508" y="46" width="144" height="232" rx="30" fill="#fff6ec"/>
+    <rect x="536" y="152" width="26" height="74" rx="13" fill="#a45c1e" opacity=".6"/>
+    <rect x="574" y="118" width="26" height="108" rx="13" fill="#a45c1e" opacity=".78"/>
+    <rect x="612" y="88" width="26" height="138" rx="13" fill="#a45c1e"/>
+    <rect x="536" y="246" width="92" height="10" rx="5" fill="#432b18" opacity=".3"/>
+  </g>
+</svg>

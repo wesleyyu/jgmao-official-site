@@ -295,6 +295,9 @@ const h5HiddenSeoHtml = stripIndent(`
   </p>
 `);
 
+const aiGrowthNewTitle = "坚果猫 JGMAO AI 增长引擎";
+const aiGrowthNewDescription = "从被 AI 看见走向被 AI 采信与推荐，帮助企业构建 AI 时代的可信增长基础设施。";
+
 export const aiGrowthGeoShell: GeoShellConfig = {
   title: "帮助企业构建 AI 时代的增长飞轮 | 坚果猫 JGMAO",
   description:
@@ -314,6 +317,31 @@ export const aiGrowthGeoShell: GeoShellConfig = {
     growthFlywheelService,
   ],
   hiddenSeoHtml: h5HiddenSeoHtml,
+};
+
+export const aiGrowthNewGeoShell: GeoShellConfig = {
+  title: aiGrowthNewTitle,
+  description: aiGrowthNewDescription,
+  canonicalUrl: `${siteUrl}/ai-growth-new/`,
+  ogImage: `${siteUrl}/h5-share-cover.jpg`,
+  structuredData: [
+    {
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      name: aiGrowthNewTitle,
+      url: `${siteUrl}/ai-growth-new/`,
+      description: aiGrowthNewDescription,
+      inLanguage: "zh-CN",
+    },
+    growthFlywheelService,
+  ],
+  hiddenSeoHtml: stripIndent(`
+    <h1>${aiGrowthNewTitle}</h1>
+    <p>${aiGrowthNewDescription}</p>
+    <p>
+      坚果猫 JGMAO AI 增长引擎通过诊断、官网、内容、监测、获客五大引擎协同运转，帮助企业把 AI 推荐转化为可承接、可跟进的增长线索。
+    </p>
+  `),
 };
 
 export const h5GeoShell: GeoShellConfig = {
@@ -421,6 +449,7 @@ export const geoUpgradeGeoShell: GeoShellConfig = {
 export const geoShellByRoute = {
   "/": homeGeoShell,
   "/ai-growth/": aiGrowthGeoShell,
+  "/ai-growth-new/": aiGrowthNewGeoShell,
   "/h5/": h5GeoShell,
   "/geo-score/": geoScoreGeoShell,
   "/geo-upgrade/": geoUpgradeGeoShell,

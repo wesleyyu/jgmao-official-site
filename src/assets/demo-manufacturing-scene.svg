@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 520" role="img" aria-labelledby="title desc">
+  <title id="title">Manufacturing scene image</title>
+  <desc id="desc">Factory equipment details, dashboard, certification card, and engineering workflow.</desc>
+  <defs><linearGradient id="bg" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#edf4f7"/><stop offset=".6" stop-color="#d8e6ec"/><stop offset="1" stop-color="#b9ced9"/></linearGradient></defs>
+  <rect width="900" height="520" rx="40" fill="url(#bg)"/>
+  <g transform="translate(96 82)">
+    <rect width="708" height="340" rx="38" fill="#fff" opacity=".9"/>
+    <rect x="44" y="48" width="244" height="232" rx="30" fill="#17242c"/>
+    <rect x="78" y="86" width="116" height="13" rx="6.5" fill="#c9d7de"/>
+    <rect x="78" y="126" width="166" height="11" rx="5.5" fill="#fff" opacity=".36"/>
+    <rect x="78" y="156" width="128" height="11" rx="5.5" fill="#fff" opacity=".26"/>
+    <rect x="78" y="210" width="84" height="34" rx="17" fill="#9fb8c5"/>
+    <rect x="332" y="48" width="132" height="232" rx="30" fill="#dfe9ee"/>
+    <circle cx="398" cy="112" r="42" fill="#42677a"/>
+    <rect x="364" y="180" width="68" height="12" rx="6" fill="#17242c" opacity=".55"/>
+    <rect x="508" y="48" width="154" height="232" rx="30" fill="#eef3f6"/>
+    <rect x="540" y="96" width="28" height="126" rx="14" fill="#42677a" opacity=".5"/>
+    <rect x="580" y="132" width="28" height="90" rx="14" fill="#42677a" opacity=".72"/>
+    <rect x="620" y="76" width="28" height="146" rx="14" fill="#42677a"/>
+  </g>
+</svg>
