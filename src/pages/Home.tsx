@@ -1023,50 +1023,50 @@ const geoBlueprints: GeoBlueprint[] = [
 
 const scenarioCards: ScenarioCard[] = [
   {
-    title: { zh: "AI 搜索与问答里品牌不够可见", en: "Brand visibility is weak in AI search and answer experiences" },
+    title: { zh: "发现需求路径", en: "Discover Demand Journeys" },
     description: {
-      zh: "官网有内容，但结构和表达不适合被 AI 抽取、引用和采信，品牌在高意图问题里很难被看见。",
-      en: "The site has content, but its structure and expression are weak for AI retrieval, citation, and trust in high-intent question scenarios.",
+      zh: "识别客户会在 AI 搜索中提出的问题、比较的方案和关注的证据，明确企业应该在哪些问题里被看见。",
+      en: "Identify the questions customers ask in AI search, the options they compare, and the proof they care about, then clarify where the company should appear.",
     },
     icon: Globe2,
     accent: "#5AE4FF",
     glow: "rgba(90, 228, 255, 0.24)",
   },
   {
-    title: { zh: "内容产能不稳定，难以持续覆盖问题场景", en: "Content production is inconsistent and cannot keep up with demand" },
+    title: { zh: "沉淀可信内容资产", en: "Build Trusted Content Assets" },
     description: {
-      zh: "专题页、问答页、案例和行业内容依赖人工堆叠，更新慢，难以形成持续扩张的内容系统。",
-      en: "Landing pages, Q&A content, case studies, and industry insight rely on manual effort and fail to scale into a durable publishing system.",
+      zh: "把官网页面、FAQ、案例、专题页、产品资料和行业观点，整理成可被 AI 理解、引用和持续优化的内容资产。",
+      en: "Turn website pages, FAQ, cases, topic pages, product materials, and industry viewpoints into content assets that AI can understand, cite, and keep improving.",
     },
     icon: FileSearch,
     accent: "#A1F56A",
     glow: "rgba(161, 245, 106, 0.22)",
   },
   {
-    title: { zh: "官网承接弱，访客难以理解和转化", en: "The website cannot clearly capture intent or convert visitors" },
+    title: { zh: "建立企业知识库", en: "Create Enterprise Knowledge" },
     description: {
-      zh: "页面层级、信任表达和 CTA 路径不清晰，访客虽然来了，却不知道下一步，也难以快速建立信任。",
-      en: "Page hierarchy, trust signals, and CTA paths are unclear, so visitors arrive but fail to understand the next step or trust the offer quickly.",
+      zh: "把分散在官网、文档、案例和内容里的信息，沉淀为企业知识库、向量数据库和知识图谱，支持官网、智能客服和 AI 智能体调用。",
+      en: "Organize scattered website, document, case, and content information into an enterprise knowledge base, vector database, and knowledge graph for websites, AI service, and agents.",
     },
     icon: Sparkles,
     accent: "#F3C56B",
     glow: "rgba(243, 197, 107, 0.22)",
   },
   {
-    title: { zh: "线索承接分散，销售跟进缺少闭环", en: "Lead handling is fragmented and follow-up lacks a closed loop" },
+    title: { zh: "增强权威可信度", en: "Strengthen Authority and Trust" },
     description: {
-      zh: "咨询入口、表单、标签和分发逻辑没有连起来，导致高意图线索无法被快速识别、路由和跟进。",
-      en: "Consultation entry points, forms, tags, and routing are disconnected, so high-intent leads are not captured, routed, or followed up quickly.",
+      zh: "通过区块链可信登记、客户案例、资质证明、专家观点、权威媒体合作和外部可信信号，提升品牌被采信和被推荐的基础。",
+      en: "Use blockchain trusted registration, customer cases, credentials, expert viewpoints, authoritative media cooperation, and external trust signals to strengthen the foundation for trust and recommendation.",
     },
     icon: Database,
     accent: "#7CB6FF",
     glow: "rgba(124, 182, 255, 0.22)",
   },
   {
-    title: { zh: "看不清 AI 推荐带来的结果与质量", en: "Recommendation impact and quality are hard to evaluate" },
+    title: { zh: "承接增长机会", en: "Capture Growth Opportunities" },
     description: {
-      zh: "企业知道流量在变，但不知道 AI 为什么推荐、哪些内容在推动商机，以及该如何持续优化。",
-      en: "The company sees changing traffic but lacks visibility into why AI recommends it, which assets create opportunities, and how to improve systematically.",
+      zh: "把 AI 推荐、官网访问、内容咨询和表单线索接住，通过官网入口、智能客服、企微承接、线索通知与复测反馈，形成持续跟进路径。",
+      en: "Capture AI recommendations, website visits, content inquiries, and form leads through website entry points, AI service, WeCom handoff, notifications, and retesting feedback.",
     },
     icon: Radar,
     accent: "#FF8C8C",
@@ -2529,17 +2529,7 @@ function Home() {
                 </div>
               ))}
             </div>
-
-            <div className="mt-8 rounded-[1.8rem] border border-cyan-300/15 bg-cyan-300/8 p-6">
-              <p className="text-xs uppercase tracking-[0.24em] text-cyan-100/80">{locale === "zh" ? "典型问题" : "Typical Challenges"}</p>
-              <h3 className="mt-3 text-3xl font-semibold text-white">{locale === "zh" ? "这类企业最常见的增长断点" : "The most common growth breakpoints"}</h3>
-              <p className="mt-4 text-sm leading-7 text-slate-200">
-                {locale === "zh"
-                  ? "品牌能做内容，但不一定能被 AI 看见；有流量，也不一定能形成线索；有推荐，也不一定知道结果为什么好或不好。"
-                  : "Many teams can publish content, but not all of it becomes visible to AI, converts visitors, or turns recommendations into measurable pipeline."}
-              </p>
-              <p className="mt-4 text-sm leading-7 text-slate-300 md:hidden">{mobileAccordionHint}</p>
-            </div>
+            <p className="mt-5 text-sm leading-7 text-slate-300 md:hidden">{mobileAccordionHint}</p>
           </article>
 
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -2566,7 +2556,7 @@ function Home() {
                         <Icon className="h-5 w-5" />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="text-xs uppercase tracking-[0.22em] text-slate-400">{locale === "zh" ? `场景 0${index + 1}` : `Scenario 0${index + 1}`}</p>
+                        <p className="text-xs uppercase tracking-[0.22em] text-slate-400">{locale === "zh" ? `环节 0${index + 1}` : `Step 0${index + 1}`}</p>
                         <h3 className="mt-1 text-xl font-semibold text-white">{t(scenario.title, locale)}</h3>
                       </div>
                       <ArrowRight className={cn("h-4 w-4 shrink-0 text-slate-400 transition md:hidden", isExpanded && "rotate-90 text-white")} />
