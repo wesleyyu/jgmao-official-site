@@ -1137,9 +1137,31 @@ const brandCopy = {
   architectureTag: { zh: "Core Scenarios", en: "Core Scenarios" },
   architectureTitle: { zh: "核心场景：适用问题", en: "Core scenarios: where this system fits" },
   architectureBody: {
-    zh: "如果企业正在面临 AI 可见性不足、内容生产不稳定、官网承接弱、线索闭环断裂，或者看不清推荐结果质量，这一套增长系统才真正有价值。",
-    en: "This system is most useful when enterprises face weak AI visibility, inconsistent content production, poor website conversion, fragmented lead handling, or weak recommendation insight.",
+    zh: "当企业开始发现下面这些问题，JGMAO 会把官网、可信内容资产、企业知识库、推荐监测与获客承接连接起来，形成一套持续优化的增长飞轮。",
+    en: "When these problems start to appear, JGMAO connects the website, trusted content assets, enterprise knowledge base, recommendation monitoring, and lead handoff into a continuously optimized growth flywheel.",
   },
+  architectureProblems: [
+    {
+      zh: "AI 回答中很少出现自己的品牌",
+      en: "The brand rarely appears in AI answers",
+    },
+    {
+      zh: "官网和内容难以被 AI 准确理解",
+      en: "The website and content are hard for AI to understand accurately",
+    },
+    {
+      zh: "内容生产零散，无法沉淀为可信内容资产",
+      en: "Content production is scattered and does not become trusted content assets",
+    },
+    {
+      zh: "官网有访问，但缺少有效咨询和线索承接",
+      en: "The website has traffic but lacks effective inquiry and lead handoff",
+    },
+    {
+      zh: "不清楚 AI 是否推荐了自己，也不知道推荐质量如何",
+      en: "The team cannot tell whether AI recommends the brand or how good those recommendations are",
+    },
+  ],
   flywheelDemoTag: { zh: "Interactive Flywheel", en: "Interactive Flywheel" },
   flywheelDemoTitle: { zh: "JGMAO增长飞轮", en: "Use one interactive growth flywheel to explain all five JGMAO modules clearly" },
   flywheelDemoBody: {
@@ -2494,6 +2516,19 @@ function Home() {
             <SectionTag>{t(brandCopy.architectureTag, locale)}</SectionTag>
             <h2 className="mt-5 text-3xl font-semibold tracking-tight text-white sm:text-[2.5rem]">{t(brandCopy.architectureTitle, locale)}</h2>
             <p className="mt-4 text-base leading-8 text-slate-300">{t(brandCopy.architectureBody, locale)}</p>
+            <div className="mt-6 grid gap-3">
+              {brandCopy.architectureProblems.map((problem, index) => (
+                <div
+                  key={t(problem, locale)}
+                  className="flex gap-3 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm leading-6 text-slate-100"
+                >
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-cyan-300/15 text-xs font-semibold text-cyan-100">
+                    {index + 1}
+                  </span>
+                  <span>{t(problem, locale)}</span>
+                </div>
+              ))}
+            </div>
 
             <div className="mt-8 rounded-[1.8rem] border border-cyan-300/15 bg-cyan-300/8 p-6">
               <p className="text-xs uppercase tracking-[0.24em] text-cyan-100/80">{locale === "zh" ? "典型问题" : "Typical Challenges"}</p>
