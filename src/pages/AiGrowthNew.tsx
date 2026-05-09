@@ -162,44 +162,44 @@ const breakpointSteps = [
 
 const engineModules = [
   {
-    title: { zh: "GEO 诊断与优化", en: "GEO Diagnosis & Optimization" },
+    title: { zh: "GEO 优化引擎", en: "GEO Optimization Engine" },
     body: {
-      zh: "从抓取、结构、内容资产、AI 可见性、信任信号和转化承接等维度，判断官网当前问题和优化优先级。",
-      en: "Evaluate crawling, structure, content assets, AI visibility, trust signals, and conversion paths to identify priorities.",
+      zh: "从 AI 搜索问题、品牌表达、官网结构、可信内容资产、企业知识库和外部可信信号等维度，识别企业为什么不容易被 AI 看见、引用和推荐。",
+      en: "Identify why a company is not easily seen, cited, or recommended by AI across search questions, brand expression, website structure, trusted content assets, enterprise knowledge, and external trust signals.",
     },
     icon: Radar,
   },
   {
-    title: { zh: "AI 增长官网", en: "AI Growth Website" },
-    body: {
-      zh: "不只是做一个官网，而是生成适合 GEO、内容发布、知识库沉淀和获客转化的企业官网系统。",
-      en: "Create more than a website: a system for GEO, content publishing, knowledge assets, and lead conversion.",
-    },
-    icon: Globe2,
-  },
-  {
     title: { zh: "可信内容资产", en: "Trusted Content Assets" },
     body: {
-      zh: "围绕 FAQ、案例、专题页、行业知识和产品说明，沉淀更容易被用户和 AI 理解的内容资产。",
-      en: "Build FAQ, cases, topic pages, industry insights, and product explanations that users and AI can understand.",
+      zh: "把文章、案例、FAQ、专题页和产品资料，沉淀成可复用、可追踪、可持续优化的可信内容资产。",
+      en: "Turn articles, cases, FAQ, topic pages, and product materials into reusable, trackable, and continuously optimizable trusted content assets.",
     },
     icon: FileText,
   },
   {
-    title: { zh: "AI 推荐监测", en: "AI Recommendation Monitoring" },
+    title: { zh: "AI 增长网站", en: "AI Growth Website" },
     body: {
-      zh: "持续观察企业在 AI 搜索、推荐和内容引用场景中的可见性变化，辅助判断优化是否有效。",
-      en: "Monitor how visibility changes across AI search, recommendation, and citation scenarios.",
+      zh: "让官网不只是展示页面，而是连接 GEO、可信内容资产、企业知识库、咨询入口和线索承接的增长界面。",
+      en: "Make the website the operating interface that connects GEO, trusted content assets, enterprise knowledge, consultation entries, and lead handoff.",
     },
-    icon: BarChart3,
+    icon: Globe2,
   },
   {
-    title: { zh: "智能获客转化", en: "Smart Lead Conversion" },
+    title: { zh: "智能获客系统", en: "Intelligent Lead System" },
     body: {
-      zh: "通过清晰 CTA、线索表单、企微承接、内容路径和咨询入口，把内容曝光转化为真实线索。",
-      en: "Turn exposure into real leads through clear CTAs, forms, WeCom handoff, content paths, and consultation entries.",
+      zh: "把 AI 推荐、官网访问、内容咨询和表单线索接住，并通过企微、客服、飞书通知和复测反馈形成跟进路径。",
+      en: "Capture AI recommendations, website visits, content inquiries, and form leads, then route them through WeCom, support, Feishu notifications, and retest feedback.",
     },
     icon: MessageCircle,
+  },
+  {
+    title: { zh: "AI 推荐监测", en: "AI Recommendation Monitoring" },
+    body: {
+      zh: "持续观察品牌、产品和内容在 AI 回答中的出现、引用、比较和推荐表现，帮助企业判断下一步该优化什么。",
+      en: "Monitor how brands, products, and content appear, get cited, compared, and recommended in AI answers so teams know what to optimize next.",
+    },
+    icon: BarChart3,
   },
 ];
 
@@ -400,10 +400,10 @@ const sectionCopy = {
   },
   websiteCardCta: { zh: "查看官网生成", en: "View website generation" },
   engineEyebrow: { zh: "五大引擎", en: "Five Engines" },
-  engineTitle: { zh: "五大引擎协同运转", en: "Five engines working together" },
+  engineTitle: { zh: "五大引擎：核心能力", en: "Five engines: core capabilities" },
   engineBody: {
-    zh: "围绕诊断、官网、内容、监测与获客，把可信增长路径落到可执行系统中，帮助企业从被 AI 看见，走向被 AI 采信、推荐，并形成持续增长闭环。",
-    en: "Diagnosis, website, content, monitoring, and lead conversion turn the trusted growth path into an executable system.",
+    zh: "解决从 AI 可见性、可信内容资产、官网承接到推荐监测与获客转化的关键断点，协同运转后形成完整的 AI 增长飞轮。",
+    en: "Each engine contributes to GEO visibility, trusted content assets, website handoff, recommendation monitoring, and lead conversion. Together, they form a complete AI growth flywheel.",
   },
   plansEyebrow: { zh: "产品层级", en: "Product Layers" },
   plansTitle: { zh: "先低门槛看清问题，再进入持续服务", en: "Start with a low-friction diagnosis, then move into ongoing service." },
