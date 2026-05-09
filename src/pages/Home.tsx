@@ -2542,17 +2542,17 @@ function Home() {
         </div>
 
         <section id="architecture" className="grid gap-6 py-14 lg:grid-cols-[0.88fr_1.12fr]">
-          <article className="rounded-[2rem] border border-white/10 bg-slate-950/55 p-6 backdrop-blur-xl">
+          <article className="rounded-[2rem] border border-white/10 bg-slate-950/55 p-6 shadow-[0_24px_90px_rgba(0,0,0,0.22)] backdrop-blur-xl">
             <SectionTag>{t(brandCopy.architectureTag, locale)}</SectionTag>
             <h2 className="mt-5 text-3xl font-semibold tracking-tight text-white sm:text-[2.5rem]">{t(brandCopy.architectureTitle, locale)}</h2>
             <div className="mt-6 grid gap-3">
               {brandCopy.architectureProblems.map((problem, index) => (
                 <div
                   key={t(problem.title, locale)}
-                  className="flex gap-3 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm leading-6 text-slate-100"
+                  className="group flex gap-3 rounded-2xl border border-white/10 bg-white/[0.035] px-4 py-3 text-sm leading-6 text-slate-100 transition hover:border-cyan-200/25 hover:bg-cyan-200/[0.055]"
                 >
-                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-cyan-300/15 text-xs font-semibold text-cyan-100">
-                    {index + 1}
+                  <span className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-cyan-200/25 bg-cyan-300/10">
+                    <span className="h-1.5 w-1.5 rounded-full bg-cyan-100 shadow-[0_0_12px_rgba(103,232,249,0.65)]" />
                   </span>
                   <span>
                     <span className="block font-semibold text-white">{t(problem.title, locale)}</span>
@@ -2565,8 +2565,10 @@ function Home() {
           </article>
 
           <div className="space-y-4">
-            <div className="rounded-[1.8rem] border border-cyan-300/15 bg-cyan-300/8 p-5">
-              <p className="text-xs uppercase tracking-[0.24em] text-cyan-100/80">{locale === "zh" ? "JGMAO 解法" : "JGMAO Solution"}</p>
+            <div className="relative overflow-hidden rounded-[1.8rem] border border-cyan-200/25 bg-gradient-to-br from-cyan-300/14 via-white/[0.055] to-violet-300/12 p-5 shadow-[0_24px_100px_rgba(34,211,238,0.12)]">
+              <div className="pointer-events-none absolute -right-12 -top-16 h-36 w-36 rounded-full bg-cyan-200/20 blur-3xl" />
+              <div className="pointer-events-none absolute -bottom-20 left-12 h-40 w-40 rounded-full bg-violet-300/15 blur-3xl" />
+              <p className="relative text-xs uppercase tracking-[0.24em] text-cyan-100/85">{locale === "zh" ? "JGMAO 解法" : "JGMAO Solution"}</p>
               <p className="mt-3 text-sm leading-7 text-slate-200">{t(brandCopy.architectureBody, locale)}</p>
             </div>
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -2581,8 +2583,11 @@ function Home() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, amount: 0.25 }}
                   transition={{ duration: 0.35, delay: index * 0.04 }}
-                  className="rounded-[1.8rem] border border-white/10 bg-white/6 p-5 shadow-[0_20px_80px_rgba(0,0,0,0.2)] backdrop-blur"
+                  className="relative overflow-hidden rounded-[1.8rem] border border-white/10 bg-white/6 p-5 shadow-[0_20px_80px_rgba(0,0,0,0.2)] backdrop-blur transition hover:-translate-y-0.5 hover:border-white/18 hover:bg-white/[0.075]"
                 >
+                  {index < scenarioCards.length - 1 ? (
+                    <span className="pointer-events-none absolute right-5 top-5 hidden h-px w-10 bg-gradient-to-r from-transparent via-white/25 to-transparent xl:block" />
+                  ) : null}
                   <button
                     type="button"
                     onClick={() => setActiveScenarioIndex((current) => (current === index ? null : index))}
@@ -2593,7 +2598,7 @@ function Home() {
                         <Icon className="h-5 w-5" />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="text-xs uppercase tracking-[0.22em] text-slate-400">{locale === "zh" ? `环节 0${index + 1}` : `Step 0${index + 1}`}</p>
+                        <p className="text-xs uppercase tracking-[0.22em]" style={{ color: scenario.accent }}>{locale === "zh" ? `环节 0${index + 1}` : `Step 0${index + 1}`}</p>
                         <h3 className="mt-1 text-xl font-semibold text-white">{t(scenario.title, locale)}</h3>
                       </div>
                       <ArrowRight className={cn("h-4 w-4 shrink-0 text-slate-400 transition md:hidden", isExpanded && "rotate-90 text-white")} />
