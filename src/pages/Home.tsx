@@ -1137,7 +1137,7 @@ const brandCopy = {
   architectureTag: { zh: "Core Scenarios", en: "Core Scenarios" },
   architectureTitle: { zh: "AI 时代企业常见的增长断点", en: "Common growth breakpoints in the AI era" },
   architectureBody: {
-    zh: "这些问题往往不是单点问题，而是官网、可信内容资产、企业知识库、推荐监测与获客承接没有协同运转。",
+    zh: "面对这些问题，JGMAO 会把官网、可信内容资产、企业知识库、推荐监测与获客承接连接起来，形成一套持续优化的增长飞轮。",
     en: "When these problems start to appear, JGMAO connects the website, trusted content assets, enterprise knowledge base, recommendation monitoring, and lead handoff into a continuously optimized growth flywheel.",
   },
   architectureProblems: [
