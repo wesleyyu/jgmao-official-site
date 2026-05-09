@@ -408,6 +408,29 @@
     animation-play-state: paused !important;
   }
 
+  [data-trust-motion-active="false"] .trust-chain::after,
+  [data-trust-motion-active="false"] .trust-node,
+  [data-trust-motion-active="false"] .trust-node::after {
+    animation-play-state: paused !important;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .flow-current-edge,
+    .trust-chain::after,
+    .trust-node,
+    .trust-node::after,
+    .flywheel-ring,
+    .flywheel-ring-reverse,
+    .status-badge-live,
+    .status-badge-dot,
+    .snapshot-flow-dot,
+    .snapshot-layer-card::before,
+    .snapshot-layer-icon,
+    .flywheel-why-connector::after {
+      animation: none !important;
+    }
+  }
+
   @keyframes flow-dash {
     from {
       stroke-dashoffset: 0;

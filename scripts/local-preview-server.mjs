@@ -44,8 +44,9 @@ const wechatPayApiV2Key = process.env.WECHAT_PAY_API_V2_KEY || "";
 const wechatPayNotifyUrl = process.env.WECHAT_PAY_NOTIFY_URL || "";
 const wechatPayOauthBaseUrl = (process.env.WECHAT_PAY_OAUTH_BASE_URL || "").replace(/\/$/, "");
 const wechatPayOauthCallbackPath = (process.env.WECHAT_PAY_OAUTH_CALLBACK_PATH || "/pay/wechat/callback/").trim() || "/pay/wechat/callback/";
-const wechatPaySolutionPriceFen = Number(process.env.WECHAT_PAY_SOLUTION_PRICE_FEN || 9900);
-const wechatPayStandardPriceFen = Number(process.env.WECHAT_PAY_STANDARD_PRICE_FEN || 129900);
+const wechatPaySolutionPriceFen = Number(process.env.WECHAT_PAY_SOLUTION_PRICE_FEN || 19900);
+const wechatPayStandardPriceFen = Number(process.env.WECHAT_PAY_STANDARD_PRICE_FEN || 200000);
+const wechatPayProfessionalPriceFen = Number(process.env.WECHAT_PAY_PROFESSIONAL_PRICE_FEN || 600000);
 const wecomAccessTokenCache = { value: "", expiresAt: 0 };
 
 const mimeTypes = new Map([
@@ -980,6 +981,10 @@ const planOrderMeta = {
   standard: {
     title: "坚果猫AI增长引擎标准版",
     priceFen: wechatPayStandardPriceFen,
+  },
+  professional: {
+    title: "坚果猫AI增长引擎专业版",
+    priceFen: wechatPayProfessionalPriceFen,
   },
 };
 

@@ -13,7 +13,7 @@ import {
   Sparkles,
   X,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "wouter";
 
 import GrowthEntryFloating from "@/components/GrowthEntryFloating";
@@ -100,7 +100,7 @@ const engineModules = [
 const plans = [
   {
     name: { zh: "官网 GEO 优化方案", en: "Website GEO Optimization Plan" },
-    price: { zh: "99 元 / 次", en: "RMB 99 / plan" },
+    price: { zh: "199 元 / 次", en: "RMB 199 / plan" },
     tag: { zh: "适合先看清怎么改", en: "Best for clarifying what to improve" },
     body: {
       zh: "基于本次官网评分结果，进一步生成页面级分析、具体改造清单与优先级路线图。",
@@ -117,7 +117,7 @@ const plans = [
   },
   {
     name: { zh: "坚果猫AI增长引擎标准版", en: "JGMAO AI Growth Engine Standard" },
-    price: { zh: "1299 元/月", en: "RMB 1299 / month" },
+    price: { zh: "2000 元/月", en: "RMB 2000 / month" },
     tag: { zh: "适合持续运营和获客", en: "Best for ongoing operation and leads" },
     body: {
       zh: "通过 GEO 诊断与优化、可信内容资产、AI 增长官网、AI 推荐监测与智能获客转化，帮助企业从被 AI 看见，到被 AI 理解、信任和推荐，并把内容曝光转化为真实线索。",
@@ -127,11 +127,35 @@ const plans = [
       { zh: "GEO 诊断与优化引擎", en: "GEO diagnosis and optimization engine" },
       { zh: "可信内容资产中心", en: "Trusted content asset center" },
       { zh: "AI 增长官网系统", en: "AI growth website system" },
+      { zh: "面向 AI 大模型的企业知识库", en: "Enterprise knowledge base for large AI models" },
       { zh: "AI 推荐监测系统", en: "AI recommendation monitoring system" },
       { zh: "智能获客与转化系统", en: "Smart lead and conversion system" },
+      { zh: "持续获得官网 GEO 详细报告与优化方案", en: "Ongoing website GEO detailed reports and optimization plans" },
+      { zh: "数字内容区块链可信登记 200 份/月", en: "200 digital content blockchain trusted registrations per month" },
     ],
     href: "/website-create/",
     cta: { zh: "了解标准版", en: "Learn about Standard" },
+  },
+  {
+    name: { zh: "坚果猫AI增长引擎专业版", en: "JGMAO AI Growth Engine Professional" },
+    price: { zh: "6000 元/月", en: "RMB 6000 / month" },
+    tag: { zh: "适合独立部署和可信赋能", en: "Best for dedicated deployment and trust enablement" },
+    body: {
+      zh: "在标准版全部能力基础上，进一步提供独立 IP 服务器、日常运维、企业向量数据库、AI 智能客服、数字内容区块链可信登记与技术支持，适合更重视稳定运行和咨询承接的企业。",
+      en: "Includes all Standard capabilities, plus dedicated IP/server deployment, operations support, enterprise vector database setup, AI customer service, blockchain trusted registrations, and technical support for teams that need more stable operations and lead handoff.",
+    },
+    points: [
+      { zh: "标准版全部能力", en: "All Standard capabilities" },
+      { zh: "独立 IP 与独立服务器部署", en: "Dedicated IP and server deployment" },
+      { zh: "服务器日常运维与基础安全维护", en: "Server operations and basic security maintenance" },
+      { zh: "可信内容资产中心：内容资产区块链可信登记 600 份/月", en: "Trusted content asset center: 600 blockchain trusted content registrations per month" },
+      { zh: "企业向量数据库建设企业内容资产大脑", en: "Enterprise vector database for a content asset brain" },
+      { zh: "AI 智能体辅助内容运营与知识库补齐", en: "AI agent assistance for content operations and knowledge-base completion" },
+      { zh: "AI 智能客服与咨询承接系统", en: "AI customer service and consultation handoff system" },
+      { zh: "基础故障排查与技术支持", en: "Basic troubleshooting and technical support" },
+    ],
+    href: "/geo-upgrade/?plan=professional#professional-plan",
+    cta: { zh: "了解专业版", en: "Learn about Professional" },
   },
 ];
 
@@ -344,9 +368,48 @@ function setMeta() {
 export default function AiGrowthNewPage() {
   const [locale, setLocale] = useState<Locale>("zh");
   const [menuOpen, setMenuOpen] = useState(false);
+  const trustedFlowSectionRef = useRef<HTMLElement | null>(null);
+  const [trustedFlowMotionActive, setTrustedFlowMotionActive] = useState(true);
 
   useEffect(() => {
     setMeta();
+  }, []);
+
+  useEffect(() => {
+    const target = trustedFlowSectionRef.current;
+
+    if (!target) {
+      return undefined;
+    }
+
+    const reduceMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let sectionVisible = true;
+
+    const syncMotionState = () => {
+      setTrustedFlowMotionActive(sectionVisible && !document.hidden && !reduceMotionQuery.matches);
+    };
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        sectionVisible = entries[0]?.isIntersecting ?? true;
+        syncMotionState();
+      },
+      {
+        rootMargin: "10% 0px -12% 0px",
+        threshold: [0, 0.1, 0.25],
+      },
+    );
+
+    observer.observe(target);
+    document.addEventListener("visibilitychange", syncMotionState);
+    reduceMotionQuery.addEventListener("change", syncMotionState);
+    syncMotionState();
+
+    return () => {
+      observer.disconnect();
+      document.removeEventListener("visibilitychange", syncMotionState);
+      reduceMotionQuery.removeEventListener("change", syncMotionState);
+    };
   }, []);
 
   return (
@@ -540,7 +603,11 @@ export default function AiGrowthNewPage() {
         </div>
       </section>
 
-      <section className="relative mx-auto max-w-7xl px-5 py-10 sm:px-8">
+      <section
+        ref={trustedFlowSectionRef}
+        data-trust-motion-active={trustedFlowMotionActive ? "true" : "false"}
+        className="relative mx-auto max-w-7xl px-5 py-10 sm:px-8"
+      >
         <div className="overflow-hidden rounded-[2.4rem] border border-white/10 bg-[linear-gradient(145deg,rgba(8,21,37,0.9),rgba(13,30,51,0.72))] p-6 shadow-[0_28px_100px_rgba(0,0,0,0.24)] backdrop-blur-xl lg:p-8">
           <div className="grid gap-6 lg:grid-cols-[0.78fr_1.22fr] lg:items-center">
             <div>
@@ -661,7 +728,7 @@ export default function AiGrowthNewPage() {
               {text(sectionCopy.plansBody, locale)}
             </p>
           </div>
-          <div className="grid gap-5 md:grid-cols-2">
+          <div className="grid gap-5 xl:grid-cols-3">
             {plans.map((plan) => (
               <article key={plan.name.zh} className="rounded-[2rem] border border-white/10 bg-slate-950/62 p-6 shadow-[0_20px_70px_rgba(0,0,0,0.22)] backdrop-blur-xl">
                 <span className="rounded-full bg-cyan-300/10 px-3 py-1.5 text-xs font-semibold text-cyan-100">{text(plan.tag, locale)}</span>

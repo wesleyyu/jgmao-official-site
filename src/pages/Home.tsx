@@ -158,8 +158,8 @@ const heroStats: HeroStat[] = [
     label: { zh: "内容产能", en: "Content Throughput" },
     value: "3.6x",
     detail: {
-      zh: "AI 内容工厂把专题页、案例、行业问答和线索页放进同一套生产系统。",
-      en: "The AI content factory puts landing pages, case studies, answer-led articles, and lead pages into one system.",
+      zh: "可信内容资产把专题页、案例、行业问答和线索页放进同一套沉淀系统。",
+      en: "Trusted content assets put landing pages, case studies, answer-led articles, and lead pages into one system.",
     },
   },
   {
@@ -174,22 +174,31 @@ const heroStats: HeroStat[] = [
 
 const snapshotLayers: SnapshotLayer[] = [
   {
-    label: { zh: "采集层", en: "Signal Layer" },
-    value: { zh: "搜索信号 + 站点行为 + 线索信号 + AI 引用", en: "Search + Site + Lead Signals + AI citations" },
+    label: { zh: "可信信息", en: "Trusted Information" },
+    value: {
+      zh: "把官网、产品、案例、常见问答、知识内容与资质材料，沉淀为 AI 更容易理解的可信数字内容资产。",
+      en: "Turn websites, products, cases, FAQs, knowledge, and credentials into trusted digital content assets AI can understand.",
+    },
     icon: Gauge,
     accent: "#52E6FF",
     glow: "rgba(82, 230, 255, 0.22)",
   },
   {
-    label: { zh: "策略层", en: "Strategy Layer" },
-    value: { zh: "增长路径 → 内容生成 → 监测优化 → 可信表达", en: "Journey → Generation → Monitoring → Authority" },
+    label: { zh: "可信赋能", en: "Trusted Enablement" },
+    value: {
+      zh: "通过企业知识库、结构化官网、区块链可信登记、权威媒体合作、专家观点与案例证明，建立可信支撑。",
+      en: "Build trust support through enterprise knowledge bases, structured websites, blockchain records, media collaboration, expert viewpoints, and cases.",
+    },
     icon: Bot,
     accent: "#F5C55C",
     glow: "rgba(245, 197, 92, 0.2)",
   },
   {
-    label: { zh: "执行层", en: "Execution Layer" },
-    value: { zh: "Orchestration 自动发布 / 回写 / 复盘", en: "Orchestration automates publishing, write-back, and review" },
+    label: { zh: "可信引用", en: "Trusted Citation" },
+    value: {
+      zh: "持续监测品牌、产品和内容在 AI 回答中的提及、引用、比较与推荐表现，并反向优化内容与获客路径。",
+      en: "Monitor how brands, products, and content are mentioned, cited, compared, and recommended by AI, then optimize content and lead paths.",
+    },
     icon: Workflow,
     accent: "#B592FF",
     glow: "rgba(181, 146, 255, 0.22)",
@@ -249,44 +258,48 @@ const flywheelModules: FlywheelModule[] = [
     letter: "J",
     name: "Journey",
     title: {
-      zh: "用户旅程与增长路径",
-      en: "User Journey and Growth Paths",
+      zh: "AI 搜索需求路径",
+      en: "AI Search Demand Journey",
     },
     compactTitle: {
-      zh: "增长路径",
-      en: "Growth Paths",
+      zh: "需求路径",
+      en: "Demand Journey",
     },
     summary: {
-      zh: "先把用户如何发现、比较、咨询、转化与复访拆成可优化的路径图。",
-      en: "Map how users discover, compare, ask, convert, and return before optimizing anything else.",
+      zh: "先识别客户会在 AI 搜索里提出哪些问题、比较哪些方案、关注哪些证据。",
+      en: "Identify what customers ask in AI search, which options they compare, and which proof they care about.",
     },
     description: {
-      zh: "我们先对官网流量、搜索意图、内容入口和转化节点做旅程拆解，找出哪里该承接、哪里该解释、哪里该推动行动。",
-      en: "We break down traffic, search intent, content entry points, and conversion nodes to understand where the site should guide, explain, or push action.",
+      zh: "先识别客户会在 AI 搜索里提出哪些问题、比较哪些方案、关注哪些证据，再反推企业官网、内容资产和咨询入口应该如何布局。",
+      en: "Start from customer questions in AI search, then work backward to the website structure, content assets, and consultation entry points.",
     },
     modalBody: {
-      zh: "Journey 模块决定官网的信息架构、入口优先级和转化路径。它会告诉你哪些页面该承接高意图需求，哪些内容该放在比较阶段，哪些证据应该在用户准备咨询前出现。",
-      en: "Journey defines the website’s information architecture, entry priorities, and conversion paths. It tells you which pages should capture high-intent demand, where comparison-stage content belongs, and when proof should show up before a buyer is ready to talk.",
+      zh: "Journey 模块决定企业应该在哪些 AI 搜索问题里被看见、哪些内容需要被 AI 理解，以及哪些入口需要承接潜在线索。它会把客户问题、比较路径和证据需求转成可执行的官网与内容布局。",
+      en: "Journey defines which AI search questions the brand should appear in, what AI needs to understand, and which entry points should capture potential leads.",
     },
     accent: "#52E6FF",
     glow: "rgba(82, 230, 255, 0.28)",
     icon: Waypoints,
     outputLabel: {
-      zh: "Journey 输出",
-      en: "Journey Outputs",
+      zh: "驱动能力",
+      en: "Flywheel Drivers",
     },
     outputs: [
       {
-        zh: "旅程地图",
-        en: "Journey maps",
+        zh: "AI 搜索问题清单",
+        en: "AI search question list",
       },
       {
-        zh: "关键页面结构",
-        en: "High-intent page architecture",
+        zh: "客户决策路径图",
+        en: "Customer decision journey map",
       },
       {
-        zh: "高意图入口清单",
-        en: "Priority entry-point list",
+        zh: "高意向内容入口",
+        en: "High-intent content entries",
+      },
+      {
+        zh: "官网承接页面建议",
+        en: "Website landing page suggestions",
       },
     ],
     signals: [
@@ -313,71 +326,75 @@ const flywheelModules: FlywheelModule[] = [
       { label: { zh: "高意图入口", en: "Intent Entries" }, value: "48" },
     ],
     integrationTitle: {
-      zh: "Journey 连接点",
+      zh: "J 连接点",
       en: "Journey Integrations",
     },
     integrations: [
       {
-        zh: "官网导航与页面层级设计",
-        en: "Website navigation and page hierarchy",
+        zh: "GEO 优化问题场景",
+        en: "GEO optimization scenarios",
       },
       {
-        zh: "CTA 与下载入口的布局策略",
-        en: "Layout strategy for CTAs and downloadable assets",
+        zh: "可信内容资产选题方向",
+        en: "Trusted content asset topics",
       },
       {
-        zh: "内容矩阵中的意图映射",
-        en: "Intent mapping across the content matrix",
+        zh: "官网结构与线索承接入口",
+        en: "Website structure and lead handoff entries",
       },
     ],
     nextStep: {
-      zh: "Journey 的输出会直接成为 Generation 的输入。",
-      en: "Journey outputs become direct inputs for Generation.",
+      zh: "J 的输出会直接决定哪些内容先做、哪些页面先改、哪些入口先承接。",
+      en: "Journey outputs decide which content to build first, which pages to improve first, and which entries should capture leads first.",
     },
   },
   {
-    id: "generation",
+    id: "growth-assets",
     letter: "G",
-    name: "Generation",
+    name: "Growth Assets",
     title: {
-      zh: "内容 / 站点 / 线索 / 转化的生成能力",
-      en: "Generation for Content, Pages, Leads, and Conversion",
+      zh: "可信增长内容资产",
+      en: "Trusted Growth Assets",
     },
     compactTitle: {
-      zh: "生成能力",
-      en: "Generation System",
+      zh: "增长资产",
+      en: "Growth Assets",
     },
     summary: {
-      zh: "把战略拆成可规模化生成的页面、内容、CTA 与线索承接资产。",
-      en: "Turn strategy into scalable pages, content, CTAs, and lead assets.",
+      zh: "把 AI 搜索需求路径转成官网页面、FAQ、案例、专题页、知识库素材和可信登记内容。",
+      en: "Turn AI search demand journeys into pages, FAQ, cases, topic assets, knowledge-base materials, and trusted registrations.",
     },
     description: {
-      zh: "不是只做文案，而是把页面模块、证据结构、问答片段、下载页、表单与线索收集一起形成高频生成引擎。",
-      en: "This is not just copywriting. It is a generation system for page modules, proof structures, answer blocks, download pages, forms, and lead capture assets.",
+      zh: "不是只生成文案，而是围绕客户问题、产品价值、案例证据和行业观点，沉淀可持续运营、可被 AI 理解和引用的增长资产。",
+      en: "This is not just copy generation. It builds reusable growth assets around customer questions, product value, case proof, and industry viewpoints.",
     },
     modalBody: {
-      zh: "Generation 负责把正确的路径转成可快速生产的官网资产。它把首页 Hero、解决方案页、FAQ、案例页和转化组件统一成一个可复用的内容生产系统。",
-      en: "Generation turns the right paths into rapidly produced website assets. It unifies homepage hero sections, solution pages, FAQs, case studies, and conversion components into one repeatable production system.",
+      zh: "Growth Assets 负责把 J 模块识别出来的 AI 搜索需求，转成官网页面、FAQ、案例、专题页、知识库素材、白皮书和可信登记内容，让内容不只是发布，而是成为可复用、可追踪、可持续优化的资产。",
+      en: "Growth Assets turns AI search demand from Journey into pages, FAQ, cases, topic assets, knowledge-base materials, white papers, and trusted registrations so content becomes reusable, trackable, and improvable.",
     },
     accent: "#9CF46B",
     glow: "rgba(156, 244, 107, 0.22)",
     icon: Sparkles,
     outputLabel: {
-      zh: "Generation 输出",
-      en: "Generation Outputs",
+      zh: "驱动能力",
+      en: "Flywheel Drivers",
     },
     outputs: [
       {
-        zh: "专题页批量生成",
-        en: "Landing page generation",
+        zh: "官网页面与专题页",
+        en: "Website pages and topic assets",
       },
       {
-        zh: "问答型内容资产",
-        en: "Answer-led content assets",
+        zh: "FAQ 与案例内容",
+        en: "FAQ and case content",
       },
       {
-        zh: "线索承接组件",
-        en: "Lead conversion components",
+        zh: "企业知识库素材",
+        en: "Enterprise knowledge-base materials",
+      },
+      {
+        zh: "可信登记内容资产",
+        en: "Trusted registration content assets",
       },
     ],
     signals: [
@@ -404,71 +421,79 @@ const flywheelModules: FlywheelModule[] = [
       { label: { zh: "线索承接率", en: "Lead Capture" }, value: "+37%" },
     ],
     integrationTitle: {
-      zh: "Generation 连接点",
-      en: "Generation Integrations",
+      zh: "G 连接点",
+      en: "Growth Asset Integrations",
     },
     integrations: [
       {
-        zh: "官网页面模板与模块库",
-        en: "Website page templates and module library",
+        zh: "AI 搜索需求路径",
+        en: "AI search demand journey",
       },
       {
-        zh: "内容生产节奏与发布工作流",
-        en: "Content production rhythm and publishing workflow",
+        zh: "企业知识库与向量数据库",
+        en: "Enterprise knowledge base and vector database",
       },
       {
-        zh: "线索页、CTA 与表单承接",
-        en: "Lead pages, CTAs, and form capture",
+        zh: "区块链可信登记",
+        en: "Blockchain trusted registration",
+      },
+      {
+        zh: "媒体分发与外部可信信号",
+        en: "Media distribution and external trust signals",
       },
     ],
     nextStep: {
-      zh: "Generation 的结果需要 Monitoring 来验证是否有效。",
-      en: "Generation needs Monitoring to validate what actually works.",
+      zh: "G 的输出会进入 Memory，沉淀为可检索、可调用、可复用的企业内容资产。",
+      en: "Growth Asset outputs enter Memory and become searchable, callable, and reusable enterprise content assets.",
     },
   },
   {
-    id: "monitoring",
+    id: "memory",
     letter: "M",
-    name: "Monitoring",
+    name: "Memory",
     title: {
-      zh: "监测、验证、反馈",
-      en: "Monitoring, Validation, and Feedback",
+      zh: "企业内容资产大脑",
+      en: "Enterprise Content Memory",
     },
     compactTitle: {
-      zh: "监测反馈",
-      en: "Monitoring Loop",
+      zh: "资产大脑",
+      en: "Content Memory",
     },
     summary: {
-      zh: "每一个增长动作都被追踪、验证、归因，然后回流到下一轮优化。",
-      en: "Every growth action is traced, validated, attributed, and fed back into the next cycle.",
+      zh: "把可信增长内容资产沉淀为可检索、可调用、可复用的企业知识记忆。",
+      en: "Turn trusted growth assets into searchable, callable, and reusable enterprise knowledge memory.",
     },
     description: {
-      zh: "从 AI 引用、自然搜索、页面行为到表单转化，我们把信号统一到一个监测层，知道哪条路径有效、哪种表达在损耗。",
-      en: "From AI citations and organic search to page behavior and form conversion, signals are unified into one monitoring layer to reveal which path works and which message leaks value.",
+      zh: "把官网页面、FAQ、案例、文章、白皮书和产品资料沉淀进企业知识库、向量数据库与知识图谱，形成企业内容资产大脑。",
+      en: "Store pages, FAQ, cases, articles, white papers, and product materials in the enterprise knowledge base, vector database, and knowledge graph.",
     },
     modalBody: {
-      zh: "Monitoring 让官网从主观判断转成有反馈的数据系统。不是只看流量，而是看 AI 引用、页面表现、案例吸引力、CTA 点击和最终线索质量。",
-      en: "Monitoring turns the website from a subjective design exercise into a feedback-driven system. It tracks not only traffic, but also AI citations, page performance, case engagement, CTA clicks, and lead quality.",
+      zh: "Memory 让内容资产不再散落在官网、文档和不同渠道里，而是进入企业知识库、向量数据库和知识图谱，成为可被官网生成、AI 智能客服、GEO 内容创作和推荐监测持续调用的企业内容资产大脑。",
+      en: "Memory prevents content assets from staying scattered across websites, documents, and channels. It turns them into an enterprise memory that websites, AI service agents, GEO content, and recommendation monitoring can keep using.",
     },
     accent: "#FFC966",
     glow: "rgba(255, 201, 102, 0.2)",
     icon: Radar,
     outputLabel: {
-      zh: "Monitoring 输出",
-      en: "Monitoring Outputs",
+      zh: "驱动能力",
+      en: "Flywheel Drivers",
     },
     outputs: [
       {
-        zh: "归因看板",
-        en: "Attribution dashboards",
+        zh: "企业 AI 知识库",
+        en: "Enterprise AI knowledge base",
       },
       {
-        zh: "实验报告",
-        en: "Experiment reports",
+        zh: "企业向量数据库",
+        en: "Enterprise vector database",
       },
       {
-        zh: "异常预警与修正建议",
-        en: "Anomaly alerts and fixes",
+        zh: "企业知识图谱",
+        en: "Enterprise knowledge graph",
+      },
+      {
+        zh: "可复用内容资产库",
+        en: "Reusable content asset library",
       },
     ],
     signals: [
@@ -495,26 +520,30 @@ const flywheelModules: FlywheelModule[] = [
       { label: { zh: "异常发现", en: "Anomaly Detection" }, value: "<1h" },
     ],
     integrationTitle: {
-      zh: "Monitoring 连接点",
-      en: "Monitoring Integrations",
+      zh: "M 连接点",
+      en: "Memory Integrations",
     },
     integrations: [
       {
-        zh: "Search Console / Analytics / CRM 数据回收",
-        en: "Search Console, Analytics, and CRM feedback",
+        zh: "可信增长内容资产",
+        en: "Trusted growth assets",
       },
       {
-        zh: "AI 引用与答案抓取监测",
-        en: "AI citation and answer extraction tracking",
+        zh: "官网生成与内容更新",
+        en: "Website generation and content updates",
       },
       {
-        zh: "内容与 CTA 的实验对照",
-        en: "Controlled experiments for content and CTAs",
+        zh: "AI 智能客服与咨询承接",
+        en: "AI customer service and consultation handoff",
+      },
+      {
+        zh: "推荐监测与内容优化",
+        en: "Recommendation monitoring and content optimization",
       },
     ],
     nextStep: {
-      zh: "Monitoring 会告诉 Authority 和智能执行中枢下一步该加强什么。",
-      en: "Monitoring tells Authority and Orchestration what to improve next.",
+      zh: "M 的输出会进入 Authority，用知识库、图谱和可信记录支撑品牌被 AI 采信与推荐。",
+      en: "Memory outputs enter Authority, using the knowledge base, graph, and trusted records to support AI trust and recommendation.",
     },
   },
   {
@@ -522,44 +551,48 @@ const flywheelModules: FlywheelModule[] = [
     letter: "A",
     name: "Authority",
     title: {
-      zh: "采信、可信度、权威表达",
-      en: "Authority, Trust, and Credible Expression",
+      zh: "权威可信建设",
+      en: "Authority and Trust Building",
     },
     compactTitle: {
-      zh: "可信表达",
-      en: "Trust Layer",
+      zh: "权威可信",
+      en: "Authority",
     },
     summary: {
-      zh: "让官网内容更容易被用户相信，也更容易被 AI 抽取与引用。",
-      en: "Make website content easier for people to trust and easier for AI to cite.",
+      zh: "用可信记录、知识图谱、案例资质和外部信号，增强品牌被 AI 采信、引用和推荐的基础。",
+      en: "Use trusted records, knowledge graphs, credentials, and external signals to strengthen AI trust, citation, and recommendation.",
     },
     description: {
-      zh: "通过证据结构、来源表达、专家视角、品牌信号与案例可信度设计，让你的页面不是‘会说’，而是‘值得被信’。",
-      en: "By designing evidence structures, sourcing, expert voice, brand signals, and proof-heavy case studies, the site becomes not just persuasive, but trustworthy.",
+      zh: "通过区块链可信登记、企业知识图谱、客户案例、资质证明、专家观点、权威媒体合作和外部可信信号，建立可被验证、可被引用、可被背书的可信证据链。",
+      en: "Build a verifiable and citable proof chain through blockchain trusted registration, enterprise knowledge graphs, cases, credentials, expert viewpoints, authoritative media cooperation, and external trust signals.",
     },
     modalBody: {
-      zh: "Authority 模块决定官网是不是值得被采信。它把案例、资质、数据、专家观点和来源说明做成一个统一的信任层，让用户和 AI 都更愿意引用你的内容。",
-      en: "Authority determines whether the website deserves trust. It turns cases, credentials, data, expert viewpoints, and source notes into a consistent trust layer that both buyers and AI models are more willing to reference.",
+      zh: "Authority 模块负责把 Memory 沉淀的企业内容资产进一步变成可信证据链。它把可信登记、知识图谱、案例、资质、专家观点和外部内容信号组织起来，让用户和 AI 更容易相信、引用和推荐企业。",
+      en: "Authority turns the enterprise content memory into a trusted evidence chain. It organizes trusted registration, knowledge graphs, cases, credentials, expert viewpoints, and external content signals so people and AI models can trust, cite, and recommend the company more easily.",
     },
     accent: "#FF7F7F",
     glow: "rgba(255, 127, 127, 0.22)",
     icon: ShieldCheck,
     outputLabel: {
-      zh: "Authority 输出",
-      en: "Authority Outputs",
+      zh: "驱动能力",
+      en: "Flywheel Drivers",
     },
     outputs: [
       {
-        zh: "可信表达规范",
-        en: "Trust expression system",
+        zh: "区块链可信记录",
+        en: "Blockchain trusted records",
       },
       {
-        zh: "证据引用结构",
-        en: "Evidence and citation structure",
+        zh: "企业知识图谱增强",
+        en: "Enterprise knowledge graph enhancement",
       },
       {
-        zh: "案例与资质信任层",
-        en: "Case-study and credential layer",
+        zh: "客户案例与资质证明",
+        en: "Customer cases and credential proof",
+      },
+      {
+        zh: "权威内容与外部可信信号",
+        en: "Authoritative content and external trust signals",
       },
     ],
     signals: [
@@ -586,71 +619,79 @@ const flywheelModules: FlywheelModule[] = [
       { label: { zh: "品牌信任层", en: "Trust Blocks" }, value: "12" },
     ],
     integrationTitle: {
-      zh: "Authority 连接点",
+      zh: "A 连接点",
       en: "Authority Integrations",
     },
     integrations: [
       {
-        zh: "案例页、资质页、专家内容的统一规范",
-        en: "Shared structure for cases, credentials, and expert content",
+        zh: "企业内容资产大脑",
+        en: "Enterprise content memory",
       },
       {
-        zh: "引用格式与证据块标准化",
-        en: "Standardized citation and proof blocks",
+        zh: "可信内容分发",
+        en: "Trusted content distribution",
       },
       {
-        zh: "品牌可信表达与设计语言",
-        en: "Brand trust language and proof-led design",
+        zh: "权威媒体合作",
+        en: "Authoritative media cooperation",
+      },
+      {
+        zh: "AI 推荐监测",
+        en: "AI recommendation monitoring",
       },
     ],
     nextStep: {
-      zh: "Authority 会抬高整个飞轮的信任基线。",
-      en: "Authority raises the trust baseline of the entire flywheel.",
+      zh: "A 的输出会进入 Orchestration，把被采信、被引用和被推荐的机会持续转化为执行动作和增长闭环。",
+      en: "Authority outputs enter Orchestration, turning trust, citation, and recommendation opportunities into ongoing actions and growth loops.",
     },
   },
   {
     id: "orchestration",
     letter: "O",
-    name: "Orchestration",
+    name: "Opportunity",
     title: {
-      zh: "智能执行中枢",
-      en: "AI Automation and Closed-Loop Orchestration",
+      zh: "增长机会承接",
+      en: "Opportunity",
     },
     compactTitle: {
-      zh: "智能执行",
-      en: "Automation Hub",
+      zh: "机会承接",
+      en: "Opportunity",
     },
     summary: {
-      zh: "把前面四个模块串成持续运转的自动化增长系统，而不是一次性交付。",
-      en: "Connect the other four modules into a continuously running, automated growth system instead of a one-off delivery.",
+      zh: "把 AI 推荐、官网访问、内容咨询和表单线索接住，让客户兴趣有路径被跟进。",
+      en: "Capture AI recommendations, website visits, content inquiries, and form leads so customer interest has a path to follow-up.",
     },
     description: {
-      zh: "通过工作流、触发器、任务队列和回写机制，让生成、发布、监测、复盘和优化成为真正自动执行的循环。",
-      en: "Through workflows, triggers, job queues, and write-back mechanisms, generation, publishing, monitoring, and iteration become a real operating loop.",
+      zh: "通过官网入口、智能客服、企微承接、线索通知与复测反馈，把用户从看见、理解、咨询、留资到后续跟进串成持续运行的增长闭环。",
+      en: "Use website entry points, AI customer service, WeCom handoff, lead notifications, and retesting feedback to connect visibility, understanding, inquiry, lead capture, and follow-up into a continuous growth loop.",
     },
     modalBody: {
-      zh: "智能执行中枢是飞轮真正转起来的关键。它让内容生成、页面更新、信号回收、异常提醒和优化建议不再依赖人工记忆，而是按节奏自动发生。",
-      en: "Orchestration is what makes the flywheel actually move. It ensures content generation, page updates, signal collection, anomaly alerts, and optimization suggestions happen on rhythm instead of relying on human memory.",
+      zh: "Opportunity 负责把前面 J-G-M-A 产生的内容资产、可信信号和推荐机会，连接到真实的客户承接动作。底层通过 Orchestration 编排能力，把用户从看见、理解、咨询、留资到后续跟进串成一个持续运行的增长闭环。",
+      en: "Opportunity connects the content assets, trust signals, and recommendation opportunities created by J-G-M-A to real customer handoff actions. Under the hood, orchestration connects visibility, understanding, inquiry, lead capture, and follow-up into an operating growth loop.",
     },
     accent: "#B592FF",
     glow: "rgba(181, 146, 255, 0.2)",
     icon: Workflow,
     outputLabel: {
-      zh: "智能执行中枢输出",
-      en: "Orchestration Outputs",
+      zh: "驱动能力",
+      en: "Flywheel Drivers",
     },
     outputs: [
       {
-        zh: "自动化工作流",
-        en: "Automation workflows",
+        zh: "官网承接入口",
+        en: "Website conversion entry points",
       },
       {
-        zh: "触发规则",
-        en: "Trigger logic",
+        zh: "智能客服与企微承接",
+        en: "AI customer service and WeCom handoff",
       },
       {
-        zh: "多角色协作编排",
-        en: "Multi-role coordination",
+        zh: "线索通知与跟进路径",
+        en: "Lead notifications and follow-up paths",
+      },
+      {
+        zh: "优化复测与转化反馈",
+        en: "Optimization retesting and conversion feedback",
       },
     ],
     signals: [
@@ -677,26 +718,30 @@ const flywheelModules: FlywheelModule[] = [
       { label: { zh: "人效提升", en: "Team Leverage" }, value: "4.6x" },
     ],
     integrationTitle: {
-      zh: "智能执行中枢连接点",
+      zh: "O 连接点",
       en: "Orchestration Integrations",
     },
     integrations: [
       {
-        zh: "内容发布与站点更新流程",
-        en: "Content publishing and page update workflows",
+        zh: "AI 推荐监测",
+        en: "AI recommendation monitoring",
       },
       {
-        zh: "表单线索到 CRM 的自动回写",
-        en: "Automatic form-to-CRM handoff",
+        zh: "官网与内容发布系统",
+        en: "Website and content publishing system",
       },
       {
-        zh: "监测异常后的自动任务派发",
-        en: "Automatic task creation after monitoring anomalies",
+        zh: "企业知识库与智能客服",
+        en: "Enterprise knowledge base and AI customer service",
+      },
+      {
+        zh: "飞书 / 企微线索通知",
+        en: "Feishu and WeCom lead notifications",
       },
     ],
     nextStep: {
-      zh: "智能执行中枢会让飞轮持续转下去，而不是停在建议层。",
-      en: "Orchestration keeps the flywheel moving instead of stopping at recommendations.",
+      zh: "O 会把 J-G-M-A 形成的可见性、内容资产、知识沉淀和可信信号，转化为可承接、可跟进、可复测的增长机会。",
+      en: "Opportunity turns the visibility, content assets, knowledge memory, and trust signals created by J-G-M-A into growth opportunities that can be captured, followed up, and retested.",
     },
   },
 ];
@@ -751,14 +796,14 @@ const capabilities: Capability[] = [
   {
     id: "content-factory",
     token: "AIC",
-    name: { zh: "AI 内容工厂", en: "AI Content Factory" },
+    name: { zh: "可信内容资产", en: "Trusted Content Assets" },
     title: { zh: "把专题页、问答内容、案例和行业观察放进持续生产系统", en: "Turn pages, Q&A content, cases, and industry insight into a production system" },
     summary: {
       zh: "不仅是写文章，而是形成可复用的内容模板、发布节奏和多页面协同机制。",
       en: "This is not just writing content. It builds reusable templates, publishing rhythms, and multi-page coordination.",
     },
     description: {
-      zh: "AI 内容工厂会把企业的产品价值、行业问题、客户案例和转换场景拆成可规模化生成的内容资产，让官网与内容体系长期稳定地产出。",
+      zh: "可信内容资产会把企业的产品价值、行业问题、客户案例和转化场景沉淀成可持续运营的内容资产，让官网与内容体系长期稳定地产出。",
       en: "The content factory transforms product value, industry questions, customer cases, and conversion scenarios into scalable content assets that continuously feed the website.",
     },
     modalBody: {
@@ -800,7 +845,7 @@ const capabilities: Capability[] = [
     name: { zh: "AI 增长网站", en: "AI Growth Website" },
     title: { zh: "让官网从静态展示页升级成增长、采信与转化的运营界面", en: "Turn the website from a brochure into an operating interface for growth and trust" },
     summary: {
-      zh: "官网不再只是展示品牌，而是承接 GEO、内容工厂、线索系统和推荐分析的增长中枢。",
+      zh: "官网不再只是展示品牌，而是承接 GEO、可信内容资产、线索系统和推荐分析的增长中枢。",
       en: "The website becomes the central layer that connects GEO, content, lead capture, and recommendation analysis.",
     },
     description: {
@@ -1042,7 +1087,7 @@ const caseStudies: CaseStudy[] = [
     company: { zh: "西林设计", en: "Sealing" },
     sector: { zh: "品牌设计", en: "Brand Design" },
     outcome: {
-      zh: "通过 GEO 优化引擎与 AI 内容工厂，把官网升级成 AI 搜索的稳定获客入口。",
+      zh: "通过 GEO 优化引擎与可信内容资产，把官网升级成 AI 搜索的稳定获客入口。",
       en: "Used the GEO engine and content factory to turn the website into a stable acquisition channel in AI search.",
     },
     challenge: {
@@ -1083,11 +1128,11 @@ const caseStudies: CaseStudy[] = [
 ];
 
 const brandCopy = {
-  heroTag: { zh: "AI时代企业增长系统", en: "Enterprise growth system for the AI era" },
+  heroTag: { zh: "让企业在 AI 搜索中被看见", en: "Be visible in AI search" },
   heroTitle: { zh: "帮助企业构建 AI 时代的增长飞轮", en: "Helping enterprises build AI growth flywheels in the AI era" },
   heroBody: {
-    zh: "帮助企业把AI可见性、内容、官网、获客与推荐判断连成一个真正可运转的增长系统。",
-    en: "JGMAO AI Growth Engine combines five parts: GEO optimization, an AI content factory, an AI growth website, an intelligent lead system, and AI recommendation analytics to connect visibility, content, conversion, and feedback into one operating system.",
+    zh: "帮助企业在 AI 搜索中被看见，并让官网、可信内容资产、企业知识库、推荐监测与获客承接协同运转，形成持续优化的增长飞轮。",
+    en: "JGMAO AI Growth Engine combines five parts: GEO optimization, trusted content assets, an AI growth website, an intelligent lead system, and AI recommendation analytics to connect visibility, content, conversion, and feedback into one operating system.",
   },
   architectureTag: { zh: "Core Scenarios", en: "Core Scenarios" },
   architectureTitle: { zh: "核心场景：适用问题", en: "Core scenarios: where this system fits" },
@@ -1471,6 +1516,8 @@ function Home() {
   const [activeScenarioIndex, setActiveScenarioIndex] = useState<number | null>(null);
   const [floatingNavOpen, setFloatingNavOpen] = useState(false);
   const [firstScreenMotionActive, setFirstScreenMotionActive] = useState(true);
+  const [pageVisible, setPageVisible] = useState(() => typeof document === "undefined" || !document.hidden);
+  const topMotionActive = firstScreenMotionActive && pageVisible;
   const [detailIndex, setDetailIndex] = useState<number | null>(null);
   const [flywheelDemoDetailIndex, setFlywheelDemoDetailIndex] = useState<number | null>(null);
   const [chatModalOpen, setChatModalOpen] = useState(false);
@@ -1685,7 +1732,7 @@ function Home() {
   }, [locale]);
 
   useEffect(() => {
-    if (flywheelDemoPaused || !firstScreenMotionActive) {
+    if (flywheelDemoPaused || !topMotionActive) {
       return undefined;
     }
 
@@ -1696,7 +1743,7 @@ function Home() {
     }, 3600);
 
     return () => window.clearInterval(timer);
-  }, [firstScreenMotionActive, flywheelDemoPaused]);
+  }, [topMotionActive, flywheelDemoPaused]);
 
   useEffect(() => {
     const heroSection = heroSectionRef.current;
@@ -1760,17 +1807,28 @@ function Home() {
   }, []);
 
   useEffect(() => {
+    const syncPageVisibility = () => {
+      setPageVisible(!document.hidden);
+    };
+
+    document.addEventListener("visibilitychange", syncPageVisibility);
+    syncPageVisibility();
+
+    return () => document.removeEventListener("visibilitychange", syncPageVisibility);
+  }, []);
+
+  useEffect(() => {
     document.documentElement.lang = locale === "zh" ? "zh-CN" : "en";
 
     const title = locale === "zh"
-      ? "坚果猫 JGMAO AI 增长引擎 | GEO优化引擎 | AI内容工厂 | AI增长网站 | 智能获客系统 | AI推荐分析"
-      : "JGMAO AI Growth Engine | GEO | AI Content Factory | AI Growth Website | Lead System | Recommendation Analytics";
+      ? "坚果猫 JGMAO AI 增长引擎 | GEO优化引擎 | 可信内容资产 | AI增长网站 | 智能获客系统 | AI推荐分析"
+      : "JGMAO AI Growth Engine | GEO | Trusted Content Assets | AI Growth Website | Lead System | Recommendation Analytics";
     const description = locale === "zh"
-      ? "坚果猫 JGMAO AI 增长引擎帮助企业在 AI 时代构建 AI 增长飞轮，包含 GEO 优化引擎、AI 内容工厂、AI 增长网站、智能获客系统和 AI推荐分析五大部分。"
+      ? "坚果猫 JGMAO AI 增长引擎帮助企业在 AI 时代构建 AI 增长飞轮，包含 GEO 优化引擎、可信内容资产、AI 增长网站、智能获客系统和 AI推荐分析五大部分。"
       : "JGMAO AI Growth Engine helps enterprises build AI growth flywheels through GEO optimization, AI content production, AI growth websites, intelligent lead systems, and recommendation analytics.";
     const keywords = locale === "zh"
-      ? "坚果猫, JGMAO, 坚果猫 JGMAO, AI增长引擎, GEO优化引擎, AI内容工厂, AI增长网站, 智能获客系统, AI推荐分析, GEO优化, AI搜索优化"
-      : "JGMAO, AI growth engine, GEO optimization, AI content factory, AI growth website, intelligent lead system, recommendation analytics";
+      ? "坚果猫, JGMAO, 坚果猫 JGMAO, AI增长引擎, GEO优化引擎, 可信内容资产, AI增长网站, 智能获客系统, AI推荐分析, GEO优化, AI搜索优化"
+      : "JGMAO, AI growth engine, GEO optimization, trusted content assets, AI growth website, intelligent lead system, recommendation analytics";
 
     document.title = title;
     setMetaTag("name", "description", description);
@@ -1870,7 +1928,7 @@ function Home() {
   return (
     <main
       id="top"
-      data-top-motion-active={firstScreenMotionActive ? "true" : "false"}
+      data-top-motion-active={topMotionActive ? "true" : "false"}
       className="relative min-h-screen overflow-hidden bg-[#050816] text-slate-100"
     >
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_15%,rgba(82,230,255,0.14),transparent_24%),radial-gradient(circle_at_90%_18%,rgba(245,197,92,0.12),transparent_24%),radial-gradient(circle_at_50%_80%,rgba(181,146,255,0.12),transparent_28%),linear-gradient(180deg,#050816_0%,#091222_38%,#050816_100%)]" />
@@ -2142,7 +2200,7 @@ function Home() {
               <div className="relative">
                 <div className="flex items-center justify-between gap-4">
                   <div>
-                    <p className="text-xs uppercase tracking-[0.28em] text-slate-400">{locale === "zh" ? "实时系统快照" : "Live System Snapshot"}</p>
+                    <p className="text-xs uppercase tracking-[0.28em] text-slate-400">{locale === "zh" ? "可信增长路径" : "Trusted Growth Path"}</p>
                     <h2 className="mt-2 text-2xl font-semibold text-white">
                       {locale === "zh" ? "增长不是一条链路，而是一个会自我强化的系统" : "Growth is not a single funnel. It is a self-reinforcing system."}
                     </h2>
@@ -2211,7 +2269,7 @@ function Home() {
                   <p className="text-xs uppercase tracking-[0.24em] text-amber-100/80">{locale === "zh" ? "核心目标" : "Core Outcome"}</p>
                   <p className="mt-3 text-sm leading-7 text-slate-200">
                     {locale === "zh"
-                      ? "帮助企业把 AI 可见性、内容产能、官网承接、线索转化和推荐判断连成一个真正可持续优化的增长闭环。"
+                      ? "帮助企业构建 AI 时代可信增长基础设施，让内容、官网、监测与获客系统协同运转，持续提升被 AI 采信、推荐和转化的能力。"
                       : "Help enterprises connect AI visibility, content production, website conversion, lead capture, and recommendation intelligence into one sustainable growth loop."}
                   </p>
                 </div>
@@ -2278,12 +2336,12 @@ function Home() {
                   <motion.div
                     className="absolute left-1/2 top-1/2 z-10 flex h-[36%] w-[36%] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-full border border-white/12 bg-slate-950/80 px-2 text-center shadow-[0_0_80px_rgba(0,0,0,0.38)] backdrop-blur-xl sm:h-[36%] sm:w-[36%] md:h-[38%] md:w-[38%]"
                     animate={
-                      firstScreenMotionActive
+                      topMotionActive
                         ? { boxShadow: [`0 0 40px ${activeFlywheelModule.glow}`, `0 0 72px ${activeFlywheelModule.glow}`, `0 0 40px ${activeFlywheelModule.glow}`] }
                         : { boxShadow: `0 0 40px ${activeFlywheelModule.glow}` }
                     }
                     transition={
-                      firstScreenMotionActive
+                      topMotionActive
                         ? { duration: 3.2, repeat: Number.POSITIVE_INFINITY }
                         : { duration: 0.25 }
                     }

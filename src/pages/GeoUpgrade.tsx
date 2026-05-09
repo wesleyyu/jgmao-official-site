@@ -80,7 +80,7 @@ const deliverables = [
 const servicePlans = [
   {
     name: "优化方案",
-    price: "99元/次",
+    price: "199 元/次",
     tone: "border-white/10 bg-white/5",
     titleTone: "text-white",
     summary: "适合先按次获取一份当前官网的具体升级建议，快速明确先改什么、从哪里开始。",
@@ -94,25 +94,43 @@ const servicePlans = [
   },
   {
     name: "坚果猫AI增长引擎标准版",
-    price: "1299 元/月",
+    price: "2000 元/月",
     tone: "border-cyan-300/20 bg-cyan-300/10",
     titleTone: "text-cyan-100",
     summary: "适合把官网升级、内容增长与智能获客串成持续系统，长期推进官网增长。",
     features: [
       "GEO 官网系统",
       "可信内容发布系统",
+      "面向 AI 大模型的企业知识库",
       "知识库系统",
       "智能获客系统",
       "AI 智能体服务系统",
-      "官网 GEO 详细诊断报告",
-      "官网 GEO 升级方案",
+      "持续获得官网 GEO 详细报告与优化方案",
+      "数字内容区块链可信登记 200 份/月",
+    ],
+  },
+  {
+    name: "坚果猫AI增长引擎专业版",
+    price: "6000 元/月",
+    tone: "border-amber-300/20 bg-amber-300/10",
+    titleTone: "text-amber-100",
+    summary: "适合需要独立部署、运维保障、企业向量数据库、AI 智能客服与可信赋能能力的企业团队。",
+    features: [
+      "标准版全部能力",
+      "独立 IP 与独立服务器部署",
+      "服务器日常运维与基础安全维护",
+      "可信内容资产中心：内容资产区块链可信登记 600 份/月",
+      "企业向量数据库建设企业内容资产大脑",
+      "AI 智能体辅助内容运营与知识库补齐",
+      "AI 智能客服与咨询承接系统",
+      "基础故障排查与技术支持",
     ],
   },
 ];
 
 type GeoPlanOrder = {
   orderNo: string;
-  planKey: "solution" | "standard";
+  planKey: "solution" | "standard" | "professional";
   planTitle: string;
   amountFen: number;
   amountLabel: string;
@@ -142,7 +160,7 @@ export default function GeoUpgradePage() {
   const searchParams = new URLSearchParams(window.location.search);
   const reportToken = searchParams.get("report")?.trim() || "";
   const [showWecomModal, setShowWecomModal] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState<"solution" | "standard">("standard");
+  const [selectedPlan, setSelectedPlan] = useState<"solution" | "standard" | "professional">("standard");
   const [solutionOrder, setSolutionOrder] = useState<GeoPlanOrder | null>(null);
   const [solutionOrderLoading, setSolutionOrderLoading] = useState(false);
   const [solutionOrderError, setSolutionOrderError] = useState("");
@@ -163,11 +181,18 @@ export default function GeoUpgradePage() {
     if (
       window.location.hash === "#solution-plan"
       || window.location.hash === "#standard-plan"
+      || window.location.hash === "#professional-plan"
       || searchParams.get("plan") === "solution"
       || searchParams.get("plan") === "standard"
+      || searchParams.get("plan") === "professional"
     ) {
       window.setTimeout(() => {
-        const targetId = window.location.hash === "#standard-plan" || searchParams.get("plan") === "standard" ? "standard-plan" : "solution-plan";
+        const planParam = searchParams.get("plan");
+        const targetId = window.location.hash === "#professional-plan" || planParam === "professional"
+          ? "professional-plan"
+          : window.location.hash === "#standard-plan" || planParam === "standard"
+            ? "standard-plan"
+            : "solution-plan";
         document.getElementById(targetId)?.scrollIntoView({ behavior: "smooth", block: "center" });
       }, 80);
     }
@@ -306,7 +331,10 @@ export default function GeoUpgradePage() {
 
             <div className="mt-5 grid gap-3">
               {servicePlans.map((plan) => {
-                if (plan.name === "优化方案") {
+                const isSolutionPlan = plan.name === "优化方案";
+                const isProfessionalPlan = plan.name.includes("专业版");
+
+                if (isSolutionPlan) {
                   return (
                     <div
                       id="solution-plan"
@@ -345,7 +373,7 @@ export default function GeoUpgradePage() {
                 return (
 	                  <div
 	                    key={plan.name}
-	                    id="standard-plan"
+	                    id={isProfessionalPlan ? "professional-plan" : "standard-plan"}
 	                    className={`rounded-[1.4rem] border p-4 text-left ${plan.tone}`}
 	                  >
                     <div className="flex items-center justify-between gap-3">
@@ -365,7 +393,7 @@ export default function GeoUpgradePage() {
                     <button
                       type="button"
                       onClick={() => {
-                        setSelectedPlan("standard");
+                        setSelectedPlan(isProfessionalPlan ? "professional" : "standard");
                         setShowWecomModal(true);
                       }}
                       className="mt-4 inline-flex w-full items-center justify-center rounded-full border border-cyan-300/20 bg-cyan-300/15 px-4 py-2.5 text-sm font-medium text-cyan-50 transition hover:bg-cyan-300/20"
@@ -441,7 +469,7 @@ export default function GeoUpgradePage() {
                       </a>
                     ) : solutionOrder.paymentStatus === "not_configured" ? (
 	                      <p className="mt-3 text-sm leading-7 text-slate-300">
-	                        当前先保留这笔预订单。支付链路完成后，这里会直接拉起本次 99 元按次支付。
+	                        当前先保留这笔预订单。支付链路完成后，这里会直接拉起本次 199 元按次支付。
 	                      </p>
                     ) : (
 	                      <button
@@ -466,7 +494,7 @@ export default function GeoUpgradePage() {
               <>
                 <h2 className="mt-5 text-2xl font-semibold text-white">扫码添加企微</h2>
                 <p className="mt-3 text-sm leading-7 text-slate-300">
-                  添加企微后，可继续确认标准版系统方案的适用范围、开通内容与推进节奏。
+                  添加企微后，可继续确认{selectedPlan === "professional" ? "专业版" : "标准版"}系统方案的适用范围、开通内容与推进节奏。
                 </p>
                 <div className="mt-6 flex justify-center rounded-[1.5rem] border border-white/10 bg-white p-4">
                   <img
@@ -476,7 +504,9 @@ export default function GeoUpgradePage() {
                   />
                 </div>
                 <p className="mt-4 text-sm leading-7 text-slate-300">
-                  适合希望把官网升级、内容增长与智能获客系统持续串起来推进的企业团队。
+                  {selectedPlan === "professional"
+                    ? "适合需要独立部署、运维保障、企业向量数据库与可信赋能能力的企业团队。"
+                    : "适合希望把官网升级、内容增长与智能获客系统持续串起来推进的企业团队。"}
                 </p>
               </>
             )}

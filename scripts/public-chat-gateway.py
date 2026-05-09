@@ -59,8 +59,9 @@ WECHAT_PAY_APP_SECRET = os.environ.get("WECHAT_PAY_APP_SECRET", WECHAT_APP_SECRE
 WECHAT_PAY_NOTIFY_URL = os.environ.get("WECHAT_PAY_NOTIFY_URL", "").strip()
 WECHAT_PAY_OAUTH_BASE_URL = os.environ.get("WECHAT_PAY_OAUTH_BASE_URL", "").strip().rstrip("/")
 WECHAT_PAY_OAUTH_CALLBACK_PATH = (os.environ.get("WECHAT_PAY_OAUTH_CALLBACK_PATH", "/pay/wechat/callback/") or "/pay/wechat/callback/").strip()
-WECHAT_PAY_SOLUTION_PRICE_FEN = int(os.environ.get("WECHAT_PAY_SOLUTION_PRICE_FEN", "9900"))
-WECHAT_PAY_STANDARD_PRICE_FEN = int(os.environ.get("WECHAT_PAY_STANDARD_PRICE_FEN", "129900"))
+WECHAT_PAY_SOLUTION_PRICE_FEN = int(os.environ.get("WECHAT_PAY_SOLUTION_PRICE_FEN", "19900"))
+WECHAT_PAY_STANDARD_PRICE_FEN = int(os.environ.get("WECHAT_PAY_STANDARD_PRICE_FEN", "200000"))
+WECHAT_PAY_PROFESSIONAL_PRICE_FEN = int(os.environ.get("WECHAT_PAY_PROFESSIONAL_PRICE_FEN", "600000"))
 WECHAT_ACCESS_TOKEN_CACHE = {"value": "", "expires_at": 0}
 WECHAT_JSAPI_TICKET_CACHE = {"value": "", "expires_at": 0}
 WECOM_ACCESS_TOKEN_CACHE = {"value": "", "expires_at": 0}
@@ -1463,6 +1464,10 @@ PLAN_ORDER_META = {
     "standard": {
         "title": "坚果猫AI增长引擎标准版",
         "priceFen": WECHAT_PAY_STANDARD_PRICE_FEN,
+    },
+    "professional": {
+        "title": "坚果猫AI增长引擎专业版",
+        "priceFen": WECHAT_PAY_PROFESSIONAL_PRICE_FEN,
     },
 }
 

@@ -22,8 +22,8 @@ export const faqItems: FaqItem[] = [
     id: "what-is-jgmao-growth-engine",
     question: { zh: "什么是坚果猫 JGMAO AI 增长引擎？", en: "What is the JGMAO AI Growth Engine?" },
     answer: {
-      zh: "坚果猫 JGMAO AI 增长引擎是一套帮助企业在 AI 时代构建增长飞轮的系统，包含 GEO 优化引擎、AI 内容工厂、AI 增长网站、智能获客系统和 AI 推荐分析五大部分。",
-      en: "JGMAO AI Growth Engine is a system for helping enterprises build AI growth flywheels, combining a GEO engine, AI content factory, AI growth website, intelligent lead system, and AI recommendation analytics.",
+      zh: "坚果猫 JGMAO AI 增长引擎是一套帮助企业在 AI 时代构建增长飞轮的系统，包含 GEO 优化引擎、可信内容资产、AI 增长网站、智能获客系统和 AI 推荐分析五大部分。",
+      en: "JGMAO AI Growth Engine is a system for helping enterprises build AI growth flywheels, combining a GEO engine, trusted content assets, AI growth website, intelligent lead system, and AI recommendation analytics.",
     },
     featured: true,
     tags: [{ zh: "产品定义", en: "Product Definition" }],
@@ -56,9 +56,9 @@ export const faqItems: FaqItem[] = [
   },
   {
     id: "why-content-factory-needs-website",
-    question: { zh: "AI 内容工厂为什么必须和官网一起做？", en: "Why must the AI content factory be connected to the website?" },
+    question: { zh: "可信内容资产为什么必须和官网一起做？", en: "Why must trusted content assets be connected to the website?" },
     answer: {
-      zh: "因为内容如果不回流到官网结构、FAQ、案例页和线索页，就很难形成可持续的增长资产。AI 内容工厂的价值在于持续生成可被看见、可被推荐、可被转化的官网内容系统。",
+      zh: "因为内容如果不回流到官网结构、FAQ、案例页和线索页，就很难形成可持续的增长资产。可信内容资产的价值在于持续沉淀可被看见、可被推荐、可被转化的官网内容系统。",
       en: "Because content alone does not create durable growth assets unless it flows back into the website structure, FAQ, case studies, and lead pages. The content factory matters when it continuously creates visible, recommendable, conversion-ready site assets.",
     },
     featured: false,

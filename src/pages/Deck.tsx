@@ -94,7 +94,7 @@ const slides = [
     id: "close",
     index: "08",
     tag: "Closing",
-    title: "TrustOps 想成为企业 AI 内容工厂的默认控制平面。",
+    title: "TrustOps 想成为企业可信内容资产的默认控制平面。",
     subtitle: "谁掌握放行、留痕和审计入口，谁就掌握企业 AI 内容的运营主权。",
     body:
       "融资/路演的核心不是证明我们也能生成，而是证明我们占住了生成之后最难被替代、最容易扩预算的位置。",

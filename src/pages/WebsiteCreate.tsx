@@ -26,6 +26,10 @@ const standardCapabilities = [
     desc: "作为对外展示、内容承载、线索转化和 GEO 优化的核心入口。",
   },
   {
+    title: "面向 AI 大模型的企业知识库",
+    desc: "围绕企业内容、产品资料、案例和常见问答，沉淀更适合 AI 调用和理解的知识结构。",
+  },
+  {
     title: "AI 推荐监测系统",
     desc: "监测品牌、产品和内容在 AI 搜索、问答、推荐场景中的曝光与变化。",
   },
@@ -33,6 +37,25 @@ const standardCapabilities = [
     title: "智能获客与转化系统",
     desc: "打通咨询入口、线索收集、提醒通知和转化承接，让访问和内容曝光进入后续跟进。",
   },
+  {
+    title: "持续获得官网 GEO 详细报告与优化方案",
+    desc: "在持续服务中定期复测官网表现，并获得对应的详细诊断与优化方向。",
+  },
+  {
+    title: "数字内容区块链可信登记 200 份/月",
+    desc: "为重要数字内容提供可信登记能力，辅助建立内容可信记录。",
+  },
+];
+
+const professionalFeatures = [
+  "标准版全部能力",
+  "独立 IP 与独立服务器部署",
+  "服务器日常运维与基础安全维护",
+  "可信内容资产中心：内容资产区块链可信登记 600 份/月",
+  "企业向量数据库建设企业内容资产大脑",
+  "AI 智能体辅助内容运营与知识库补齐",
+  "AI 智能客服与咨询承接系统",
+  "基础故障排查与技术支持",
 ];
 
 const fitList = [
@@ -212,22 +235,38 @@ export default function WebsiteCreatePage() {
             transition={{ duration: 0.35, delay: 0.1 }}
             className="rounded-[2rem] border border-amber-300/20 bg-amber-300/10 p-6 backdrop-blur-xl"
           >
-            <p className="text-xs uppercase tracking-[0.22em] text-amber-100/70">标准版</p>
-            <h2 className="mt-4 text-2xl font-semibold text-white">坚果猫AI增长引擎标准版</h2>
-            <p className="mt-3 text-3xl font-semibold text-amber-100">1299 元/月</p>
+            <p className="text-xs uppercase tracking-[0.22em] text-amber-100/70">服务版本</p>
+            <h2 className="mt-4 text-2xl font-semibold text-white">从官网生成到持续增长系统</h2>
             <p className="mt-3 text-sm leading-7 text-amber-50/90">
-              通过 GEO 诊断与优化、可信内容资产、AI 增长官网、AI 推荐监测与智能获客转化，帮助企业从被 AI 看见，到被 AI 理解、信任和推荐，并把内容曝光转化为真实线索。
+              标准版适合持续运营官网、内容和获客；专业版进一步增加独立部署、运维保障、企业向量数据库、AI 智能客服与可信赋能能力。
             </p>
-            <div className="mt-5 grid gap-3">
-              {standardCapabilities.map((item) => (
-                <div key={item.title} className="flex items-start gap-3 rounded-2xl border border-white/10 bg-slate-950/35 px-4 py-3">
-                  <BadgeCheck className="mt-0.5 h-4 w-4 shrink-0 text-amber-200" />
-                  <div>
-                    <p className="text-sm font-semibold leading-6 text-slate-100">{item.title}</p>
-                    <p className="mt-1 text-xs leading-5 text-slate-300">{item.desc}</p>
-                  </div>
+            <div className="mt-5 grid gap-4">
+              <div className="rounded-[1.4rem] border border-white/10 bg-slate-950/35 p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-100/70">标准版</p>
+                <h3 className="mt-2 text-xl font-semibold text-white">坚果猫AI增长引擎标准版</h3>
+                <p className="mt-2 text-2xl font-semibold text-amber-100">2000 元/月</p>
+                <div className="mt-4 grid gap-2">
+                  {standardCapabilities.map((item) => (
+                    <div key={item.title} className="flex items-start gap-2">
+                      <BadgeCheck className="mt-0.5 h-4 w-4 shrink-0 text-cyan-200" />
+                      <p className="text-sm leading-6 text-slate-100">{item.title}</p>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              </div>
+              <div className="rounded-[1.4rem] border border-amber-200/25 bg-amber-200/10 p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-100/70">专业版</p>
+                <h3 className="mt-2 text-xl font-semibold text-white">坚果猫AI增长引擎专业版</h3>
+                <p className="mt-2 text-2xl font-semibold text-amber-100">6000 元/月</p>
+                <div className="mt-4 grid gap-2">
+                  {professionalFeatures.map((item) => (
+                    <div key={item} className="flex items-start gap-2">
+                      <BadgeCheck className="mt-0.5 h-4 w-4 shrink-0 text-amber-200" />
+                      <p className="text-sm leading-6 text-slate-100">{item}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </motion.aside>
         </section>
