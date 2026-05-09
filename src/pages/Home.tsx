@@ -1157,7 +1157,7 @@ const brandCopy = {
         en: "The website and content are hard for AI to understand accurately",
       },
       description: {
-        zh: "页面有内容，但主题、结构和证据表达不清晰，AI 不容易抓取、概括和引用。",
+        zh: "页面有内容，但主题、结构和证据表达不清晰，AI 不容易抓取和引用。",
         en: "The content exists, but weak topics, structure, and proof make it harder for AI to retrieve, summarize, and cite.",
       },
     },
