@@ -45,7 +45,7 @@ const heroCopy = {
   titleStart: { zh: "从被 AI 看见，", en: "From being seen by AI" },
   titleHighlight: { zh: "到被 AI 采信与推荐", en: "to being trusted and recommended" },
   intro: {
-    zh: "坚果猫 JGMAO AI 增长引擎，帮助企业从“被 AI 看见”走向“被 AI 采信”，并通过诊断、官网、内容、监测、获客五大引擎协同运转，把 AI 推荐转化为可承接、可跟进的增长线索。",
+    zh: "坚果猫 JGMAO AI 增长引擎，帮助企业构建 AI 时代可信增长基础设施，通过 GEO 诊断、AI 增长官网、可信内容资产、推荐监测与获客承接协同运转，持续提升品牌在 AI 搜索中的可见、采信与推荐机会。",
     en: "JGMAO AI Growth Engine helps companies move from being seen by AI to being trusted by AI. Through diagnosis, websites, content, monitoring, and lead conversion, it turns AI recommendations into actionable growth leads.",
   },
   scoreCta: { zh: "先做官网 GEO 评分", en: "Start with GEO scoring" },
