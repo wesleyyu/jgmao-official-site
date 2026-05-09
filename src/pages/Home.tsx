@@ -1142,24 +1142,54 @@ const brandCopy = {
   },
   architectureProblems: [
     {
-      zh: "AI 回答中很少出现自己的品牌",
-      en: "The brand rarely appears in AI answers",
+      title: {
+        zh: "AI 回答中很少出现自己的品牌",
+        en: "The brand rarely appears in AI answers",
+      },
+      description: {
+        zh: "客户在 AI 搜索相关问题时，看不到企业，也就少了一次被发现和比较的机会。",
+        en: "When customers search with AI, the company is not visible and loses a chance to be discovered and compared.",
+      },
     },
     {
-      zh: "官网和内容难以被 AI 准确理解",
-      en: "The website and content are hard for AI to understand accurately",
+      title: {
+        zh: "官网和内容难以被 AI 准确理解",
+        en: "The website and content are hard for AI to understand accurately",
+      },
+      description: {
+        zh: "页面有内容，但主题、结构和证据表达不清晰，AI 不容易抓取、概括和引用。",
+        en: "The content exists, but weak topics, structure, and proof make it harder for AI to retrieve, summarize, and cite.",
+      },
     },
     {
-      zh: "内容生产零散，无法沉淀为可信内容资产",
-      en: "Content production is scattered and does not become trusted content assets",
+      title: {
+        zh: "内容生产零散，无法沉淀为可信内容资产",
+        en: "Content production is scattered and does not become trusted content assets",
+      },
+      description: {
+        zh: "文章、案例、FAQ 和资料分散发布，难以长期复用，也难以形成可被 AI 采信的资产。",
+        en: "Articles, cases, FAQs, and materials are scattered, making them hard to reuse or turn into assets AI can trust.",
+      },
     },
     {
-      zh: "官网有访问，但缺少有效咨询和线索承接",
-      en: "The website has traffic but lacks effective inquiry and lead handoff",
+      title: {
+        zh: "官网有访问，但缺少有效咨询和线索承接",
+        en: "The website has traffic but lacks effective inquiry and lead handoff",
+      },
+      description: {
+        zh: "用户来了，但不知道下一步该做什么，咨询入口、表单、企微和客服没有形成顺畅路径。",
+        en: "Visitors arrive but do not know the next step because consultation entries, forms, WeCom, and service paths are not connected.",
+      },
     },
     {
-      zh: "不清楚 AI 是否推荐了自己，也不知道推荐质量如何",
-      en: "The team cannot tell whether AI recommends the brand or how good those recommendations are",
+      title: {
+        zh: "不清楚 AI 是否推荐了自己，也不知道推荐质量如何",
+        en: "The team cannot tell whether AI recommends the brand or how good those recommendations are",
+      },
+      description: {
+        zh: "企业看不到哪些问题触发了推荐、推荐内容是否准确，也难以判断下一步该优化哪里。",
+        en: "The team cannot see which questions trigger recommendations, whether those recommendations are accurate, or what to optimize next.",
+      },
     },
   ],
   flywheelDemoTag: { zh: "Interactive Flywheel", en: "Interactive Flywheel" },
@@ -2519,13 +2549,16 @@ function Home() {
             <div className="mt-6 grid gap-3">
               {brandCopy.architectureProblems.map((problem, index) => (
                 <div
-                  key={t(problem, locale)}
+                  key={t(problem.title, locale)}
                   className="flex gap-3 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm leading-6 text-slate-100"
                 >
                   <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-cyan-300/15 text-xs font-semibold text-cyan-100">
                     {index + 1}
                   </span>
-                  <span>{t(problem, locale)}</span>
+                  <span>
+                    <span className="block font-semibold text-white">{t(problem.title, locale)}</span>
+                    <span className="mt-1 block text-slate-300">{t(problem.description, locale)}</span>
+                  </span>
                 </div>
               ))}
             </div>
