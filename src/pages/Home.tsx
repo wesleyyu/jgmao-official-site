@@ -1147,7 +1147,7 @@ const brandCopy = {
         en: "The brand rarely appears in AI answers",
       },
       description: {
-        zh: "客户在 AI 搜索相关问题时看不到企业，就意味着少了被发现和比较的机会。",
+        zh: "客户在 AI 搜索相关问题时看不到企业，就意味着少了被发现的机会。",
         en: "When customers search with AI, the company is not visible and loses a chance to be discovered and compared.",
       },
     },
