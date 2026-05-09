@@ -54,6 +54,112 @@ const heroCopy = {
   flywheelTitle: { zh: "帮助企业构建 AI 时代的增长飞轮", en: "Build a growth flywheel for the AI era" },
 };
 
+const breakpointCopy = {
+  eyebrow: { zh: "增长断点", en: "Growth Breakpoints" },
+  title: { zh: "AI 时代企业常见的增长断点", en: "Common growth breakpoints in the AI era" },
+  solutionLabel: { zh: "JGMAO 解法", en: "JGMAO Solution" },
+  solutionBody: {
+    zh: "面对这些问题，JGMAO 会把官网、可信内容资产、企业知识库、推荐监测与获客承接连接起来，形成一套持续优化的增长飞轮。",
+    en: "JGMAO connects the website, trusted content assets, enterprise knowledge base, recommendation monitoring, and lead handoff into a continuously optimized growth flywheel.",
+  },
+};
+
+const breakpointProblems = [
+  {
+    title: {
+      zh: "AI 回答中很少出现自己的品牌",
+      en: "The brand rarely appears in AI answers",
+    },
+    body: {
+      zh: "客户在 AI 搜索相关问题时看不到企业，就意味着少了被发现的机会。",
+      en: "When customers search with AI, the company is not visible and loses a chance to be discovered.",
+    },
+  },
+  {
+    title: {
+      zh: "官网和内容难以被 AI 准确理解",
+      en: "The website and content are hard for AI to understand accurately",
+    },
+    body: {
+      zh: "页面有内容，但主题、结构和证据表达不清晰，AI 不容易抓取和引用。",
+      en: "The content exists, but weak topics, structure, and proof make it harder for AI to retrieve and cite.",
+    },
+  },
+  {
+    title: {
+      zh: "内容生产零散，无法沉淀为可信内容资产",
+      en: "Content is scattered and does not become trusted assets",
+    },
+    body: {
+      zh: "文章、案例、FAQ 和资料分散发布，难以长期复用，也难以形成可被 AI 采信的资产。",
+      en: "Articles, cases, FAQs, and materials are scattered, making them hard to reuse or turn into assets AI can trust.",
+    },
+  },
+  {
+    title: {
+      zh: "官网有访问，但缺少有效咨询和线索承接",
+      en: "The website has traffic but weak lead handoff",
+    },
+    body: {
+      zh: "用户来了，但不知道下一步该做什么，咨询入口、表单、企微和客服没有形成顺畅路径。",
+      en: "Visitors arrive but do not know the next step because consultation entries, forms, WeCom, and service paths are not connected.",
+    },
+  },
+  {
+    title: {
+      zh: "不清楚 AI 是否推荐了自己，也不知道推荐质量如何",
+      en: "The team cannot tell whether AI recommends the brand",
+    },
+    body: {
+      zh: "企业看不到哪些问题触发了推荐、推荐内容是否准确，也难以判断下一步该优化哪里。",
+      en: "The team cannot see which questions trigger recommendations, whether they are accurate, or what to optimize next.",
+    },
+  },
+];
+
+const breakpointSteps = [
+  {
+    title: { zh: "发现需求路径", en: "Discover demand paths" },
+    body: {
+      zh: "识别客户会在 AI 搜索中提出的问题、比较的方案和关注的证据。",
+      en: "Identify the questions, alternatives, and proof points customers search for with AI.",
+    },
+    icon: Radar,
+  },
+  {
+    title: { zh: "沉淀可信内容资产", en: "Build trusted content assets" },
+    body: {
+      zh: "把产品、案例、FAQ、专题页和行业观点整理成可持续复用的内容资产。",
+      en: "Turn products, cases, FAQ, topic pages, and viewpoints into reusable content assets.",
+    },
+    icon: FileText,
+  },
+  {
+    title: { zh: "建立企业知识库", en: "Create the enterprise knowledge base" },
+    body: {
+      zh: "让官网、内容系统和知识库共同表达企业能力，减少信息断层。",
+      en: "Let the website, content system, and knowledge base express company capabilities together.",
+    },
+    icon: Bot,
+  },
+  {
+    title: { zh: "监测推荐质量", en: "Monitor recommendation quality" },
+    body: {
+      zh: "持续观察 AI 回答中的提及、引用、比较和推荐表现。",
+      en: "Track mentions, citations, comparisons, and recommendations in AI answers.",
+    },
+    icon: BarChart3,
+  },
+  {
+    title: { zh: "承接增长机会", en: "Capture growth opportunities" },
+    body: {
+      zh: "把被看见后的访问、咨询和线索接住，形成可跟进的增长路径。",
+      en: "Convert visibility into visits, inquiries, and leads that can be followed up.",
+    },
+    icon: MessageCircle,
+  },
+];
+
 const engineModules = [
   {
     title: { zh: "GEO 诊断与优化", en: "GEO Diagnosis & Optimization" },
@@ -600,6 +706,75 @@ export default function AiGrowthNewPage() {
               <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
             </div>
           </Link>
+        </div>
+      </section>
+
+      <section className="relative mx-auto max-w-7xl px-5 py-10 sm:px-8">
+        <div className="grid gap-6 lg:grid-cols-[0.92fr_1.08fr]">
+          <article className="relative overflow-hidden rounded-[2.35rem] border border-white/10 bg-[linear-gradient(145deg,rgba(15,31,52,0.9),rgba(5,15,29,0.86))] p-6 shadow-[0_28px_90px_rgba(0,0,0,0.24)] backdrop-blur-xl lg:p-8">
+            <div className="pointer-events-none absolute -left-24 -top-24 h-60 w-60 rounded-full bg-cyan-300/12 blur-3xl" />
+            <div className="relative">
+              <span className="inline-flex rounded-full border border-cyan-200/20 bg-cyan-200/10 px-4 py-2 text-xs font-semibold tracking-[0.2em] text-cyan-100">
+                {text(breakpointCopy.eyebrow, locale)}
+              </span>
+              <h2 className="mt-5 text-3xl font-semibold tracking-tight sm:text-4xl">{text(breakpointCopy.title, locale)}</h2>
+              <div className="mt-6 grid gap-3">
+                {breakpointProblems.map((item, index) => (
+                  <div key={item.title.zh} className="rounded-[1.35rem] border border-white/10 bg-white/[0.045] p-4">
+                    <div className="flex items-start gap-3">
+                      <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-2xl border border-cyan-200/15 bg-cyan-200/10 text-xs font-semibold text-cyan-100">
+                        {String(index + 1).padStart(2, "0")}
+                      </span>
+                      <div>
+                        <h3 className="text-base font-semibold text-white">{text(item.title, locale)}</h3>
+                        <p className="mt-2 text-sm leading-6 text-slate-300">{text(item.body, locale)}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </article>
+
+          <div className="space-y-4">
+            <article className="relative overflow-hidden rounded-[2rem] border border-amber-200/20 bg-[linear-gradient(145deg,rgba(245,197,92,0.18),rgba(15,23,42,0.76))] p-6 shadow-[0_24px_80px_rgba(245,197,92,0.12)] backdrop-blur-xl">
+              <div className="pointer-events-none absolute -right-20 -top-20 h-52 w-52 rounded-full bg-amber-200/14 blur-3xl" />
+              <div className="relative flex items-start gap-4">
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-amber-100/20 bg-amber-100/15 text-amber-100">
+                  <Sparkles className="h-5 w-5" />
+                </span>
+                <div>
+                  <p className="text-xs uppercase tracking-[0.22em] text-amber-100/80">{text(breakpointCopy.solutionLabel, locale)}</p>
+                  <p className="mt-3 text-lg font-semibold leading-8 text-white">{text(breakpointCopy.solutionBody, locale)}</p>
+                </div>
+              </div>
+            </article>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              {breakpointSteps.map((item, index) => {
+                const Icon = item.icon;
+                return (
+                  <article
+                    key={item.title.zh}
+                    className={`rounded-[1.65rem] border border-white/10 bg-white/[0.055] p-5 backdrop-blur transition hover:-translate-y-1 hover:border-cyan-200/30 hover:bg-white/[0.08] ${
+                      index === 0 ? "md:col-span-2" : ""
+                    }`}
+                  >
+                    <div className="flex items-start gap-4">
+                      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-cyan-200/16 bg-cyan-200/10 text-cyan-100">
+                        <Icon className="h-5 w-5" />
+                      </span>
+                      <div>
+                        <p className="text-xs font-semibold text-cyan-100/70">{locale === "zh" ? `环节 ${String(index + 1).padStart(2, "0")}` : `Step ${index + 1}`}</p>
+                        <h3 className="mt-1 text-lg font-semibold">{text(item.title, locale)}</h3>
+                        <p className="mt-2 text-sm leading-6 text-slate-300">{text(item.body, locale)}</p>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          </div>
         </div>
       </section>
 
