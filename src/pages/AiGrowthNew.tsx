@@ -43,7 +43,7 @@ function text(value: LocalizedText, locale: Locale) {
 const heroCopy = {
   eyebrow: { zh: "AI 时代企业可信增长基础设施", en: "Trusted growth infrastructure for AI-era enterprises" },
   titleStart: { zh: "从被 AI 看见，", en: "From being seen by AI" },
-  titleHighlight: { zh: "到被 AI 信任和推荐", en: "to being trusted and recommended" },
+  titleHighlight: { zh: "到被 AI 采信与推荐", en: "to being trusted and recommended" },
   intro: {
     zh: "坚果猫 JGMAO AI 增长引擎，帮助企业从“被 AI 看见”走向“被 AI 采信”，并通过诊断、官网、内容、监测、获客五大引擎协同运转，把 AI 推荐转化为可承接、可跟进的增长线索。",
     en: "JGMAO AI Growth Engine helps companies move from being seen by AI to being trusted by AI. Through diagnosis, websites, content, monitoring, and lead conversion, it turns AI recommendations into actionable growth leads.",
