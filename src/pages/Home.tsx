@@ -753,19 +753,19 @@ const capabilities: Capability[] = [
     name: { zh: "GEO 优化引擎", en: "GEO Optimization Engine" },
     title: { zh: "解决企业在 AI 搜索中不容易被看见的问题", en: "Solve weak visibility in AI search" },
     summary: {
-      zh: "通过页面结构、FAQ、答案块和引用证据，让官网内容更容易被 AI 抓取和引用。",
+      zh: "从 AI 搜索问题、品牌表达、官网结构、可信内容资产、企业知识库和外部可信信号等维度，识别企业为什么不容易被 AI 看见、引用和推荐。",
       en: "Use page structure, FAQ, answer blocks, and proof signals to make website content easier for AI to retrieve and cite.",
     },
     description: {
-      zh: "GEO 优化引擎先识别企业为什么不容易出现在 AI 搜索结果里，再把页面标题、答案结构、FAQ、案例证据和引用来源整理成更适合 AI 抓取的表达。",
+      zh: "GEO 优化引擎不只看官网内容，而是从 AI 搜索问题、品牌表达、官网结构、可信内容资产、企业知识库和外部可信信号等多个维度，判断企业为什么不容易被 AI 看见、引用和推荐，并给出系统优化方向。",
       en: "The GEO engine identifies which pages, paragraphs, and answer structures are most extractable by AI, then upgrades them with structured headings, answer-first composition, proof blocks, and trust signals.",
     },
     modalBody: {
-      zh: "这个模块是整站 GEO 的基础层。它会告诉企业哪些页面应该优先改、哪些内容应该写成问题驱动型页面、哪些段落需要加入来源和可验证证据，最终让官网从“可访问”变成“更容易被 AI 引用”。",
+      zh: "这个模块是整套增长飞轮的 GEO 基础层。它会告诉企业哪些 AI 搜索问题需要覆盖、哪些品牌表达需要统一、哪些官网结构需要调整、哪些可信内容资产和知识库内容需要补齐，以及哪些外部可信信号需要增强。",
       en: "This module is the base layer for site-wide GEO. It defines which pages should become question-led assets, which paragraphs should be tightened, and where sources, cases, and evidence need to be added so the site is easier for AI systems to retrieve, summarize, and recommend.",
     },
     geoFocus: {
-      zh: "核心 GEO 动作：结构化标题、FAQ 集群、答案块、引用来源、案例证据。",
+      zh: "关键动作：围绕 AI 搜索问题、官网结构、可信内容资产、企业知识库与外部可信信号，优化企业在 AI 回答中的可见性、可引用性和可信度。",
       en: "Core GEO moves: structured headings, FAQ clusters, answer blocks, source references, and proof-heavy cases.",
     },
     accent: "#5AE4FF",
@@ -773,8 +773,8 @@ const capabilities: Capability[] = [
     icon: Globe2,
     outputs: [
       { zh: "AI 搜索可见性诊断", en: "AI visibility diagnostics" },
-      { zh: "页面结构与标题层级优化", en: "Page structure and heading hierarchy optimization" },
-      { zh: "FAQ、答案块与引用证据设计", en: "FAQ, answer blocks, and citation proof design" },
+      { zh: "品牌表达、官网结构与内容资产优化方向", en: "Brand expression, website structure, and content asset optimization direction" },
+      { zh: "企业知识库与外部可信信号补齐建议", en: "Enterprise knowledge base and external trust signal recommendations" },
     ],
     integrations: [
       { zh: "首页、专题页、方案页和案例页标题体系", en: "Homepage, landing-page, solution-page, and case-page heading systems" },
