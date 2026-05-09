@@ -1207,7 +1207,7 @@ const brandCopy = {
   moduleTag: { zh: "Interactive Engine Map", en: "Interactive Engine Map" },
   moduleTitle: { zh: "五大引擎：从问题到结果的能力矩阵", en: "Five engines: a capability matrix from problem to result" },
   moduleBody: {
-    zh: "每个引擎都对应一个关键增长断点：先看清问题，再配置能力，最后形成可见结果。彼此协同后，才构成完整的 AI 增长飞轮。",
+    zh: "五大引擎分别解决从 AI 可见性、可信内容资产、官网承接到推荐监测与获客转化的关键断点，协同运转后形成完整的 AI 增长飞轮。",
     en: "Click any engine to see how it contributes to site-wide GEO, content, conversion, and recommendation intelligence. Each part can work alone, but together they create a complete AI growth engine.",
   },
   detailButton: { zh: "查看引擎详情", en: "Open Engine Detail" },
