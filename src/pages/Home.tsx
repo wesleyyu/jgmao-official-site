@@ -751,17 +751,17 @@ const capabilities: Capability[] = [
     id: "geo-engine",
     token: "GEO",
     name: { zh: "GEO 优化引擎", en: "GEO Optimization Engine" },
-    title: { zh: "让品牌在 AI 问答时代更容易被看见、被引用、被采信", en: "Improve visibility, citation, and trust in the AI answer era" },
+    title: { zh: "解决企业在 AI 搜索中不容易被看见的问题", en: "Solve weak visibility in AI search" },
     summary: {
-      zh: "围绕 AI 搜索、问答式检索和生成式推荐场景，对官网结构、FAQ、答案块和证据表达做系统优化。",
-      en: "Systematically optimize website structure, FAQ patterns, answer blocks, and evidence design for AI search and recommendation scenarios.",
+      zh: "通过页面结构、FAQ、答案块和引用证据，让官网内容更容易被 AI 抓取和引用。",
+      en: "Use page structure, FAQ, answer blocks, and proof signals to make website content easier for AI to retrieve and cite.",
     },
     description: {
-      zh: "GEO 优化引擎负责识别哪些页面、段落和表达更适合被 AI 抽取，再通过结构化标题、结论先行、证据块和可信来源设计，让网站从“可访问”变成“可引用”。",
+      zh: "GEO 优化引擎先识别企业为什么不容易出现在 AI 搜索结果里，再把页面标题、答案结构、FAQ、案例证据和引用来源整理成更适合 AI 抓取的表达。",
       en: "The GEO engine identifies which pages, paragraphs, and answer structures are most extractable by AI, then upgrades them with structured headings, answer-first composition, proof blocks, and trust signals.",
     },
     modalBody: {
-      zh: "这个模块是整站 GEO 的基础层。它会告诉企业哪些内容应该写成问题驱动型页面，哪些表达应该缩短，哪些段落需要加入来源、案例和可验证证据，目的是让网站更适合被 AI 抓取、概括和推荐。",
+      zh: "这个模块是整站 GEO 的基础层。它会告诉企业哪些页面应该优先改、哪些内容应该写成问题驱动型页面、哪些段落需要加入来源和可验证证据，最终让官网从“可访问”变成“更容易被 AI 引用”。",
       en: "This module is the base layer for site-wide GEO. It defines which pages should become question-led assets, which paragraphs should be tightened, and where sources, cases, and evidence need to be added so the site is easier for AI systems to retrieve, summarize, and recommend.",
     },
     geoFocus: {
@@ -773,8 +773,8 @@ const capabilities: Capability[] = [
     icon: Globe2,
     outputs: [
       { zh: "AI 搜索可见性诊断", en: "AI visibility diagnostics" },
-      { zh: "FAQ / 问答页优化", en: "FAQ and answer-page optimization" },
-      { zh: "引用友好的答案结构", en: "Citation-friendly answer structures" },
+      { zh: "页面结构与标题层级优化", en: "Page structure and heading hierarchy optimization" },
+      { zh: "FAQ、答案块与引用证据设计", en: "FAQ, answer blocks, and citation proof design" },
     ],
     integrations: [
       { zh: "首页、专题页、方案页和案例页标题体系", en: "Homepage, landing-page, solution-page, and case-page heading systems" },
@@ -797,17 +797,17 @@ const capabilities: Capability[] = [
     id: "content-factory",
     token: "AIC",
     name: { zh: "可信内容资产", en: "Trusted Content Assets" },
-    title: { zh: "把专题页、问答内容、案例和行业观察放进持续生产系统", en: "Turn pages, Q&A content, cases, and industry insight into a production system" },
+    title: { zh: "把零散内容沉淀为可信内容资产", en: "Turn scattered content into trusted content assets" },
     summary: {
-      zh: "不仅是写文章，而是形成可复用的内容模板、发布节奏和多页面协同机制。",
-      en: "This is not just writing content. It builds reusable templates, publishing rhythms, and multi-page coordination.",
+      zh: "把文章、案例、FAQ、专题页和产品资料，沉淀成可复用、可追踪、可持续优化的可信内容资产。",
+      en: "Turn articles, cases, FAQ, topic pages, and product materials into reusable, trackable, and continuously optimizable trusted content assets.",
     },
     description: {
-      zh: "可信内容资产会把企业的产品价值、行业问题、客户案例和转化场景沉淀成可持续运营的内容资产，让官网与内容体系长期稳定地产出。",
+      zh: "可信内容资产模块不是单纯写文章，而是围绕客户问题、产品价值、案例证据和行业观点，建立可持续更新的内容资产体系。",
       en: "The content factory transforms product value, industry questions, customer cases, and conversion scenarios into scalable content assets that continuously feed the website.",
     },
     modalBody: {
-      zh: "这个模块决定网站能不能持续生产“被看见的内容”。它会搭建专题页模板、案例模板、行业问答模板和下载页模板，让网站不是一次性搭完，而是持续扩张内容覆盖。",
+      zh: "这个模块决定企业内容能不能从“发布过”变成“可复用”。它会把专题页、案例、FAQ、行业观点和产品资料整理成内容资产，让官网、知识库、AI 智能体和推荐监测都能持续调用。",
       en: "This module determines whether the website can keep producing content that gets discovered. It builds reusable templates for landing pages, case studies, industry Q&A, and downloadable assets so the site expands over time instead of stopping at launch.",
     },
     geoFocus: {
@@ -818,9 +818,9 @@ const capabilities: Capability[] = [
     glow: "rgba(161, 245, 106, 0.22)",
     icon: FileSearch,
     outputs: [
-      { zh: "专题页与方案页模板", en: "Landing and solution page templates" },
-      { zh: "行业问答内容矩阵", en: "Industry Q&A content matrix" },
-      { zh: "案例 / 洞察 / 下载资产", en: "Case-study, insight, and downloadable assets" },
+      { zh: "专题页、FAQ 与案例内容资产", en: "Topic pages, FAQ, and case content assets" },
+      { zh: "行业问题与产品资料内容矩阵", en: "Industry-question and product-material content matrix" },
+      { zh: "可复用、可追踪的可信内容库", en: "Reusable and trackable trusted content library" },
     ],
     integrations: [
       { zh: "首页 Hero 到案例页的内容协同", en: "Content coordination from hero sections to case pages" },
@@ -843,17 +843,17 @@ const capabilities: Capability[] = [
     id: "growth-website",
     token: "WEB",
     name: { zh: "AI 增长网站", en: "AI Growth Website" },
-    title: { zh: "让官网从静态展示页升级成增长、采信与转化的运营界面", en: "Turn the website from a brochure into an operating interface for growth and trust" },
+    title: { zh: "让官网成为增长飞轮中的运营界面", en: "Make the website an operating interface in the growth flywheel" },
     summary: {
-      zh: "官网不再只是展示品牌，而是承接 GEO、可信内容资产、线索系统和推荐分析的增长中枢。",
+      zh: "让官网不只是展示页面，而是连接 GEO、可信内容资产、企业知识库、咨询入口和线索承接的增长界面。",
       en: "The website becomes the central layer that connects GEO, content, lead capture, and recommendation analysis.",
     },
     description: {
-      zh: "AI 增长网站模块负责首页、产品页、解决方案页、案例页、FAQ 和表单的整体协同，让品牌故事、信任层与转化路径都在一个体验里成立。",
+      zh: "AI 增长网站模块负责首页、产品页、专题页、案例页、FAQ、知识内容和咨询入口的协同，让用户看得懂、AI 抓得到、线索接得住。",
       en: "The AI growth website module orchestrates the homepage, product pages, solution pages, case studies, FAQ, and forms so brand narrative, trust signals, and conversion paths work together.",
     },
     modalBody: {
-      zh: "这个模块是五大引擎的展示入口和承接层。它决定品牌信息是不是清楚、用户是不是知道下一步、AI 是不是容易理解页面层级，也是整站 GEO 的载体。",
+      zh: "这个模块让官网成为增长飞轮的一环，而不是孤立的展示站。它连接内容资产、企业知识库、AI 搜索可见性、咨询入口和线索承接，让官网承担解释、信任和行动引导的作用。",
       en: "This module is both the display layer and the conversion layer for all five engines. It determines whether the brand story is clear, whether buyers know the next step, and whether AI systems can understand the site hierarchy.",
     },
     geoFocus: {
@@ -864,9 +864,9 @@ const capabilities: Capability[] = [
     glow: "rgba(243, 197, 107, 0.22)",
     icon: Sparkles,
     outputs: [
-      { zh: "首页 / 产品页 / 场景页结构", en: "Homepage, product-page, and scenario-page structure" },
-      { zh: "案例页与 FAQ 体验设计", en: "Case-study and FAQ experience design" },
-      { zh: "转化导向型页面组件", en: "Conversion-oriented page components" },
+      { zh: "首页、产品页、专题页与案例页结构", en: "Homepage, product, topic, and case page structure" },
+      { zh: "FAQ、知识内容与可信表达模块", en: "FAQ, knowledge content, and trust modules" },
+      { zh: "咨询入口、表单与线索承接组件", en: "Consultation entries, forms, and lead handoff components" },
     ],
     integrations: [
       { zh: "品牌主张、信任层与行动入口的统一呈现", en: "Unified presentation of brand narrative, proof, and action entry points" },
@@ -889,17 +889,17 @@ const capabilities: Capability[] = [
     id: "lead-system",
     token: "ILS",
     name: { zh: "智能获客系统", en: "Intelligent Lead System" },
-    title: { zh: "把内容流量与咨询意向转成可跟进、可分发、可验证的高质量线索", en: "Convert traffic and intent into qualified, routable, measurable leads" },
+    title: { zh: "把 AI 推荐和官网访问转化为可跟进线索", en: "Turn AI recommendations and website visits into followable leads" },
     summary: {
-      zh: "从 CTA、表单、下载页到 CRM 回写和顾问跟进，形成完整线索承接路径。",
+      zh: "把 AI 推荐、官网访问、内容咨询和表单线索接住，并通过企微、客服、飞书通知和复测反馈形成跟进路径。",
       en: "From CTA and forms to CRM routing and consultant follow-up, build a full lead-capture path.",
     },
     description: {
-      zh: "智能获客系统负责线索表单设计、分发逻辑、标签管理、CRM 回写和后续跟进规则，让网站增长结果真正进入销售和客户成功流程。",
+      zh: "智能获客系统负责咨询入口、表单设计、线索标签、企微承接、飞书通知和后续跟进规则，让内容曝光和官网访问真正进入可跟进流程。",
       en: "The lead system handles forms, routing, tagging, CRM write-back, and follow-up rules so website growth translates into real pipeline.",
     },
     modalBody: {
-      zh: "如果没有智能获客系统，内容与 GEO 只能停留在曝光层。这个模块负责把高意图访客快速识别出来，按来源、场景、需求强弱进入不同的承接路径。",
+      zh: "如果没有智能获客系统，AI 推荐和内容访问很容易停在曝光层。这个模块会把高意向访客识别出来，按来源、场景和需求强弱进入不同的承接路径。",
       en: "Without an intelligent lead system, content and GEO stop at awareness. This module identifies high-intent visitors quickly and routes them into the right follow-up path based on source, scenario, and urgency.",
     },
     geoFocus: {
@@ -910,9 +910,9 @@ const capabilities: Capability[] = [
     glow: "rgba(124, 182, 255, 0.22)",
     icon: Database,
     outputs: [
-      { zh: "线索表单与咨询入口", en: "Lead forms and consultation entry points" },
-      { zh: "CRM 回写与标签路由", en: "CRM write-back and tag routing" },
-      { zh: "线索分层与跟进节奏", en: "Lead scoring and follow-up rhythm" },
+      { zh: "官网咨询入口与分层表单", en: "Website consultation entries and tiered forms" },
+      { zh: "企微承接、飞书通知与线索标签", en: "WeCom handoff, Feishu notifications, and lead tags" },
+      { zh: "线索跟进路径与复测反馈", en: "Lead follow-up paths and retesting feedback" },
     ],
     integrations: [
       { zh: "与内容页、案例页和 FAQ 的 CTA 协同", en: "CTA coordination across content, cases, and FAQ" },
@@ -934,18 +934,18 @@ const capabilities: Capability[] = [
   {
     id: "recommendation-analytics",
     token: "ANA",
-    name: { zh: "AI推荐分析", en: "AI Recommendation Analytics" },
-    title: { zh: "看清品牌是如何被 AI 推荐、被用户点击、被线索验证的", en: "Understand how AI recommends your brand and how those recommendations convert" },
+    name: { zh: "AI 推荐监测", en: "AI Recommendation Monitoring" },
+    title: { zh: "看清品牌在 AI 回答中的出现、引用和推荐表现", en: "Understand how the brand appears, is cited, and gets recommended in AI answers" },
     summary: {
-      zh: "把 AI 引用、推荐路径、内容表现和线索质量放进统一的决策分析层。",
+      zh: "持续观察品牌、产品和内容在 AI 回答中的出现、引用、比较和推荐表现，帮助企业判断下一步该优化什么。",
       en: "Unify AI citations, recommendation paths, content performance, and lead quality in one decision layer.",
     },
     description: {
-      zh: "AI推荐分析模块负责监测品牌在哪些问题场景中被推荐、哪些表达更容易被采纳、哪些内容能带来更高质量的商机，让优化有真正的闭环。",
+      zh: "AI 推荐监测模块负责看清哪些问题触发了品牌出现、哪些内容被引用、推荐表达是否准确，以及这些推荐是否带来了更高质量的咨询和线索。",
       en: "The recommendation analytics module tracks where the brand is recommended, which messages are adopted more often, and which assets produce higher-quality pipeline.",
     },
     modalBody: {
-      zh: "这个模块是网站 GEO 的判断层。它不只告诉你页面有没有流量，而是告诉你 AI 为什么推荐你、哪些内容在推动获客、哪些页面虽然有访问却没有商机质量。",
+      zh: "这个模块是增长飞轮的判断层。它不只看页面有没有流量，而是看 AI 是否推荐了企业、为什么推荐、推荐内容是否准确，以及哪些内容正在推动真实线索。",
       en: "This module is the judgment layer for website GEO. It tells you not just whether pages have traffic, but why AI recommends you, which assets move pipeline, and which pages attract visits without real opportunity quality.",
     },
     geoFocus: {
@@ -956,9 +956,9 @@ const capabilities: Capability[] = [
     glow: "rgba(255, 140, 140, 0.22)",
     icon: Radar,
     outputs: [
-      { zh: "AI 推荐路径分析", en: "AI recommendation-path analysis" },
-      { zh: "内容与页面表现归因", en: "Content and page attribution" },
-      { zh: "推荐到商机的质量回看", en: "Recommendation-to-opportunity quality review" },
+      { zh: "AI 回答出现、引用与推荐监测", en: "AI answer appearance, citation, and recommendation monitoring" },
+      { zh: "推荐内容准确性与质量判断", en: "Recommendation accuracy and quality evaluation" },
+      { zh: "推荐到线索的效果回看", en: "Recommendation-to-lead performance review" },
     ],
     integrations: [
       { zh: "AI 搜索引用与推荐监测", en: "AI search citation and recommendation tracking" },
@@ -1205,9 +1205,9 @@ const brandCopy = {
   flywheelDemoActiveModule: { zh: "当前模块", en: "Active Module" },
   flywheelDemoModalLabel: { zh: "模块详情", en: "Module Detail" },
   moduleTag: { zh: "Interactive Engine Map", en: "Interactive Engine Map" },
-  moduleTitle: { zh: "五大引擎：核心能力", en: "The five engines are not isolated products. They form one coordinated growth system." },
+  moduleTitle: { zh: "五大引擎：从问题到结果的能力矩阵", en: "Five engines: a capability matrix from problem to result" },
   moduleBody: {
-    zh: "每个引擎都能独立发挥作用，彼此协同后形成完整的 AI 增长飞轮。",
+    zh: "每个引擎都对应一个关键增长断点：先看清问题，再配置能力，最后形成可见结果。彼此协同后，才构成完整的 AI 增长飞轮。",
     en: "Click any engine to see how it contributes to site-wide GEO, content, conversion, and recommendation intelligence. Each part can work alone, but together they create a complete AI growth engine.",
   },
   detailButton: { zh: "查看引擎详情", en: "Open Engine Detail" },
@@ -2750,9 +2750,9 @@ function Home() {
 
                   <div className="mt-5 flex flex-wrap gap-2">
                     {[
-                      { id: "overview", zh: "概览", en: "Overview" },
-                      { id: "outputs", zh: "核心产物", en: "Outputs" },
-                      { id: "integrations", zh: "关键连接点", en: "Integrations" },
+                      { id: "overview", zh: "解决问题", en: "Problem" },
+                      { id: "outputs", zh: "能力要点", en: "Capabilities" },
+                      { id: "integrations", zh: "连接协同", en: "Connections" },
                     ].map((tab) => {
                       const isActive = moduleTab === tab.id;
 
@@ -2778,11 +2778,11 @@ function Home() {
                         <p className="max-w-3xl text-base leading-8 text-slate-300">{t(activeCapability.description, locale)}</p>
                         <div className="mt-6 grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
                           <div className="rounded-[1.5rem] border border-white/10 bg-slate-950/55 p-5">
-                            <p className="text-xs uppercase tracking-[0.22em] text-slate-400">{locale === "zh" ? "能力海报" : "Capability Poster"}</p>
+                            <p className="text-xs uppercase tracking-[0.22em] text-slate-400">{locale === "zh" ? "关键动作" : "Key Actions"}</p>
                             <p className="mt-3 text-sm leading-7 text-slate-200">{t(activeCapability.geoFocus, locale)}</p>
                           </div>
                           <div className="rounded-[1.5rem] border border-white/10 bg-slate-950/55 p-5">
-                            <p className="text-xs uppercase tracking-[0.22em] text-slate-400">{locale === "zh" ? "关键场景信号" : "Key Signals"}</p>
+                            <p className="text-xs uppercase tracking-[0.22em] text-slate-400">{locale === "zh" ? "判断信号" : "Signals"}</p>
                             <div className="mt-4 flex flex-wrap gap-2">
                               {activeCapability.signals.map((signal) => (
                                 <span key={signal.en} className="rounded-full border px-3 py-2 text-sm text-slate-200" style={{ borderColor: `${activeCapability.accent}66`, backgroundColor: activeCapability.glow }}>
@@ -2793,7 +2793,8 @@ function Home() {
                           </div>
                         </div>
 
-                        <div className="mt-6 grid gap-4 sm:grid-cols-3">
+                        <p className="mt-6 text-xs uppercase tracking-[0.22em] text-slate-400">{locale === "zh" ? "可见结果" : "Visible Results"}</p>
+                        <div className="mt-3 grid gap-4 sm:grid-cols-3">
                           {activeCapability.metrics.map((metric) => (
                             <div key={metric.label.en} className="rounded-[1.4rem] border border-white/10 bg-slate-950/55 p-4">
                               <p className="text-xs uppercase tracking-[0.22em] text-slate-400">{t(metric.label, locale)}</p>
@@ -2806,7 +2807,7 @@ function Home() {
 
                     {moduleTab === "outputs" ? (
                       <div className="rounded-[1.5rem] border border-white/10 bg-slate-950/55 p-5">
-                        <p className="text-xs uppercase tracking-[0.22em] text-slate-400">{locale === "zh" ? "核心产物" : "Key Outputs"}</p>
+                        <p className="text-xs uppercase tracking-[0.22em] text-slate-400">{locale === "zh" ? "能力要点" : "Capabilities"}</p>
                         <div className="mt-4 space-y-3">
                           {activeCapability.outputs.map((item) => (
                             <div key={item.en} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200">
@@ -2819,7 +2820,7 @@ function Home() {
 
                     {moduleTab === "integrations" ? (
                       <div className="rounded-[1.5rem] border border-white/10 bg-slate-950/55 p-5">
-                        <p className="text-xs uppercase tracking-[0.22em] text-slate-400">{locale === "zh" ? "关键连接点" : "Key Integrations"}</p>
+                        <p className="text-xs uppercase tracking-[0.22em] text-slate-400">{locale === "zh" ? "连接协同" : "Connections"}</p>
                         <div className="mt-4 space-y-3">
                           {activeCapability.integrations.map((item) => (
                             <div key={item.en} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200">
@@ -3583,7 +3584,7 @@ function Home() {
 
                 <div className="mt-8 grid gap-4 lg:grid-cols-[1fr_1fr]">
                   <div className="rounded-[1.5rem] border border-white/10 bg-slate-950/55 p-5">
-                    <p className="text-xs uppercase tracking-[0.22em] text-slate-400">{locale === "zh" ? "核心产物" : "Key Outputs"}</p>
+                    <p className="text-xs uppercase tracking-[0.22em] text-slate-400">{locale === "zh" ? "能力要点" : "Capabilities"}</p>
                     <div className="mt-4 space-y-3">
                       {detailCapability.outputs.map((item) => (
                         <div key={item.en} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200">
@@ -3594,7 +3595,7 @@ function Home() {
                   </div>
 
                   <div className="rounded-[1.5rem] border border-white/10 bg-slate-950/55 p-5">
-                    <p className="text-xs uppercase tracking-[0.22em] text-slate-400">{locale === "zh" ? "关键连接点" : "Key Integrations"}</p>
+                    <p className="text-xs uppercase tracking-[0.22em] text-slate-400">{locale === "zh" ? "连接协同" : "Connections"}</p>
                     <div className="mt-4 space-y-3">
                       {detailCapability.integrations.map((item) => (
                         <div key={item.en} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200">
