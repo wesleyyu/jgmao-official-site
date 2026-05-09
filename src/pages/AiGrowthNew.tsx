@@ -400,7 +400,7 @@ const sectionCopy = {
   },
   websiteCardCta: { zh: "查看官网生成", en: "View website generation" },
   engineEyebrow: { zh: "五大引擎", en: "Five Engines" },
-  engineTitle: { zh: "五大引擎：核心能力", en: "Five engines: core capabilities" },
+  engineTitle: { zh: "五大引擎协同运转", en: "Five engines working together" },
   engineBody: {
     zh: "解决从 AI 可见性、可信内容资产、官网承接到推荐监测与获客转化的关键断点，协同运转后形成完整的 AI 增长飞轮。",
     en: "Each engine contributes to GEO visibility, trusted content assets, website handoff, recommendation monitoring, and lead conversion. Together, they form a complete AI growth flywheel.",
