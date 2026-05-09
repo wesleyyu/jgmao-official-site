@@ -2254,7 +2254,7 @@ function Home() {
                   <div>
                     <p className="text-xs uppercase tracking-[0.28em] text-slate-400">{locale === "zh" ? "可信增长路径" : "Trusted Growth Path"}</p>
                     <h2 className="mt-2 text-2xl font-semibold text-white">
-                      {locale === "zh" ? "增长不是一条链路，而是一个会自我强化的系统" : "Growth is not a single funnel. It is a self-reinforcing system."}
+                      {locale === "zh" ? "AI 时代的增长，不是一条线性的获客链路，而是一个持续积累、自我强化的可信系统。" : "Growth in the AI era is not a linear acquisition funnel. It is a trusted system that compounds and reinforces itself."}
                     </h2>
                   </div>
                   <motion.div
