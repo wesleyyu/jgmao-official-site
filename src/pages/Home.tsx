@@ -1135,7 +1135,7 @@ const brandCopy = {
     en: "JGMAO AI Growth Engine combines five parts: GEO optimization, trusted content assets, an AI growth website, an intelligent lead system, and AI recommendation analytics to connect visibility, content, conversion, and feedback into one operating system.",
   },
   architectureTag: { zh: "Core Scenarios", en: "Core Scenarios" },
-  architectureTitle: { zh: "核心场景：适用问题", en: "Core scenarios: where this system fits" },
+  architectureTitle: { zh: "AI 时代企业常见的增长断点", en: "Common growth breakpoints in the AI era" },
   architectureBody: {
     zh: "这些问题往往不是单点问题，而是官网、可信内容资产、企业知识库、推荐监测与获客承接没有协同运转。",
     en: "When these problems start to appear, JGMAO connects the website, trusted content assets, enterprise knowledge base, recommendation monitoring, and lead handoff into a continuously optimized growth flywheel.",
