@@ -2545,7 +2545,6 @@ function Home() {
           <article className="rounded-[2rem] border border-white/10 bg-slate-950/55 p-6 backdrop-blur-xl">
             <SectionTag>{t(brandCopy.architectureTag, locale)}</SectionTag>
             <h2 className="mt-5 text-3xl font-semibold tracking-tight text-white sm:text-[2.5rem]">{t(brandCopy.architectureTitle, locale)}</h2>
-            <p className="mt-4 text-base leading-8 text-slate-300">{t(brandCopy.architectureBody, locale)}</p>
             <div className="mt-6 grid gap-3">
               {brandCopy.architectureProblems.map((problem, index) => (
                 <div
@@ -2565,7 +2564,12 @@ function Home() {
             <p className="mt-5 text-sm leading-7 text-slate-300 md:hidden">{mobileAccordionHint}</p>
           </article>
 
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <div className="space-y-4">
+            <div className="rounded-[1.8rem] border border-cyan-300/15 bg-cyan-300/8 p-5">
+              <p className="text-xs uppercase tracking-[0.24em] text-cyan-100/80">{locale === "zh" ? "JGMAO 解法" : "JGMAO Solution"}</p>
+              <p className="mt-3 text-sm leading-7 text-slate-200">{t(brandCopy.architectureBody, locale)}</p>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {scenarioCards.map((scenario, index) => {
               const Icon = scenario.icon;
               const isExpanded = activeScenarioIndex === index;
@@ -2599,6 +2603,7 @@ function Home() {
                 </motion.article>
               );
             })}
+            </div>
           </div>
         </section>
 
