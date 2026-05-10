@@ -713,9 +713,9 @@ const flywheelModules: FlywheelModule[] = [
       },
     ],
     metrics: [
-      { label: { zh: "自动执行率", en: "Automation Rate" }, value: "79%" },
-      { label: { zh: "优化节拍", en: "Optimization Rhythm" }, value: "Weekly" },
-      { label: { zh: "人效提升", en: "Team Leverage" }, value: "4.6x" },
+      { label: { zh: "线索承接", en: "Lead Capture" }, value: "多入口" },
+      { label: { zh: "跟进协同", en: "Follow-up Sync" }, value: "自动通知" },
+      { label: { zh: "复测反馈", en: "Retest Feedback" }, value: "持续回流" },
     ],
     integrationTitle: {
       zh: "O 连接点",
