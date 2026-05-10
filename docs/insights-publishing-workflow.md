@@ -51,6 +51,41 @@
 - `publishing.distributionTargets`
 - `publishing.feishuReady`
 
+## 轻量发布流：飞书文档 -> 官网文章
+
+现阶段建议先采用“飞书写作 + 本地结构化导入”的方式，不急着直接接数据库或完整 CMS。
+
+推荐流程：
+
+1. 在飞书文档里完成文章正文、标题、摘要、段落和图片说明。
+2. 人工确认文章是否适合公开发布，以及是否涉及客户隐私、夸大承诺或未确认数据。
+3. 按 `docs/feishu-insight-draft.example.json` 整理为结构化草稿。
+4. 运行导入脚本，把草稿写入 `src/content/insights.ts`。
+5. 本地构建检查 `/insights/` 和 `/insights/:slug/`。
+6. 同步官网后，文章会进入独立 URL，并被 prerender 成适合抓取的静态页面。
+
+导入命令：
+
+```bash
+npm run insight:import -- docs/feishu-insight-draft.example.json
+```
+
+默认导入为 `draft` 状态，确认无误后再把 `status` 改成 `published`。
+
+## 图文文章处理方式
+
+飞书文档里的图片不要直接粘贴进正文。建议先把图片作为官网静态资源管理：
+
+- 公开封面图、配图：放到 `public/insights/`。
+- 文件命名：使用文章 slug 前缀，例如 `ai-search-visible-growth-assets-cover.jpg`。
+- 正文图片：先在飞书文档里保留“图片说明 / 建议位置”，后续再扩展文章数据结构支持正文图片块。
+
+这样做的好处是：
+
+- 图片地址稳定，适合微信、搜索引擎和 AI 抓取。
+- 不依赖飞书图片临时链接。
+- 后续迁移到 CMS 时也能保持 URL 稳定。
+
 建议后续流程：
 
 1. 飞书里提交选题或文章草稿

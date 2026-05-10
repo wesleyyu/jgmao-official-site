@@ -1,0 +1,76 @@
+{
+  "slug": "ai-search-visible-growth-assets",
+  "status": "draft",
+  "category": {
+    "zh": "GEO 洞察",
+    "en": "GEO Insight"
+  },
+  "title": {
+    "zh": "为什么企业需要把内容沉淀为可信增长资产",
+    "en": "Why enterprises need to turn content into trusted growth assets"
+  },
+  "summary": {
+    "zh": "从官网、案例、FAQ、知识库到可信登记，说明内容如何成为 AI 搜索时代的增长基础。",
+    "en": "How websites, cases, FAQs, knowledge bases, and trusted records become growth assets in the AI search era."
+  },
+  "description": {
+    "zh": "AI 搜索时代，内容不只是发布出去的文章，而是帮助企业被理解、被采信、被推荐的可信资产。",
+    "en": "In the AI search era, content is not just published material. It becomes a trusted asset that helps enterprises be understood, trusted, and recommended."
+  },
+  "seoTitle": {
+    "zh": "企业如何沉淀可信增长资产 | 坚果猫 JGMAO",
+    "en": "How enterprises build trusted growth assets | JGMAO"
+  },
+  "seoDescription": {
+    "zh": "了解企业如何把官网、案例、FAQ、知识库与可信登记沉淀为 AI 搜索时代的可信增长资产。",
+    "en": "Learn how enterprises turn websites, cases, FAQs, knowledge bases, and trusted records into trusted growth assets for AI search."
+  },
+  "publishedAt": "2026-05-10",
+  "readingTime": "5 min",
+  "metric": "Asset",
+  "metricLabel": {
+    "zh": "可信内容资产",
+    "en": "Trusted Content Asset"
+  },
+  "iconKey": "file-search",
+  "relatedFaqIds": [
+    "what-is-jgmao-growth-engine",
+    "geo-vs-seo"
+  ],
+  "sections": [
+    {
+      "title": {
+        "zh": "内容为什么要资产化",
+        "en": "Why content needs to become an asset"
+      },
+      "body": {
+        "zh": "很多企业持续发布内容，但内容分散在官网、公众号、销售资料和项目文档里，没有形成统一的可信表达。资产化的核心，是把这些内容整理成 AI 和客户都容易理解、引用和验证的结构。",
+        "en": "Many enterprises keep publishing content, but it is scattered across websites, social channels, sales materials, and project documents. Assetization means turning it into a structure that AI systems and customers can understand, cite, and verify."
+      },
+      "bullets": [
+        {
+          "zh": "让核心问题和答案更清楚",
+          "en": "Make key questions and answers clearer"
+        },
+        {
+          "zh": "让案例、资质和观点形成证据链",
+          "en": "Connect cases, qualifications, and viewpoints into a proof chain"
+        },
+        {
+          "zh": "让后续官网、知识库和推荐监测持续复用",
+          "en": "Make the content reusable across the website, knowledge base, and recommendation monitoring"
+        }
+      ]
+    },
+    {
+      "title": {
+        "zh": "哪些内容最值得先沉淀",
+        "en": "What content should be structured first"
+      },
+      "body": {
+        "zh": "建议优先沉淀产品介绍、服务场景、客户案例、常见问答、行业观点、资质证明和可信登记信息。这些内容更容易影响 AI 对企业的理解，也更容易帮助客户做判断。",
+        "en": "Start with product descriptions, service scenarios, customer cases, FAQs, industry viewpoints, qualifications, and trusted records. These assets influence how AI understands the enterprise and how customers make decisions."
+      }
+    }
+  ]
+}

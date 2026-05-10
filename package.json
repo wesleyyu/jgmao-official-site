@@ -13,7 +13,8 @@
     "serve:local": "node scripts/local-preview-server.mjs",
     "serve:prod": "node scripts/production-web-server.mjs",
     "agent:bridge": "node scripts/local-agent-bridge.mjs",
-    "chat:relay": "node scripts/server-chat-relay.mjs"
+    "chat:relay": "node scripts/server-chat-relay.mjs",
+    "insight:import": "node scripts/import-insight-draft.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
