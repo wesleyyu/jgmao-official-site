@@ -321,9 +321,9 @@ const flywheelModules: FlywheelModule[] = [
       },
     ],
     metrics: [
-      { label: { zh: "旅程清晰度", en: "Journey Clarity" }, value: "91%" },
-      { label: { zh: "关键路径覆盖", en: "Path Coverage" }, value: "23" },
-      { label: { zh: "高意图入口", en: "Intent Entries" }, value: "48" },
+      { label: { zh: "需求洞察", en: "Demand Insight" }, value: "问题识别" },
+      { label: { zh: "路径拆解", en: "Path Mapping" }, value: "链路清晰" },
+      { label: { zh: "场景归类", en: "Scenario Clustering" }, value: "持续补齐" },
     ],
     integrationTitle: {
       zh: "J 连接点",
@@ -416,9 +416,9 @@ const flywheelModules: FlywheelModule[] = [
       },
     ],
     metrics: [
-      { label: { zh: "内容产能", en: "Content Capacity" }, value: "8x" },
-      { label: { zh: "专题页速度", en: "Launch Speed" }, value: "72h" },
-      { label: { zh: "线索承接率", en: "Lead Capture" }, value: "+37%" },
+      { label: { zh: "内容沉淀", en: "Content Capture" }, value: "专题沉淀" },
+      { label: { zh: "证据补齐", en: "Proof Completion" }, value: "可信表达" },
+      { label: { zh: "引用优化", en: "Citation Optimization" }, value: "摘要优化" },
     ],
     integrationTitle: {
       zh: "G 连接点",
@@ -614,9 +614,9 @@ const flywheelModules: FlywheelModule[] = [
       },
     ],
     metrics: [
-      { label: { zh: "引用可信度", en: "Trust Lift" }, value: "+42%" },
-      { label: { zh: "AI 采信提升", en: "AI Acceptance" }, value: "+31%" },
-      { label: { zh: "品牌信任层", en: "Trust Blocks" }, value: "12" },
+      { label: { zh: "可信登记", en: "Trusted Registration" }, value: "链上记录" },
+      { label: { zh: "权威背书", en: "Authority Endorsement" }, value: "媒体合作" },
+      { label: { zh: "采信基础", en: "Trust Foundation" }, value: "证据链路" },
     ],
     integrationTitle: {
       zh: "A 连接点",
