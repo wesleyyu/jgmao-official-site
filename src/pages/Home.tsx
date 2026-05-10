@@ -2564,50 +2564,52 @@ function Home() {
             <p className="mt-5 text-sm leading-7 text-slate-300 md:hidden">{mobileAccordionHint}</p>
           </article>
 
-          <div className="space-y-4">
-            <div className="relative overflow-hidden rounded-[1.8rem] border border-cyan-200/25 bg-gradient-to-br from-cyan-300/14 via-white/[0.055] to-violet-300/12 p-5 shadow-[0_24px_100px_rgba(34,211,238,0.12)]">
-              <div className="pointer-events-none absolute -right-12 -top-16 h-36 w-36 rounded-full bg-cyan-200/20 blur-3xl" />
-              <div className="pointer-events-none absolute -bottom-20 left-12 h-40 w-40 rounded-full bg-violet-300/15 blur-3xl" />
-              <p className="relative text-xs uppercase tracking-[0.24em] text-cyan-100/85">{locale === "zh" ? "JGMAO 解法" : "JGMAO Solution"}</p>
-              <p className="mt-3 text-sm leading-7 text-slate-200">{t(brandCopy.architectureBody, locale)}</p>
-            </div>
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {scenarioCards.map((scenario, index) => {
-              const Icon = scenario.icon;
-              const isExpanded = activeScenarioIndex === index;
+          <div className="relative overflow-hidden rounded-[2rem] border border-cyan-200/18 bg-[linear-gradient(145deg,rgba(18,31,50,0.88),rgba(5,15,29,0.86))] p-5 shadow-[0_24px_90px_rgba(0,0,0,0.22)] backdrop-blur-xl">
+            <div className="pointer-events-none absolute -right-16 -top-20 h-52 w-52 rounded-full bg-cyan-200/14 blur-3xl" />
+            <div className="pointer-events-none absolute -bottom-24 left-10 h-56 w-56 rounded-full bg-violet-300/12 blur-3xl" />
+            <div className="relative space-y-4">
+              <div className="overflow-hidden rounded-[1.8rem] border border-cyan-200/25 bg-gradient-to-br from-cyan-300/14 via-white/[0.055] to-violet-300/12 p-5 shadow-[0_24px_100px_rgba(34,211,238,0.1)]">
+                <p className="text-xs uppercase tracking-[0.24em] text-cyan-100/85">{locale === "zh" ? "JGMAO 解法" : "JGMAO Solution"}</p>
+                <p className="mt-3 text-sm leading-7 text-slate-200">{t(brandCopy.architectureBody, locale)}</p>
+              </div>
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                {scenarioCards.map((scenario, index) => {
+                  const Icon = scenario.icon;
+                  const isExpanded = activeScenarioIndex === index;
 
-              return (
-                <motion.article
-                  key={scenario.title.en}
-                  initial={{ opacity: 0, y: 16 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, amount: 0.25 }}
-                  transition={{ duration: 0.35, delay: index * 0.04 }}
-                  className="relative overflow-hidden rounded-[1.8rem] border border-white/10 bg-white/6 p-5 shadow-[0_20px_80px_rgba(0,0,0,0.2)] backdrop-blur transition hover:-translate-y-0.5 hover:border-white/18 hover:bg-white/[0.075]"
-                >
-                  {index < scenarioCards.length - 1 ? (
-                    <span className="pointer-events-none absolute right-5 top-5 hidden h-px w-10 bg-gradient-to-r from-transparent via-white/25 to-transparent xl:block" />
-                  ) : null}
-                  <button
-                    type="button"
-                    onClick={() => setActiveScenarioIndex((current) => (current === index ? null : index))}
-                    className="w-full text-left"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-2xl border" style={{ borderColor: `${scenario.accent}88`, backgroundColor: scenario.glow, color: scenario.accent }}>
-                        <Icon className="h-5 w-5" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-xs uppercase tracking-[0.22em]" style={{ color: scenario.accent }}>{locale === "zh" ? `环节 0${index + 1}` : `Step 0${index + 1}`}</p>
-                        <h3 className="mt-1 text-xl font-semibold text-white">{t(scenario.title, locale)}</h3>
-                      </div>
-                      <ArrowRight className={cn("h-4 w-4 shrink-0 text-slate-400 transition md:hidden", isExpanded && "rotate-90 text-white")} />
-                    </div>
-                  </button>
-                  <p className={cn("mt-4 text-sm leading-7 text-slate-300", !isExpanded && "hidden md:block")}>{t(scenario.description, locale)}</p>
-                </motion.article>
-              );
-            })}
+                  return (
+                    <motion.article
+                      key={scenario.title.en}
+                      initial={{ opacity: 0, y: 16 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true, amount: 0.25 }}
+                      transition={{ duration: 0.35, delay: index * 0.04 }}
+                      className="relative overflow-hidden rounded-[1.8rem] border border-white/10 bg-white/6 p-5 shadow-[0_20px_80px_rgba(0,0,0,0.2)] backdrop-blur transition hover:-translate-y-0.5 hover:border-white/18 hover:bg-white/[0.075]"
+                    >
+                      {index < scenarioCards.length - 1 ? (
+                        <span className="pointer-events-none absolute right-5 top-5 hidden h-px w-10 bg-gradient-to-r from-transparent via-white/25 to-transparent xl:block" />
+                      ) : null}
+                      <button
+                        type="button"
+                        onClick={() => setActiveScenarioIndex((current) => (current === index ? null : index))}
+                        className="w-full text-left"
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className="flex h-12 w-12 items-center justify-center rounded-2xl border" style={{ borderColor: `${scenario.accent}88`, backgroundColor: scenario.glow, color: scenario.accent }}>
+                            <Icon className="h-5 w-5" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs uppercase tracking-[0.22em]" style={{ color: scenario.accent }}>{locale === "zh" ? `环节 0${index + 1}` : `Step 0${index + 1}`}</p>
+                            <h3 className="mt-1 text-xl font-semibold text-white">{t(scenario.title, locale)}</h3>
+                          </div>
+                          <ArrowRight className={cn("h-4 w-4 shrink-0 text-slate-400 transition md:hidden", isExpanded && "rotate-90 text-white")} />
+                        </div>
+                      </button>
+                      <p className={cn("mt-4 text-sm leading-7 text-slate-300", !isExpanded && "hidden md:block")}>{t(scenario.description, locale)}</p>
+                    </motion.article>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </section>
