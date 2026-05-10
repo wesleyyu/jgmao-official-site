@@ -515,9 +515,9 @@ const flywheelModules: FlywheelModule[] = [
       },
     ],
     metrics: [
-      { label: { zh: "信号刷新", en: "Signal Refresh" }, value: "15m" },
-      { label: { zh: "实验闭环", en: "Experiment Loops" }, value: "126/mo" },
-      { label: { zh: "异常发现", en: "Anomaly Detection" }, value: "<1h" },
+      { label: { zh: "知识沉淀", en: "Knowledge Capture" }, value: "持续" },
+      { label: { zh: "语义调用", en: "Semantic Retrieval" }, value: "多场景" },
+      { label: { zh: "持续更新", en: "Continuous Updates" }, value: "常态化" },
     ],
     integrationTitle: {
       zh: "M 连接点",
