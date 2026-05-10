@@ -736,43 +736,46 @@ export default function AiGrowthNewPage() {
             </div>
           </article>
 
-          <div className="space-y-4">
-            <article className="relative overflow-hidden rounded-[2rem] border border-amber-200/20 bg-[linear-gradient(145deg,rgba(245,197,92,0.18),rgba(15,23,42,0.76))] p-6 shadow-[0_24px_80px_rgba(245,197,92,0.12)] backdrop-blur-xl">
-              <div className="pointer-events-none absolute -right-20 -top-20 h-52 w-52 rounded-full bg-amber-200/14 blur-3xl" />
-              <div className="relative flex items-start gap-4">
-                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-amber-100/20 bg-amber-100/15 text-amber-100">
-                  <Sparkles className="h-5 w-5" />
-                </span>
-                <div>
-                  <p className="text-xs uppercase tracking-[0.22em] text-amber-100/80">{text(breakpointCopy.solutionLabel, locale)}</p>
-                  <p className="mt-3 text-lg font-semibold leading-8 text-white">{text(breakpointCopy.solutionBody, locale)}</p>
+          <div className="relative overflow-hidden rounded-[2.35rem] border border-amber-200/18 bg-[linear-gradient(145deg,rgba(22,32,48,0.9),rgba(8,18,33,0.88))] p-5 shadow-[0_28px_90px_rgba(0,0,0,0.22)] backdrop-blur-xl lg:p-6">
+            <div className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-amber-200/12 blur-3xl" />
+            <div className="pointer-events-none absolute -bottom-28 left-8 h-64 w-64 rounded-full bg-cyan-300/10 blur-3xl" />
+            <div className="relative space-y-4">
+              <article className="overflow-hidden rounded-[2rem] border border-amber-200/20 bg-[linear-gradient(145deg,rgba(245,197,92,0.18),rgba(15,23,42,0.76))] p-6 shadow-[0_24px_80px_rgba(245,197,92,0.1)] backdrop-blur-xl">
+                <div className="flex items-start gap-4">
+                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-amber-100/20 bg-amber-100/15 text-amber-100">
+                    <Sparkles className="h-5 w-5" />
+                  </span>
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.22em] text-amber-100/80">{text(breakpointCopy.solutionLabel, locale)}</p>
+                    <p className="mt-3 text-lg font-semibold leading-8 text-white">{text(breakpointCopy.solutionBody, locale)}</p>
+                  </div>
                 </div>
-              </div>
-            </article>
+              </article>
 
-            <div className="grid gap-4 md:grid-cols-2">
-              {breakpointSteps.map((item, index) => {
-                const Icon = item.icon;
-                return (
-                  <article
-                    key={item.title.zh}
-                    className={`rounded-[1.65rem] border border-white/10 bg-white/[0.055] p-5 backdrop-blur transition hover:-translate-y-1 hover:border-cyan-200/30 hover:bg-white/[0.08] ${
-                      index === 0 ? "md:col-span-2" : ""
-                    }`}
-                  >
-                    <div className="flex items-start gap-4">
-                      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-cyan-200/16 bg-cyan-200/10 text-cyan-100">
-                        <Icon className="h-5 w-5" />
-                      </span>
-                      <div>
-                        <p className="text-xs font-semibold text-cyan-100/70">{locale === "zh" ? `环节 ${String(index + 1).padStart(2, "0")}` : `Step ${index + 1}`}</p>
-                        <h3 className="mt-1 text-lg font-semibold">{text(item.title, locale)}</h3>
-                        <p className="mt-2 text-sm leading-6 text-slate-300">{text(item.body, locale)}</p>
+              <div className="grid gap-4 md:grid-cols-2">
+                {breakpointSteps.map((item, index) => {
+                  const Icon = item.icon;
+                  return (
+                    <article
+                      key={item.title.zh}
+                      className={`rounded-[1.65rem] border border-white/10 bg-white/[0.055] p-5 backdrop-blur transition hover:-translate-y-1 hover:border-cyan-200/30 hover:bg-white/[0.08] ${
+                        index === 0 ? "md:col-span-2" : ""
+                      }`}
+                    >
+                      <div className="flex items-start gap-4">
+                        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-cyan-200/16 bg-cyan-200/10 text-cyan-100">
+                          <Icon className="h-5 w-5" />
+                        </span>
+                        <div>
+                          <p className="text-xs font-semibold text-cyan-100/70">{locale === "zh" ? `环节 ${String(index + 1).padStart(2, "0")}` : `Step ${index + 1}`}</p>
+                          <h3 className="mt-1 text-lg font-semibold">{text(item.title, locale)}</h3>
+                          <p className="mt-2 text-sm leading-6 text-slate-300">{text(item.body, locale)}</p>
+                        </div>
                       </div>
-                    </div>
-                  </article>
-                );
-              })}
+                    </article>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>
