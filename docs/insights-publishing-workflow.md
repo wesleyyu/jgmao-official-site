@@ -127,17 +127,54 @@ npm run insight:import -- tmp/insight-drafts/{slug}.json
 
 ## 图文文章处理方式
 
-第一版先读取飞书文档的纯文本内容，图片仍建议作为官网静态资源管理：
+第一版先读取飞书文档的纯文本内容，图片/视频建议上传到阿里云 OSS，官网文章里使用稳定 HTTPS 地址：
 
-- 公开封面图、配图：放到 `public/insights/`。
-- 文件命名：使用文章 slug 前缀，例如 `ai-search-visible-growth-assets-cover.jpg`。
-- 正文图片：先在飞书文档里保留“图片说明 / 建议位置”，后续再扩展文章数据结构支持正文图片块和飞书图片下载。
+- OSS 路径：`insights/{slug}/cover.jpg`、`insights/{slug}/image-01.jpg`、`insights/{slug}/video-01.mp4`。
+- 线上地址：`https://media.jgmao.com/insights/{slug}/cover.jpg`。
+- 正文图片：先在飞书文档里保留“图片说明 / 建议位置”，后续扩展文章数据结构支持正文图片块和飞书图片下载。
 
 这样做的好处是：
 
-- 图片地址稳定，适合微信、搜索引擎和 AI 抓取。
+- 图片和视频不会撑大项目包。
+- OSS/CDN 地址稳定，适合微信、搜索引擎和 AI 抓取。
 - 不依赖飞书图片临时链接。
 - 后续迁移到 CMS 时也能保持 URL 稳定。
+
+### 上传图片/视频到 OSS
+
+建议环境变量：
+
+```bash
+ALIYUN_OSS_BUCKET=jgmao-media
+ALIYUN_OSS_REGION=oss-cn-hangzhou
+ALIYUN_OSS_ACCESS_KEY_ID=xxx
+ALIYUN_OSS_ACCESS_KEY_SECRET=xxx
+ALIYUN_OSS_PUBLIC_BASE_URL=https://media.jgmao.com
+```
+
+可选：
+
+```bash
+ALIYUN_OSS_ENDPOINT=https://jgmao-media.oss-cn-hangzhou.aliyuncs.com
+ALIYUN_OSS_ACL=public-read
+```
+
+上传命令：
+
+```bash
+npm run media:oss -- ./tmp/insight-media --prefix insights/{slug} --manifest tmp/insight-drafts/{slug}-media.json
+```
+
+测试上传计划，不实际发送文件：
+
+```bash
+npm run media:oss -- ./tmp/insight-media --prefix insights/{slug} --dry-run
+```
+
+支持的媒体格式：
+
+- 图片：`jpg`、`jpeg`、`png`、`webp`、`gif`、`svg`、`avif`
+- 视频：`mp4`、`webm`、`mov`、`m4v`
 
 ## 推荐的下一阶段
 
