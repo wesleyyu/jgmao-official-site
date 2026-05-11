@@ -145,8 +145,8 @@ npm run insight:import -- tmp/insight-drafts/{slug}.json
 建议环境变量：
 
 ```bash
-ALIYUN_OSS_BUCKET=jgmao-media
-ALIYUN_OSS_REGION=oss-cn-hangzhou
+ALIYUN_OSS_BUCKET=aiops001
+ALIYUN_OSS_REGION=oss-cn-beijing
 ALIYUN_OSS_ACCESS_KEY_ID=xxx
 ALIYUN_OSS_ACCESS_KEY_SECRET=xxx
 ALIYUN_OSS_PUBLIC_BASE_URL=https://media.jgmao.com
@@ -155,7 +155,7 @@ ALIYUN_OSS_PUBLIC_BASE_URL=https://media.jgmao.com
 可选：
 
 ```bash
-ALIYUN_OSS_ENDPOINT=https://jgmao-media.oss-cn-hangzhou.aliyuncs.com
+ALIYUN_OSS_ENDPOINT=https://aiops001.oss-cn-beijing.aliyuncs.com
 ALIYUN_OSS_ACL=public-read
 ```
 
