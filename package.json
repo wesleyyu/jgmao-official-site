@@ -14,7 +14,8 @@
     "serve:prod": "node scripts/production-web-server.mjs",
     "agent:bridge": "node scripts/local-agent-bridge.mjs",
     "chat:relay": "node scripts/server-chat-relay.mjs",
-    "insight:import": "node scripts/import-insight-draft.mjs"
+    "insight:import": "node scripts/import-insight-draft.mjs",
+    "insight:feishu": "node scripts/feishu-doc-to-insight-draft.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

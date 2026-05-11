@@ -118,11 +118,11 @@ export function InsightsIndexPage({ locale }: InsightsPageProps) {
                 : "This hub collects JGMAO's practical observations on GEO optimization, AI search visibility, trusted content assets, website conversion, and intelligent lead generation."}
             </p>
             <div className="mt-6 rounded-[1.5rem] border border-white/10 bg-white/5 p-5">
-              <p className="text-xs uppercase tracking-[0.22em] text-slate-400">{locale === "zh" ? "后续内容机制" : "Content Workflow"}</p>
+              <p className="text-xs uppercase tracking-[0.22em] text-slate-400">{locale === "zh" ? "内容持续更新" : "Continuously Updated"}</p>
               <p className="mt-3 text-sm leading-7 text-slate-300">
                 {locale === "zh"
-                  ? "当前采用本地内容文件机制，后续可通过 OpenClaw 的 JGMAO Support Agent 与飞书协同生成、审核与发布文章。"
-                  : "The current system uses local content files and can later connect OpenClaw's JGMAO Support Agent with Feishu for drafting, review, and publishing."}
+                  ? "我们会围绕企业官网 GEO、AI 搜索推荐、可信内容资产、案例页、FAQ、知识库与获客承接等主题，持续发布可参考、可执行的内容。"
+                  : "We continue to publish practical content around GEO, AI search recommendation, trusted content assets, case pages, FAQs, knowledge bases, and lead conversion."}
               </p>
             </div>
           </article>
