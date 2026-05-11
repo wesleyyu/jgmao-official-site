@@ -40,9 +40,9 @@ function renderInsightList() {
     <main style="background:#050816;color:#e5eef8;min-height:100vh;padding:48px 24px;font-family:'IBM Plex Sans',system-ui,sans-serif;">
       <section style="max-width:1080px;margin:0 auto;">
         <p style="margin:0 0 12px;color:#8fa3bc;font-size:12px;letter-spacing:.24em;text-transform:uppercase;">新闻 / 洞察</p>
-        <h1 style="margin:0;font-size:40px;line-height:1.15;color:#fff;">持续更新的内容栏目</h1>
+        <h1 style="margin:0;font-size:40px;line-height:1.15;color:#fff;">持续更新的 GEO 与 AI 增长洞察</h1>
         <p style="margin:20px 0 0;max-width:760px;font-size:16px;line-height:1.9;color:#b8c7d9;">
-          这里承载坚果猫 JGMAO 关于 GEO、AI 增长网站、内容结构、案例延展与增长方法论的持续内容输出。
+          这里持续整理坚果猫 JGMAO 关于 GEO 优化、AI 搜索可见性、可信内容资产、官网承接与智能获客转化的实践观察，帮助企业理解 AI 时代官网和内容如何更容易被看见、被采信与被推荐。
         </p>
         <div style="margin-top:32px;display:grid;gap:16px;">
           ${insightArticles

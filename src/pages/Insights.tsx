@@ -110,12 +110,12 @@ export function InsightsIndexPage({ locale }: InsightsPageProps) {
           <article className="rounded-[2rem] border border-white/10 bg-slate-950/55 p-6 backdrop-blur-xl">
             <p className="text-xs uppercase tracking-[0.22em] text-slate-400">{locale === "zh" ? "新闻 / 洞察" : "News / Insights"}</p>
             <h1 className="mt-5 text-3xl font-semibold tracking-tight text-white sm:text-[2.45rem]">
-              {locale === "zh" ? "持续更新的内容栏目" : "A continuously updated insight hub"}
+              {locale === "zh" ? "持续更新的 GEO 与 AI 增长洞察" : "A continuously updated GEO and AI growth insight hub"}
             </h1>
             <p className="mt-4 text-base leading-8 text-slate-300">
               {locale === "zh"
-                ? "这里承载坚果猫关于 GEO、AI 增长网站、内容结构、案例延展与增长方法论的持续内容输出。首页只保留轻入口，完整内容在这里持续沉淀。"
-                : "This hub holds JGMAO's ongoing content about GEO, AI growth websites, content systems, case extensions, and growth methodology."}
+                ? "这里持续整理坚果猫关于 GEO 优化、AI 搜索可见性、可信内容资产、官网承接与智能获客转化的实践观察，帮助企业理解 AI 时代官网和内容如何更容易被看见、被采信与被推荐。"
+                : "This hub collects JGMAO's practical observations on GEO optimization, AI search visibility, trusted content assets, website conversion, and intelligent lead generation."}
             </p>
             <div className="mt-6 rounded-[1.5rem] border border-white/10 bg-white/5 p-5">
               <p className="text-xs uppercase tracking-[0.22em] text-slate-400">{locale === "zh" ? "后续内容机制" : "Content Workflow"}</p>
