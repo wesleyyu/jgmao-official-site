@@ -38,12 +38,14 @@ FEISHU_APP_ID = os.environ.get("FEISHU_APP_ID", "").strip()
 FEISHU_APP_SECRET = os.environ.get("FEISHU_APP_SECRET", "").strip()
 FEISHU_TARGET_CHAT_ID = os.environ.get("FEISHU_TARGET_CHAT_ID", "").strip()
 FEISHU_TARGET_USER_OPEN_ID = os.environ.get("FEISHU_TARGET_USER_OPEN_ID", "").strip()
+FEISHU_EVENT_VERIFY_TOKEN = os.environ.get("FEISHU_EVENT_VERIFY_TOKEN", "").strip()
 WECHAT_APP_ID = os.environ.get("WECHAT_APP_ID", "").strip()
 WECHAT_APP_SECRET = os.environ.get("WECHAT_APP_SECRET", "").strip()
 LEAD_LOG_FILE = os.environ.get("LEAD_LOG_FILE", "/tmp/jgmao-leads.ndjson")
 PUBLIC_SITE_URL = os.environ.get("PUBLIC_SITE_URL", "https://www.jgmao.com").rstrip("/")
 GEO_REPORT_DIR = os.environ.get("GEO_REPORT_DIR", "/tmp/jgmao-geo-reports")
 GEO_ORDER_DIR = os.environ.get("GEO_ORDER_DIR", "/tmp/jgmao-geo-orders")
+INSIGHT_PUBLISH_TASK_DIR = os.environ.get("INSIGHT_PUBLISH_TASK_DIR", "/tmp/jgmao-insight-publish-tasks")
 WECOM_SUPPORT_LINK = (os.environ.get("WECOM_SUPPORT_LINK", "https://work.weixin.qq.com/u/vc111a7db585fe5798?v=5.0.7.68221&bb=2a039738e3") or "").strip()
 WECOM_CORP_ID = os.environ.get("WECOM_CORP_ID", "").strip()
 WECOM_AGENT_ID = os.environ.get("WECOM_AGENT_ID", "").strip()
@@ -984,6 +986,295 @@ def read_geo_report(token):
     if not file_path.exists():
         raise FileNotFoundError(token)
     return json.loads(file_path.read_text(encoding="utf-8"))
+
+
+def insight_task_dir():
+    task_dir = Path(INSIGHT_PUBLISH_TASK_DIR)
+    task_dir.mkdir(parents=True, exist_ok=True)
+    return task_dir
+
+
+def sanitize_insight_slug(slug):
+    normalized = re.sub(r"[^a-z0-9-]+", "-", (slug or "").strip().lower()).strip("-")
+    normalized = re.sub(r"-{2,}", "-", normalized)
+    return normalized[:80]
+
+
+def slugify_insight_title(title):
+    words = re.findall(r"[a-zA-Z0-9]+", (title or "").lower())
+    if words:
+        return sanitize_insight_slug("-".join(words[:12]))
+    digest = hashlib.sha1((title or str(time.time())).encode("utf-8")).hexdigest()[:12]
+    return "feishu-insight-{}".format(digest)
+
+
+def extract_feishu_docx_token(value):
+    raw = (value or "").strip()
+    if not raw:
+        raise RuntimeError("缺少飞书文档链接。")
+    if not raw.startswith("http"):
+        return raw
+    parsed = urlparse(raw)
+    match = re.search(r"/docx/([a-zA-Z0-9]+)", parsed.path or "")
+    if match:
+        return match.group(1)
+    if re.search(r"/doc/", parsed.path or ""):
+        raise RuntimeError("当前仅支持飞书新版 docx 文档链接，请先转换为新版文档。")
+    if re.search(r"/wiki/", parsed.path or ""):
+        raise RuntimeError("当前暂不直接解析 wiki 链接，请打开实际 docx 文档后复制链接。")
+    raise RuntimeError("未识别到飞书 docx 文档 token。")
+
+
+def feishu_post_json(api_path, payload, tenant_access_token=""):
+    data = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+    headers = {"Content-Type": "application/json; charset=utf-8"}
+    if tenant_access_token:
+        headers["Authorization"] = "Bearer {}".format(tenant_access_token)
+    req = urllib_request.Request(
+        "https://open.feishu.cn{}".format(api_path),
+        data=data,
+        headers=headers,
+        method="POST",
+    )
+    with urllib_request.urlopen(req, timeout=15) as response:
+        body = response.read().decode("utf-8")
+    parsed = json.loads(body or "{}")
+    if int(parsed.get("code") or 0) != 0:
+        raise RuntimeError(parsed.get("msg") or "飞书接口调用失败。")
+    return parsed
+
+
+def feishu_get_json(api_path, tenant_access_token):
+    req = urllib_request.Request(
+        "https://open.feishu.cn{}".format(api_path),
+        headers={"Authorization": "Bearer {}".format(tenant_access_token)},
+        method="GET",
+    )
+    with urllib_request.urlopen(req, timeout=15) as response:
+        body = response.read().decode("utf-8")
+    parsed = json.loads(body or "{}")
+    if int(parsed.get("code") or 0) != 0:
+        raise RuntimeError(parsed.get("msg") or "飞书接口调用失败。")
+    return parsed
+
+
+def fetch_feishu_tenant_access_token():
+    if not (FEISHU_APP_ID and FEISHU_APP_SECRET):
+        raise RuntimeError("尚未配置飞书应用凭证。")
+    payload = feishu_post_json(
+        "/open-apis/auth/v3/tenant_access_token/internal",
+        {"app_id": FEISHU_APP_ID, "app_secret": FEISHU_APP_SECRET},
+    )
+    token = (payload.get("tenant_access_token") or (payload.get("data") or {}).get("tenant_access_token") or "").strip()
+    if not token:
+        raise RuntimeError("飞书 tenant_access_token 获取失败。")
+    return token
+
+
+def fetch_feishu_docx_raw_content(document_id, tenant_access_token):
+    payload = feishu_get_json(
+        "/open-apis/docx/v1/documents/{}/raw_content".format(quote(document_id, safe="")),
+        tenant_access_token,
+    )
+    content = (
+        (payload.get("data") or {}).get("content")
+        or (payload.get("data") or {}).get("raw_content")
+        or payload.get("content")
+        or ""
+    )
+    if not (content or "").strip():
+        raise RuntimeError("飞书文档内容为空，或当前应用无权读取该文档。")
+    return content
+
+
+def read_insight_metadata(lines):
+    metadata = {}
+    content_lines = []
+    in_metadata = True
+    for line in lines:
+        trimmed = (line or "").strip()
+        if in_metadata and trimmed == "---":
+            in_metadata = False
+            continue
+        if in_metadata:
+            match = re.match(r"^([A-Za-z][A-Za-z0-9]*):\s*(.+)$", trimmed)
+            if match:
+                metadata[match.group(1)] = match.group(2).strip()
+                continue
+            if trimmed:
+                in_metadata = False
+        content_lines.append(line)
+    return metadata, content_lines
+
+
+def parse_insight_sections(content_lines):
+    sections = []
+    current = None
+
+    def flush_current():
+        if not current:
+            return
+        body_lines = []
+        bullets = []
+        for item in current.get("lines") or []:
+            trimmed = (item or "").strip()
+            if not trimmed:
+                continue
+            bullet_match = re.match(r"^[-*]\s+(.+)$", trimmed)
+            if bullet_match:
+                bullets.append(bullet_match.group(1).strip())
+            else:
+                body_lines.append(trimmed)
+        body = "\n\n".join(body_lines).strip()
+        if current.get("title") and body:
+            section = {"title": current["title"], "body": body}
+            if bullets:
+                section["bullets"] = bullets
+            sections.append(section)
+
+    for line in content_lines:
+        heading = re.match(r"^#{2,3}\s+(.+)$", (line or "").strip())
+        if heading:
+            flush_current()
+            current = {"title": heading.group(1).strip(), "lines": []}
+            continue
+        if not current and (line or "").strip():
+            current = {"title": "正文", "lines": []}
+        if current:
+            current["lines"].append(line)
+    flush_current()
+    return sections
+
+
+def parse_feishu_content_to_insight_draft(content, document_id):
+    lines = (content or "").replace("\r\n", "\n").split("\n")
+    metadata, content_lines = read_insight_metadata(lines)
+    sections = parse_insight_sections(content_lines)
+    if not sections:
+        raise RuntimeError("未识别到文章章节，请在飞书文档中使用“## 章节标题”。")
+    title = (metadata.get("title") or sections[0].get("title") or "未命名文章").strip()
+    summary = (metadata.get("summary") or (sections[0].get("body") or title)[:110]).strip()
+    slug = sanitize_insight_slug(metadata.get("slug") or slugify_insight_title(title) or "feishu-{}".format(document_id[:8]))
+    return {
+        "slug": slug,
+        "status": "draft",
+        "category": metadata.get("category") or "GEO 洞察",
+        "title": title,
+        "summary": summary,
+        "description": metadata.get("description") or summary,
+        "seoTitle": metadata.get("seoTitle") or "{} | 坚果猫 JGMAO".format(title),
+        "seoDescription": metadata.get("seoDescription") or summary,
+        "publishedAt": metadata.get("publishedAt") or datetime.now(timezone.utc).astimezone().strftime("%Y-%m-%d"),
+        "readingTime": metadata.get("readingTime") or "5 min",
+        "metric": metadata.get("metric") or "GEO",
+        "metricLabel": metadata.get("metricLabel") or "内容资产",
+        "iconKey": metadata.get("iconKey") or "file-search",
+        "relatedFaqIds": [
+            item.strip()
+            for item in (metadata.get("relatedFaqIds") or "").split(",")
+            if item.strip()
+        ],
+        "feishuReady": True,
+        "source": {
+            "type": "feishu_docx",
+            "documentId": document_id,
+            "fetchedAt": datetime.now(timezone.utc).astimezone().isoformat(),
+        },
+        "sections": sections,
+    }
+
+
+def insight_task_path(slug):
+    safe_slug = sanitize_insight_slug(slug)
+    if not safe_slug:
+        raise RuntimeError("无效文章 slug。")
+    return insight_task_dir() / "{}.json".format(safe_slug)
+
+
+def write_insight_task(task):
+    path = insight_task_path(task.get("slug") or "")
+    path.write_text(json.dumps(task, ensure_ascii=False, indent=2), encoding="utf-8")
+    return path
+
+
+def read_insight_task(slug):
+    path = insight_task_path(slug)
+    if not path.exists():
+        raise FileNotFoundError(slug)
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def list_pending_insight_tasks():
+    items = []
+    for path in sorted(insight_task_dir().glob("*.json")):
+        try:
+            task = json.loads(path.read_text(encoding="utf-8"))
+            if task.get("status") in ["pending", "approved"]:
+                items.append(task)
+        except Exception:
+            continue
+    return items
+
+
+def build_insight_task_from_feishu_doc(doc_url, operator=""):
+    document_id = extract_feishu_docx_token(doc_url)
+    token = fetch_feishu_tenant_access_token()
+    content = fetch_feishu_docx_raw_content(document_id, token)
+    draft = parse_feishu_content_to_insight_draft(content, document_id)
+    now = datetime.now(timezone.utc).astimezone().isoformat()
+    task = {
+        "slug": draft["slug"],
+        "status": "pending",
+        "docUrl": doc_url,
+        "documentId": document_id,
+        "draft": draft,
+        "operator": operator,
+        "createdAt": now,
+        "updatedAt": now,
+    }
+    write_insight_task(task)
+    return task
+
+
+def update_insight_task_status(slug, status, operator=""):
+    task = read_insight_task(slug)
+    task["status"] = status
+    task["updatedAt"] = datetime.now(timezone.utc).astimezone().isoformat()
+    if operator:
+        task["operator"] = operator
+    if status == "approved":
+        task["approvedAt"] = task["updatedAt"]
+    if status == "cancelled":
+        task["cancelledAt"] = task["updatedAt"]
+    write_insight_task(task)
+    return task
+
+
+def extract_feishu_event_text(payload):
+    if payload.get("challenge"):
+        return ""
+    event = payload.get("event") or {}
+    message = event.get("message") or {}
+    content = message.get("content") or event.get("content") or ""
+    if isinstance(content, dict):
+        return (content.get("text") or "").strip()
+    if isinstance(content, str):
+        try:
+            parsed = json.loads(content)
+            if isinstance(parsed, dict):
+                return (parsed.get("text") or "").strip()
+        except Exception:
+            return content.strip()
+    return ""
+
+
+def extract_feishu_event_operator(payload):
+    event = payload.get("event") or {}
+    sender = event.get("sender") or {}
+    sender_id = sender.get("sender_id") or {}
+    if isinstance(sender_id, dict):
+        return sender_id.get("open_id") or sender_id.get("user_id") or sender_id.get("union_id") or ""
+    return ""
 
 
 def build_wecom_callback_status():
@@ -2389,7 +2680,7 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_OPTIONS(self):
         path_only = (self.path or "").split("?", 1)[0]
-        if path_only not in ["/chat", "/lead", "/geo-score", "/wechat/share-config", "/geo-report", "/wechat/pay/start", "/wechat/pay/callback", "/pay/wechat/callback", "/pay/wechat/callback/", "/auth/callback", "/api/wechat/pay/notify", "/wechat/pay/notify", "/pay/notify", "/wecom/contact/callback"]:
+        if path_only not in ["/chat", "/lead", "/geo-score", "/wechat/share-config", "/geo-report", "/wechat/pay/start", "/wechat/pay/callback", "/pay/wechat/callback", "/pay/wechat/callback/", "/auth/callback", "/api/wechat/pay/notify", "/wechat/pay/notify", "/pay/notify", "/wecom/contact/callback", "/feishu/insight/events"]:
             self.send_error(404, "Not found")
             return
         self.send_response(204)
@@ -2457,6 +2748,10 @@ class Handler(BaseHTTPRequestHandler):
             return
         if path_only == "/wecom/contact/callback":
             self._handle_wecom_contact_callback()
+            return
+
+        if path_only == "/feishu/insight/events":
+            self._handle_feishu_insight_event()
             return
 
         if path_only != "/chat":
@@ -2816,6 +3111,117 @@ class Handler(BaseHTTPRequestHandler):
 
     def _handle_wechat_pay_callback(self):
         self._handle_wechat_pay_start()
+
+    def _handle_feishu_insight_event(self):
+        try:
+            content_length = int(self.headers.get("Content-Length", "0"))
+            raw_body = self.rfile.read(content_length) if content_length > 0 else b"{}"
+            payload = json.loads(raw_body.decode("utf-8") or "{}")
+
+            challenge = (
+                payload.get("challenge")
+                or ((payload.get("event") or {}).get("challenge"))
+                or ((payload.get("event") or {}).get("challenge_code"))
+                or ""
+            )
+            if challenge:
+                self._write_json(200, {"challenge": challenge})
+                return
+
+            if FEISHU_EVENT_VERIFY_TOKEN:
+                event_token = (
+                    payload.get("token")
+                    or ((payload.get("header") or {}).get("token"))
+                    or ((payload.get("event") or {}).get("token"))
+                    or ""
+                )
+                if event_token and event_token != FEISHU_EVENT_VERIFY_TOKEN:
+                    self._write_json(403, {"ok": False, "error": "Invalid Feishu event token."})
+                    return
+
+            message_text = extract_feishu_event_text(payload)
+            operator = extract_feishu_event_operator(payload)
+            if not message_text:
+                self._write_json(200, {"ok": True, "ignored": True}, cache_control=True)
+                return
+
+            handled = self._handle_feishu_insight_command(message_text, operator)
+            self._write_json(200, {"ok": True, "handled": handled}, cache_control=True)
+        except Exception as error:
+            try:
+                self._send_feishu_app_message(
+                    self._fetch_feishu_tenant_access_token(),
+                    "官网文章飞书发布指令处理失败：{}".format(str(error) or "未知错误"),
+                )
+            except Exception:
+                pass
+            self._write_json(200, {"ok": False, "error": str(error) or "Feishu event failed."}, cache_control=True)
+
+    def _handle_feishu_insight_command(self, message_text, operator=""):
+        text = (message_text or "").strip()
+
+        publish_match = re.search(r"(?:发布官网文章|发布文章|生成官网文章)\s+(https?://\S+|[A-Za-z0-9_-]{8,})", text)
+        if publish_match:
+            doc_url = publish_match.group(1).strip()
+            task = build_insight_task_from_feishu_doc(doc_url, operator=operator)
+            draft = task.get("draft") or {}
+            reply = "\n".join(
+                [
+                    "已生成官网文章草稿，等待群内确认发布",
+                    "标题：{}".format(draft.get("title") or "未命名"),
+                    "摘要：{}".format(draft.get("summary") or "未填写"),
+                    "Slug：{}".format(task.get("slug") or ""),
+                    "章节：{}".format(len(draft.get("sections") or [])),
+                    "状态：待确认",
+                    "",
+                    "确认发布：确认发布 {}".format(task.get("slug") or ""),
+                    "取消发布：取消发布 {}".format(task.get("slug") or ""),
+                ]
+            )
+            self._send_feishu_app_message(self._fetch_feishu_tenant_access_token(), reply)
+            return True
+
+        confirm_match = re.search(r"(?:确认发布|同意发布|发布确认)\s+([a-z0-9-]{3,})", text, re.I)
+        if confirm_match:
+            slug = sanitize_insight_slug(confirm_match.group(1))
+            task = update_insight_task_status(slug, "approved", operator=operator)
+            draft = task.get("draft") or {}
+            reply = "\n".join(
+                [
+                    "官网文章已通过群内确认，等待执行发布",
+                    "标题：{}".format(draft.get("title") or "未命名"),
+                    "Slug：{}".format(slug),
+                    "下一步：发布服务会导入文章、构建官网并回传链接。",
+                    "如需手动执行：npm run insight:publish-approved -- {}".format(slug),
+                ]
+            )
+            self._send_feishu_app_message(self._fetch_feishu_tenant_access_token(), reply)
+            return True
+
+        cancel_match = re.search(r"(?:取消发布|撤销发布)\s+([a-z0-9-]{3,})", text, re.I)
+        if cancel_match:
+            slug = sanitize_insight_slug(cancel_match.group(1))
+            update_insight_task_status(slug, "cancelled", operator=operator)
+            self._send_feishu_app_message(
+                self._fetch_feishu_tenant_access_token(),
+                "已取消官网文章发布任务：{}".format(slug),
+            )
+            return True
+
+        if re.search(r"查看待发布文章|待发布文章|发布队列", text):
+            tasks = list_pending_insight_tasks()
+            if not tasks:
+                reply = "当前没有待发布官网文章。"
+            else:
+                lines = ["当前待发布官网文章："]
+                for task in tasks[:10]:
+                    draft = task.get("draft") or {}
+                    lines.append("- {}｜{}｜{}".format(task.get("status") or "pending", task.get("slug") or "", draft.get("title") or "未命名"))
+                reply = "\n".join(lines)
+            self._send_feishu_app_message(self._fetch_feishu_tenant_access_token(), reply)
+            return True
+
+        return False
 
     def _handle_wechat_pay_notify(self):
         try:

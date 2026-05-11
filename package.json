@@ -16,6 +16,7 @@
     "chat:relay": "node scripts/server-chat-relay.mjs",
     "insight:import": "node scripts/import-insight-draft.mjs",
     "insight:feishu": "node scripts/feishu-doc-to-insight-draft.mjs",
+    "insight:publish-approved": "node scripts/publish-approved-insight.mjs",
     "media:oss": "node scripts/upload-media-to-oss.mjs"
   },
   "dependencies": {
