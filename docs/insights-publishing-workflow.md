@@ -130,13 +130,13 @@ npm run insight:import -- tmp/insight-drafts/{slug}.json
 第一版先读取飞书文档的纯文本内容，图片/视频建议上传到阿里云 OSS，官网文章里使用稳定 HTTPS 地址：
 
 - OSS 路径：`insights/{slug}/cover.jpg`、`insights/{slug}/image-01.jpg`、`insights/{slug}/video-01.mp4`。
-- 线上地址：`https://media.jgmao.com/insights/{slug}/cover.jpg`。
+- 线上地址：`https://aiops001.oss-cn-beijing.aliyuncs.com/insights/{slug}/cover.jpg`。
 - 正文图片：先在飞书文档里保留“图片说明 / 建议位置”，后续扩展文章数据结构支持正文图片块和飞书图片下载。
 
 这样做的好处是：
 
 - 图片和视频不会撑大项目包。
-- OSS/CDN 地址稳定，适合微信、搜索引擎和 AI 抓取。
+- OSS 地址稳定，适合微信、搜索引擎和 AI 抓取；访问量起来后可再切换为 CDN 域名。
 - 不依赖飞书图片临时链接。
 - 后续迁移到 CMS 时也能保持 URL 稳定。
 
@@ -149,7 +149,7 @@ ALIYUN_OSS_BUCKET=aiops001
 ALIYUN_OSS_REGION=oss-cn-beijing
 ALIYUN_OSS_ACCESS_KEY_ID=xxx
 ALIYUN_OSS_ACCESS_KEY_SECRET=xxx
-ALIYUN_OSS_PUBLIC_BASE_URL=https://media.jgmao.com
+ALIYUN_OSS_PUBLIC_BASE_URL=https://aiops001.oss-cn-beijing.aliyuncs.com
 ```
 
 可选：

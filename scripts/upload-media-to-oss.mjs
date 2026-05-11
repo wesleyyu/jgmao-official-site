@@ -25,11 +25,11 @@ const allowedTypes = new Map([...imageTypes, ...videoTypes]);
 
 function usage() {
   console.log(`Usage:
-  ALIYUN_OSS_BUCKET=jgmao-media \\
-  ALIYUN_OSS_REGION=oss-cn-hangzhou \\
+  ALIYUN_OSS_BUCKET=aiops001 \\
+  ALIYUN_OSS_REGION=oss-cn-beijing \\
   ALIYUN_OSS_ACCESS_KEY_ID=xxx \\
   ALIYUN_OSS_ACCESS_KEY_SECRET=xxx \\
-  ALIYUN_OSS_PUBLIC_BASE_URL=https://media.jgmao.com \\
+  ALIYUN_OSS_PUBLIC_BASE_URL=https://aiops001.oss-cn-beijing.aliyuncs.com \\
   npm run media:oss -- ./tmp/insight-media --prefix insights/article-slug
 
 Dry run:
