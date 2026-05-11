@@ -16,11 +16,13 @@
     "chat:relay": "node scripts/server-chat-relay.mjs",
     "insight:import": "node scripts/import-insight-draft.mjs",
     "insight:feishu": "node scripts/feishu-doc-to-insight-draft.mjs",
+    "insight:feishu-ws": "node scripts/feishu-insight-ws-bot.mjs",
     "insight:publish-approved": "node scripts/publish-approved-insight.mjs",
     "media:oss": "node scripts/upload-media-to-oss.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
+    "@larksuiteoapi/node-sdk": "^1.63.1",
     "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-alert-dialog": "^1.1.15",
     "@radix-ui/react-aspect-ratio": "^1.1.8",

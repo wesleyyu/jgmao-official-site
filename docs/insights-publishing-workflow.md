@@ -129,10 +129,25 @@ npm run insight:import -- tmp/insight-drafts/{slug}.json
 
 飞书群可以作为轻量文章发布后台。当前推荐采用两步确认，避免未审核内容直接上线。
 
-飞书事件回调地址：
+如果飞书应用使用 HTTP 回调模式，事件回调地址为：
 
 ```text
 https://www.jgmao.com/api/feishu/insight/events
+```
+
+如果飞书应用使用长连接模式，不需要填写公网回调地址，启动长连接监听进程即可：
+
+```bash
+FEISHU_APP_ID=cli_xxx \
+FEISHU_APP_SECRET=xxx \
+FEISHU_TARGET_CHAT_ID=oc_xxx \
+npm run insight:feishu-ws
+```
+
+长连接进程会接收 `im.message.receive_v1` 群消息事件，并把发布指令转交给本地网关：
+
+```text
+http://127.0.0.1:18788/feishu/insight/events
 ```
 
 ### 1. 群里生成草稿
